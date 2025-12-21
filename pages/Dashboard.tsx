@@ -22,6 +22,7 @@ import {
   Phone,
   MapPin,
   Eye,
+  EyeOff,
   Calendar,
   CreditCard,
   Image as ImageIcon,
@@ -548,6 +549,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'settings'>('orders');
 
   const handleLogin = (e: React.FormEvent) => {
@@ -562,11 +564,35 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto my-20 p-10 bg-white rounded-[40px] shadow-2xl">
-        <div className="text-center mb-8"><Lock size={40} className="mx-auto text-emerald-600 mb-4" /><h2 className="text-2xl font-black">إدارة متجر بريمة</h2></div>
+      <div className="max-w-md mx-auto my-20 p-10 bg-white rounded-[40px] shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-inner">
+            <Lock size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-gray-800 tracking-tight">إدارة متجر بريمة</h2>
+          <p className="text-gray-400 font-bold text-sm mt-1">يُرجى إدخال كلمة المرور للمتابعة</p>
+        </div>
         <form onSubmit={handleLogin} className="space-y-6">
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة المرور" className="w-full p-5 rounded-2xl border-2 outline-none text-center text-2xl" />
-          <button className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black">دخول</button>
+          <div className="relative group">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="كلمة المرور" 
+              className="w-full p-5 pr-5 pl-14 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none text-center text-2xl font-black transition-all shadow-sm group-hover:border-emerald-200" 
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-emerald-600 transition-colors"
+              title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+            >
+              {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+            </button>
+          </div>
+          <button className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 transition-all">
+            دخول للوحة التحكم
+          </button>
         </form>
       </div>
     );
