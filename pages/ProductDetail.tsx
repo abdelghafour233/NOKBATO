@@ -13,7 +13,8 @@ import {
   Phone, 
   MapPin, 
   ShoppingBag,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from 'lucide-react';
 
 interface ProductDetailProps {
@@ -21,6 +22,13 @@ interface ProductDetailProps {
   addToCart: (product: Product) => void;
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
 }
+
+const MOROCCAN_CITIES = [
+  "الدار البيضاء", "الرباط", "مراكش", "فاس", "طنجة", "أغادير", "مكناس", 
+  "وجدة", "القنيطرة", "تطوان", "تمارة", "سلا", "آسفي", "العيون", 
+  "المحمدية", "بني ملال", "الجديدة", "تازة", "الناظور", "سطات", 
+  "خريبكة", "القصر الكبير", "العرائش", "الخميسات", "تارودانت"
+];
 
 const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setOrders }) => {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +66,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   const handleDirectOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || !formData.city || !formData.phone) {
-      alert('يرجى ملء جميع الحقول المطلوبة');
+      alert('يرجى ملء جميع الحقول المطلوبة واختيار المدينة');
       return;
     }
 
@@ -99,7 +107,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
           </div>
           <h2 className="text-4xl font-black mb-4">تم استلام طلبك بنجاح!</h2>
           <p className="text-gray-500 text-xl mb-10 font-bold">
-            شكراً لثقتك بنا يا <span className="text-emerald-600">{formData.fullName}</span>. سيتصل بك فريقنا قريباً لتأكيد الإرسال.
+            شكراً لثقتك بنا يا <span className="text-emerald-600">{formData.fullName}</span>. سيتصل بك فريقنا قريباً لتأكيد الإرسال لمدينة <span className="text-blue-600">{formData.city}</span>.
           </p>
           <button 
             onClick={() => navigate('/')}
@@ -203,15 +211,19 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
               </div>
 
               <div className="relative">
-                <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" size={20} />
-                <input 
+                <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 z-10" size={20} />
+                <select 
                   required
-                  type="text"
-                  placeholder="المدينة"
-                  className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold transition-all"
+                  className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold transition-all appearance-none cursor-pointer"
                   value={formData.city}
                   onChange={e => setFormData({...formData, city: e.target.value})}
-                />
+                >
+                  <option value="" disabled>اختر مدينتك</option>
+                  {MOROCCAN_CITIES.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               </div>
 
               <div className="relative">

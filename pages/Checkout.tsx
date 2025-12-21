@@ -3,13 +3,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartItem, Order } from '../types';
 import { saveOrders, getStoredOrders } from '../store';
-import { CheckCircle, Truck, MapPin, User, Phone, ArrowRight } from 'lucide-react';
+import { CheckCircle, Truck, MapPin, User, Phone, ArrowRight, ChevronDown } from 'lucide-react';
 
 interface CheckoutPageProps {
   cart: CartItem[];
   clearCart: () => void;
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
 }
+
+const MOROCCAN_CITIES = [
+  "الدار البيضاء", "الرباط", "مراكش", "فاس", "طنجة", "أغادير", "مكناس", 
+  "وجدة", "القنيطرة", "تطوان", "تمارة", "سلا", "آسفي", "العيون", 
+  "المحمدية", "بني ملال", "الجديدة", "تازة", "الناظور", "سطات", 
+  "خريبكة", "القصر الكبير", "العرائش", "الخميسات", "تارودانت"
+];
 
 const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders }) => {
   const navigate = useNavigate();
@@ -60,7 +67,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders 
           </div>
           <h2 className="text-4xl font-black mb-4 text-gray-800">شكراً لثقتكم!</h2>
           <p className="text-gray-500 text-xl mb-10 leading-relaxed">
-            تم استلام طلبك بنجاح. سيتصل بك فريقنا في أقرب وقت ممكن لتأكيد الطلب وترتيب عملية التوصيل.
+            تم استلام طلبك بنجاح. سيتصل بك فريقنا في أقرب وقت ممكن لتأكيد الطلب وترتيب عملية التوصيل إلى مدينة <span className="text-emerald-600 font-black">{formData.city}</span>.
           </p>
           
           <div className="bg-emerald-50 p-8 rounded-3xl mb-10 text-right space-y-4 border border-emerald-100">
@@ -117,19 +124,23 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders 
                 </div>
               </div>
 
-              {/* City Field */}
+              {/* City Field (DROPDOWN) */}
               <div className="group">
                 <label className="block text-lg font-black text-gray-700 mb-3 pr-2">المدينة</label>
                 <div className="relative">
-                  <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" size={24} />
-                  <input 
+                  <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 z-10" size={24} />
+                  <select 
                     required
-                    type="text"
                     value={formData.city}
                     onChange={e => setFormData({...formData, city: e.target.value})}
-                    placeholder="مثال: الدار البيضاء، الرباط..."
-                    className="w-full p-5 pr-14 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all text-xl font-bold placeholder:font-normal placeholder:text-gray-300 shadow-sm"
-                  />
+                    className="w-full p-5 pr-14 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all text-xl font-bold shadow-sm appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>اختر مدينتك...</option>
+                    {MOROCCAN_CITIES.map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={24} />
                 </div>
               </div>
 
@@ -172,7 +183,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders 
           </form>
         </div>
 
-        {/* Order Summary (Mobile Optimized) */}
+        {/* Order Summary */}
         <div className="w-full lg:w-2/5 space-y-6">
           <div className="bg-gray-900 text-white p-8 rounded-[40px] shadow-2xl sticky top-24">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
@@ -180,7 +191,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders 
               <span className="bg-white/20 text-xs px-3 py-1 rounded-full">{cart.length} منتجات</span>
             </h2>
             
-            <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto custom-scrollbar pl-2">
+            <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto pl-2">
               {cart.map(item => (
                 <div key={item.id} className="flex gap-4 items-center bg-white/5 p-4 rounded-2xl">
                   <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
@@ -209,12 +220,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders 
                 <span className="text-3xl font-black text-emerald-400 underline underline-offset-8 decoration-emerald-500/30">{total.toLocaleString()} د.م.</span>
               </div>
             </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-3xl border border-dashed border-gray-200 text-center">
-            <p className="text-gray-400 text-sm font-bold flex items-center justify-center gap-2">
-              🛡️ تسوق آمن 100% مع ضمان الجودة
-            </p>
           </div>
         </div>
       </div>
