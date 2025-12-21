@@ -18,7 +18,10 @@ import {
   ShieldAlert,
   Database,
   Globe,
-  BarChart
+  BarChart,
+  User,
+  Phone,
+  MapPin
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -31,6 +34,8 @@ interface DashboardPageProps {
 }
 
 const OrdersManager: React.FC<{ orders: Order[], setOrders: (orders: Order[]) => void }> = ({ orders, setOrders }) => {
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+
   const updateStatus = (orderId: string, status: Order['status']) => {
     const updated = orders.map(o => o.id === orderId ? { ...o, status } : o);
     setOrders(updated);
@@ -45,12 +50,82 @@ const OrdersManager: React.FC<{ orders: Order[], setOrders: (orders: Order[]) =>
     }
   };
 
+  const handleEditOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+
+    const updated = orders.map(o => o.id === editingOrder.id ? editingOrder : o);
+    setOrders(updated);
+    saveOrders(updated);
+    setEditingOrder(null);
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 relative">
       <h2 className="text-3xl font-black text-gray-900">إدارة الطلبات ({orders.length})</h2>
+      
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b flex justify-between items-center bg-gray-50">
+              <h3 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+                <Edit2 className="text-emerald-600" /> تحرير الطلب
+              </h3>
+              <button onClick={() => setEditingOrder(null)} className="p-2 hover:bg-white rounded-full transition-colors">
+                <CloseIcon size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleEditOrder} className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="relative">
+                  <User className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input 
+                    required
+                    className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
+                    placeholder="الاسم الكامل"
+                    value={editingOrder.fullName}
+                    onChange={e => setEditingOrder({...editingOrder, fullName: e.target.value})}
+                  />
+                </div>
+                <div className="relative">
+                  <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input 
+                    required
+                    dir="ltr"
+                    className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold text-right"
+                    placeholder="رقم الهاتف"
+                    value={editingOrder.phone}
+                    onChange={e => setEditingOrder({...editingOrder, phone: e.target.value})}
+                  />
+                </div>
+                <div className="relative">
+                  <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input 
+                    required
+                    className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
+                    placeholder="المدينة"
+                    value={editingOrder.city}
+                    onChange={e => setEditingOrder({...editingOrder, city: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <button type="submit" className="flex-grow bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all">
+                  حفظ التعديلات
+                </button>
+                <button type="button" onClick={() => setEditingOrder(null)} className="bg-gray-100 text-gray-500 px-8 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all">
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6">
         {orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(order => (
-          <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6 hover:shadow-md transition-all">
+          <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6 hover:shadow-md transition-all group">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold text-gray-500">#{order.id}</span>
@@ -77,12 +152,23 @@ const OrdersManager: React.FC<{ orders: Order[], setOrders: (orders: Order[]) =>
                 <option value="shipped">تم الشحن</option>
                 <option value="delivered">تم التوصيل</option>
               </select>
-              <button 
-                onClick={() => deleteOrder(order.id)}
-                className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-              >
-                <Trash2 size={24} />
-              </button>
+              
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setEditingOrder(order)}
+                  className="p-3 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
+                  title="تعديل بيانات الطلب"
+                >
+                  <Edit2 size={22} />
+                </button>
+                <button 
+                  onClick={() => deleteOrder(order.id)}
+                  className="p-3 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                  title="حذف الطلب"
+                >
+                  <Trash2 size={22} />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -130,13 +216,11 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
     }
 
     if (editingId) {
-      // Update logic
       const updated = products.map(p => p.id === editingId ? { ...p, ...formData } as Product : p);
       setProducts(updated);
       saveProducts(updated);
       setEditingId(null);
     } else {
-      // Add logic
       const product: Product = {
         id: Math.random().toString(36).substr(2, 9),
         name: formData.name,
@@ -178,7 +262,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
         <h2 className="text-3xl font-black text-gray-900">إدارة المنتجات</h2>
       </div>
       
-      {/* Form Section */}
       <form onSubmit={handleSubmit} className={`bg-white p-8 rounded-[40px] shadow-sm border-2 transition-all duration-500 ${editingId ? 'border-emerald-500 bg-emerald-50/10' : 'border-gray-100'} grid grid-cols-1 md:grid-cols-2 gap-8`}>
         <div className="col-span-full flex items-center justify-between border-b pb-4">
           <h3 className="text-xl font-black text-emerald-600">
@@ -191,7 +274,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
           )}
         </div>
 
-        {/* Image Upload Area */}
         <div className="md:col-span-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-[32px] p-8 bg-gray-50/50 hover:bg-white hover:border-emerald-300 transition-all cursor-pointer relative group"
              onClick={() => fileInputRef.current?.click()}>
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
@@ -251,7 +333,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
         </button>
       </form>
 
-      {/* Grid List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map(product => (
           <div key={product.id} className={`bg-white p-5 rounded-[32px] shadow-sm border transition-all group ${editingId === product.id ? 'border-emerald-500 scale-[1.02]' : 'border-gray-100 hover:shadow-lg'}`}>
