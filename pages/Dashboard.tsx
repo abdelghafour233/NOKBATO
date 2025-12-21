@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { Product, Order, AppSettings } from '../types.ts';
 import { saveProducts, saveOrders, saveSettings } from '../store.ts';
@@ -17,7 +17,10 @@ import {
   CheckCircle,
   Lock,
   Key,
-  ShieldAlert
+  ShieldAlert,
+  Image as ImageIcon,
+  Upload,
+  X as CloseIcon
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -43,7 +46,6 @@ const DashboardPage: React.FC<DashboardProps> = ({ products, orders, settings, s
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // التحقق من كلمة السر بناءً على القيمة المخزنة في الإعدادات
     if (btoa(passwordInput) === settings.adminPasswordHash) {
       setIsAuthenticated(true);
       setError(false);
@@ -94,7 +96,6 @@ const DashboardPage: React.FC<DashboardProps> = ({ products, orders, settings, s
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-      {/* Side Nav */}
       <aside className="w-full md:w-64 bg-white border-l shadow-sm p-6 space-y-2">
         <div className="flex items-center gap-2 mb-8 px-4">
            <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -128,7 +129,6 @@ const DashboardPage: React.FC<DashboardProps> = ({ products, orders, settings, s
         </div>
       </aside>
 
-      {/* Content Area */}
       <main className="flex-grow p-4 md:p-12">
         <Routes>
           <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
@@ -141,7 +141,6 @@ const DashboardPage: React.FC<DashboardProps> = ({ products, orders, settings, s
   );
 };
 
-// Sub-components for Dashboard
 const StatsOverview = ({ orders, products }: { orders: Order[], products: Product[] }) => {
   const revenue = orders.reduce((sum, o) => sum + o.totalPrice, 0);
   return (
@@ -161,7 +160,6 @@ const StatsOverview = ({ orders, products }: { orders: Order[], products: Produc
           <div className="text-4xl font-black text-orange-600">{products.length}</div>
         </div>
       </div>
-
       <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8">
         <h3 className="text-xl font-black mb-6">أحدث الطلبات</h3>
         <div className="overflow-x-auto">
@@ -208,7 +206,6 @@ const OrdersList = ({ orders, setOrders }: { orders: Order[], setOrders: (o: Ord
       saveOrders(updated);
     }
   };
-
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       <h1 className="text-3xl font-black">إدارة الطلبات</h1>
@@ -250,22 +247,46 @@ const OrdersList = ({ orders, setOrders }: { orders: Order[], setOrders: (o: Ord
 
 const ProductsManager = ({ products, setProducts }: { products: Product[], setProducts: (p: Product[]) => void }) => {
   const [showAdd, setShowAdd] = useState(false);
-  const [newProduct, setNewProduct] = useState<Partial<Product>>({ category: 'electronics' });
+  const [newProduct, setNewProduct] = useState<Partial<Product>>({ 
+    category: 'electronics',
+    image: '' 
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB Limit
+        alert("حجم الصورة كبير جداً، يرجى اختيار صورة أقل من 2 ميجابايت.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProduct(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newProduct.image) {
+      alert("يرجى تحميل صورة للمنتج");
+      return;
+    }
     const productToAdd: Product = {
       id: Math.random().toString(36).substr(2, 9),
       name: newProduct.name || 'منتج جديد',
       price: Number(newProduct.price) || 0,
       category: (newProduct.category as any) || 'electronics',
-      image: newProduct.image || 'https://picsum.photos/400/400',
+      image: newProduct.image,
       description: newProduct.description || ''
     };
     const updated = [...products, productToAdd];
     setProducts(updated);
     saveProducts(updated);
     setShowAdd(false);
+    setNewProduct({ category: 'electronics', image: '' });
   };
 
   const handleDelete = (id: string) => {
@@ -290,39 +311,83 @@ const ProductsManager = ({ products, setProducts }: { products: Product[], setPr
 
       {showAdd && (
         <div className="bg-white p-8 rounded-[32px] shadow-xl border-4 border-emerald-50 animate-in zoom-in-95 duration-300">
-           <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-500 mr-2">اسم المنتج</label>
-                <input required placeholder="هاتف أيفون 15..." className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
-                  onChange={e => setNewProduct({...newProduct, name: e.target.value})} />
+           <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Image Upload Area */}
+              <div className="md:col-span-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-[32px] p-8 bg-gray-50/50 hover:bg-gray-50 hover:border-emerald-300 transition-all cursor-pointer relative group"
+                   onClick={() => fileInputRef.current?.click()}>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleImageChange} 
+                />
+                
+                {newProduct.image ? (
+                  <div className="relative w-full aspect-square max-w-[250px]">
+                    <img src={newProduct.image} className="w-full h-full object-cover rounded-2xl shadow-md border-2 border-white" alt="Preview" />
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNewProduct(prev => ({ ...prev, image: '' }));
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                    >
+                      <CloseIcon size={16} />
+                    </button>
+                    <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                       <p className="text-white text-xs font-bold">تغيير الصورة</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border flex items-center justify-center mx-auto text-gray-400 group-hover:text-emerald-500 transition-colors">
+                      <Upload size={32} />
+                    </div>
+                    <div>
+                      <p className="font-black text-gray-700">اضغط لتحميل صورة المنتج</p>
+                      <p className="text-xs text-gray-400 mt-1">يُفضل أن تكون الصورة مربعة (1:1)</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-500 mr-2">السعر (د.م.)</label>
-                <input required type="number" placeholder="0.00" className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
-                  onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})} />
+
+              {/* Form Fields */}
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-500 mr-2">اسم المنتج</label>
+                  <input required placeholder="مثال: هاتف سامسونج S24" className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
+                    onChange={e => setNewProduct({...newProduct, name: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-500 mr-2">السعر (د.م.)</label>
+                  <input required type="number" placeholder="0.00" className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
+                    onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-500 mr-2">الفئة</label>
+                  <select className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
+                    onChange={e => setNewProduct({...newProduct, category: e.target.value as any})}>
+                    <option value="electronics">إلكترونيات</option>
+                    <option value="home">منزل</option>
+                    <option value="cars">سيارات</option>
+                  </select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-500 mr-2">الفئة</label>
-                <select className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
-                  onChange={e => setNewProduct({...newProduct, category: e.target.value as any})}>
-                  <option value="electronics">إلكترونيات</option>
-                  <option value="home">منزل</option>
-                  <option value="cars">سيارات</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-500 mr-2">رابط الصورة</label>
-                <input placeholder="https://..." className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
-                  onChange={e => setNewProduct({...newProduct, image: e.target.value})} />
-              </div>
+
               <div className="md:col-span-2 space-y-2">
                 <label className="text-sm font-bold text-gray-500 mr-2">وصف المنتج</label>
-                <textarea placeholder="تحدث عن مواصفات المنتج..." className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
+                <textarea rows={3} placeholder="تحدث عن مواصفات ومميزات المنتج..." className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
                   onChange={e => setNewProduct({...newProduct, description: e.target.value})} />
               </div>
-              <div className="flex gap-4">
-                <button type="submit" className="bg-emerald-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-emerald-700 transition-all">حفظ المنتج</button>
-                <button type="button" onClick={() => setShowAdd(false)} className="bg-gray-100 text-gray-500 px-10 py-4 rounded-xl font-bold hover:bg-gray-200 transition-all">إلغاء</button>
+
+              <div className="md:col-span-2 flex gap-4 pt-4 border-t">
+                <button type="submit" className="bg-emerald-600 text-white px-10 py-4 rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100 flex-grow">حفظ المنتج الجديد</button>
+                <button type="button" onClick={() => {
+                  setShowAdd(false);
+                  setNewProduct({ category: 'electronics', image: '' });
+                }} className="bg-gray-100 text-gray-500 px-10 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all">إلغاء</button>
               </div>
            </form>
         </div>
@@ -347,6 +412,12 @@ const ProductsManager = ({ products, setProducts }: { products: Product[], setPr
             </button>
           </div>
         ))}
+        {products.length === 0 && (
+          <div className="md:col-span-3 text-center py-20 bg-gray-50 rounded-[40px] border-2 border-dashed border-gray-200">
+            <div className="text-gray-300 mb-4"><Package size={80} className="mx-auto" /></div>
+            <h3 className="text-xl font-bold text-gray-400">لا توجد منتجات حالياً، ابدأ بإضافة منتجك الأول!</h3>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -355,8 +426,6 @@ const ProductsManager = ({ products, setProducts }: { products: Product[], setPr
 const SettingsManager = ({ settings, setSettings }: { settings: AppSettings, setSettings: (s: AppSettings) => void }) => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [saved, setSaved] = useState(false);
-  
-  // حالات تغيير كلمة السر
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [passError, setPassError] = useState("");
@@ -373,24 +442,18 @@ const SettingsManager = ({ settings, setSettings }: { settings: AppSettings, set
     e.preventDefault();
     setPassError("");
     setPassSuccess(false);
-
-    // التحقق من كلمة السر الحالية
     if (btoa(currentPass) !== settings.adminPasswordHash) {
       setPassError("كلمة السر الحالية غير صحيحة");
       return;
     }
-
     if (newPass.length < 4) {
       setPassError("كلمة السر الجديدة قصيرة جداً");
       return;
     }
-
-    // تحديث كلمة السر في الإعدادات
     const updatedSettings = { ...localSettings, adminPasswordHash: btoa(newPass) };
     setLocalSettings(updatedSettings);
     setSettings(updatedSettings);
     saveSettings(updatedSettings);
-    
     setPassSuccess(true);
     setCurrentPass("");
     setNewPass("");
@@ -399,8 +462,6 @@ const SettingsManager = ({ settings, setSettings }: { settings: AppSettings, set
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <h1 className="text-3xl font-black">الإعدادات الفنية</h1>
-
-      {/* Analytics & Pixels */}
       <div className="bg-white p-8 rounded-[40px] shadow-sm border space-y-8">
         <div className="flex items-center gap-4 text-emerald-600 border-b pb-4">
            <Analytics size={32} />
@@ -409,35 +470,21 @@ const SettingsManager = ({ settings, setSettings }: { settings: AppSettings, set
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-500">Facebook Pixel ID</label>
-            <input 
-              className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
-              value={localSettings.fbPixelId}
-              onChange={e => setLocalSettings({...localSettings, fbPixelId: e.target.value})}
-              placeholder="123456789"
-            />
+            <input className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
+              value={localSettings.fbPixelId} onChange={e => setLocalSettings({...localSettings, fbPixelId: e.target.value})} placeholder="123456789" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-500">Google Analytics ID</label>
-            <input 
-              className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
-              value={localSettings.googleAnalyticsId}
-              onChange={e => setLocalSettings({...localSettings, googleAnalyticsId: e.target.value})}
-              placeholder="G-XXXXXXX"
-            />
+            <input className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
+              value={localSettings.googleAnalyticsId} onChange={e => setLocalSettings({...localSettings, googleAnalyticsId: e.target.value})} placeholder="G-XXXXXXX" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-500">TikTok Pixel ID</label>
-            <input 
-              className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
-              value={localSettings.tiktokPixelId}
-              onChange={e => setLocalSettings({...localSettings, tiktokPixelId: e.target.value})}
-              placeholder="C-XXXXXXX"
-            />
+            <input className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
+              value={localSettings.tiktokPixelId} onChange={e => setLocalSettings({...localSettings, tiktokPixelId: e.target.value})} placeholder="C-XXXXXXX" />
           </div>
         </div>
       </div>
-
-      {/* Security Settings (Change Password) */}
       <div className="bg-white p-8 rounded-[40px] shadow-sm border space-y-6">
         <div className="flex items-center gap-4 text-red-500 border-b pb-4">
            <ShieldAlert size={28} />
@@ -446,41 +493,23 @@ const SettingsManager = ({ settings, setSettings }: { settings: AppSettings, set
         <form onSubmit={handlePasswordChange} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-500">كلمة المرور الحالية</label>
-            <input 
-              required
-              type="password"
-              className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-red-500 outline-none font-bold"
-              value={currentPass}
-              onChange={e => setCurrentPass(e.target.value)}
-              placeholder="••••••••"
-            />
+            <input required type="password" className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-red-500 outline-none font-bold"
+              value={currentPass} onChange={e => setCurrentPass(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-500">كلمة المرور الجديدة</label>
-            <input 
-              required
-              type="password"
-              className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
-              value={newPass}
-              onChange={e => setNewPass(e.target.value)}
-              placeholder="••••••••"
-            />
+            <input required type="password" className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold"
+              value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="md:col-span-2 flex items-center justify-between">
             <div className="flex flex-col">
               {passError && <p className="text-red-500 text-sm font-bold mb-2">{passError}</p>}
               {passSuccess && <p className="text-emerald-600 text-sm font-bold mb-2 flex items-center gap-1"><CheckCircle size={16}/> تم تغيير كلمة السر بنجاح</p>}
             </div>
-            <button 
-              type="submit"
-              className="bg-gray-800 text-white px-8 py-3 rounded-2xl font-bold hover:bg-black transition-all shadow-md"
-            >
-              تحديث كلمة السر
-            </button>
+            <button type="submit" className="bg-gray-800 text-white px-8 py-3 rounded-2xl font-bold hover:bg-black transition-all shadow-md">تحديث كلمة السر</button>
           </div>
         </form>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-[40px] shadow-sm border space-y-6">
           <div className="flex items-center gap-4 text-blue-600 border-b pb-4">
@@ -489,16 +518,11 @@ const SettingsManager = ({ settings, setSettings }: { settings: AppSettings, set
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-500">رابط الـ Webhook الخاص بـ Sheets</label>
-            <input 
-              className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
-              value={localSettings.googleSheetsUrl}
-              onChange={e => setLocalSettings({...localSettings, googleSheetsUrl: e.target.value})}
-              placeholder="https://script.google.com/..."
-            />
+            <input className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
+              value={localSettings.googleSheetsUrl} onChange={e => setLocalSettings({...localSettings, googleSheetsUrl: e.target.value})} placeholder="https://script.google.com/..." />
             <p className="text-xs text-gray-400 mt-2 px-2">سيتم إرسال كافة تفاصيل الطلبات تلقائياً إلى ملف الإكسل الخاص بك.</p>
           </div>
         </div>
-
         <div className="bg-white p-8 rounded-[40px] shadow-sm border space-y-6">
           <div className="flex items-center gap-4 text-orange-600 border-b pb-4">
              <Globe size={28} />
@@ -507,31 +531,19 @@ const SettingsManager = ({ settings, setSettings }: { settings: AppSettings, set
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-500">اسم النطاق (Domain)</label>
-              <input 
-                className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
-                value={localSettings.domainName}
-                onChange={e => setLocalSettings({...localSettings, domainName: e.target.value})}
-                placeholder="matjarberrima.com"
-              />
+              <input className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm"
+                value={localSettings.domainName} onChange={e => setLocalSettings({...localSettings, domainName: e.target.value})} placeholder="matjarberrima.com" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-500">Name Servers</label>
-              <textarea 
-                className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm h-24"
-                value={localSettings.nameServers}
-                onChange={e => setLocalSettings({...localSettings, nameServers: e.target.value})}
-                placeholder="ns1.host.com&#10;ns2.host.com"
-              />
+              <textarea className="w-full p-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-sm h-24"
+                value={localSettings.nameServers} onChange={e => setLocalSettings({...localSettings, nameServers: e.target.value})} placeholder="ns1.host.com&#10;ns2.host.com" />
             </div>
           </div>
         </div>
       </div>
-
       <div className="flex justify-end pt-8">
-        <button 
-          onClick={handleSave}
-          className={`px-16 py-6 rounded-3xl font-black text-2xl shadow-2xl transition-all ${saved ? 'bg-emerald-100 text-emerald-700 scale-95' : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:-translate-y-1'}`}
-        >
+        <button onClick={handleSave} className={`px-16 py-6 rounded-3xl font-black text-2xl shadow-2xl transition-all ${saved ? 'bg-emerald-100 text-emerald-700 scale-95' : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:-translate-y-1'}`}>
           {saved ? <span className="flex items-center gap-3"><CheckCircle size={28} /> تم الحفظ بنجاح</span> : 'حفظ كافة التغييرات'}
         </button>
       </div>
