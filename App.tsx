@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, LayoutDashboard, Home, Package, Phone, Search, Menu, X, Settings, ListOrdered, PlusCircle, CreditCard, ChevronRight, Car, Tv, Sofa } from 'lucide-react';
-import { Product, Order, AppSettings, CartItem } from './types';
-import { getStoredProducts, getStoredOrders, getStoredSettings, saveOrders } from './store';
+import { HashRouter, Routes, Route, Link } from 'react-router-dom';
+import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard } from 'lucide-react';
+import { Product, Order, AppSettings, CartItem } from './types.ts';
+import { getStoredProducts, getStoredOrders, getStoredSettings, saveOrders } from './store.ts';
 
 // Pages
-import HomePage from './pages/Home';
-import CategoryPage from './pages/Category';
-import ProductDetail from './pages/ProductDetail';
-import CartPage from './pages/Cart';
-import CheckoutPage from './pages/Checkout';
-import DashboardPage from './pages/Dashboard';
+import HomePage from './pages/Home.tsx';
+import CategoryPage from './pages/Category.tsx';
+import ProductDetail from './pages/ProductDetail.tsx';
+import CartPage from './pages/Cart.tsx';
+import CheckoutPage from './pages/Checkout.tsx';
+import DashboardPage from './pages/Dashboard.tsx';
 
 const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -56,7 +56,7 @@ const App: React.FC = () => {
                   {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
                 <Link to="/" className="text-2xl font-black text-emerald-600 tracking-tight">
-                  متجر النخبة
+                  متجر بريمة
                 </Link>
                 <div className="hidden md:flex gap-6 mr-8">
                   <Link to="/" className="text-gray-600 hover:text-emerald-600 font-medium">الرئيسية</Link>
@@ -109,7 +109,7 @@ const App: React.FC = () => {
         <footer className="bg-white border-t py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold text-emerald-600 mb-4">متجر النخبة</h3>
+              <h3 className="text-xl font-bold text-emerald-600 mb-4">متجر بريمة</h3>
               <p className="text-gray-500 leading-relaxed">وجهتكم الأولى للتسوق الإلكتروني في المغرب. جودة عالية وأسعار منافسة.</p>
             </div>
             <div>
@@ -137,7 +137,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="text-center mt-12 text-gray-400 border-t pt-8">
-            &copy; 2024 متجر النخبة. جميع الحقوق محفوظة.
+            &copy; 2024 متجر بريمة. جميع الحقوق محفوظة.
           </div>
         </footer>
       </div>
