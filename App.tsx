@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Link } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard, Watch, Glasses } from 'lucide-react';
 import { Product, Order, AppSettings, CartItem } from './types.ts';
 import { getStoredProducts, getStoredOrders, getStoredSettings, saveOrders } from './store.ts';
@@ -12,6 +12,37 @@ import ProductDetail from './pages/ProductDetail.tsx';
 import CartPage from './pages/Cart.tsx';
 import CheckoutPage from './pages/Checkout.tsx';
 import DashboardPage from './pages/Dashboard.tsx';
+
+const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // 1. Update Title & Meta based on Route
+    const path = location.pathname;
+    let title = "متجر بريمة - تسوق أفضل المنتجات";
+    let description = "اكتشف أفضل العروض على الإلكترونيات والساعات في المغرب.";
+
+    if (path === '/') {
+      title = "الرئيسية | متجر بريمة - جودة وسعر";
+    } else if (path.includes('/category/')) {
+      const cat = path.split('/').pop();
+      title = `قسم ${cat} | متجر بريمة`;
+    } else if (path.includes('/product/')) {
+      title = "عرض المنتج | متجر بريمة";
+    }
+
+    document.title = title;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) metaDescription.setAttribute('content', description);
+
+    // 2. Pixel Injection Logic (Placeholder for real scripts)
+    if (settings.fbPixelId) {
+      console.log(`FB Pixel Active: ${settings.fbPixelId}`);
+    }
+  }, [location, settings]);
+
+  return null;
+};
 
 const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -43,6 +74,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
+      <SEOManager settings={settings} />
       <div className="min-h-screen flex flex-col font-cairo">
         {/* Navigation */}
         <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -52,6 +84,7 @@ const App: React.FC = () => {
                 <button 
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="md:hidden p-2 rounded-md hover:bg-gray-100"
+                  aria-label="القائمة"
                 >
                   {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
@@ -68,10 +101,10 @@ const App: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Link to="/dashboard" className="text-gray-500 hover:text-emerald-600 p-2 hidden md:block transition-colors">
+                <Link to="/dashboard" className="text-gray-500 hover:text-emerald-600 p-2 hidden md:block transition-colors" title="لوحة التحكم">
                   <LayoutDashboard size={22} />
                 </Link>
-                <Link to="/cart" className="relative p-3 bg-gray-50 rounded-2xl text-gray-700 hover:bg-emerald-600 hover:text-white transition-all">
+                <Link to="/cart" className="relative p-3 bg-gray-50 rounded-2xl text-gray-700 hover:bg-emerald-600 hover:text-white transition-all" aria-label="سلة التسوق">
                   <ShoppingCart size={22} />
                   {cart.length > 0 && (
                     <span className="absolute -top-1 -left-1 bg-red-500 text-white text-[10px] w-6 h-6 flex items-center justify-center rounded-full font-black shadow-lg">
@@ -136,7 +169,7 @@ const App: React.FC = () => {
             <div>
               <h4 className="font-black mb-4">طرق الدفع</h4>
               <div className="flex gap-4 items-center bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                 <CreditCard className="text-emerald-600" />
+                 <CreditCard className="text-emerald-600" aria-hidden="true" />
                  <span className="text-emerald-900 font-black text-sm">الدفع عند الاستلام (COD)</span>
               </div>
             </div>

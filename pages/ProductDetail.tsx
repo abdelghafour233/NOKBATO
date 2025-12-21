@@ -50,6 +50,36 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   useEffect(() => {
     if (product) {
       setActiveImage(product.image);
+      document.title = `${product.name} | متجر بريمة`;
+      
+      // Inject JSON-LD for Google Rich Snippets
+      const schema = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": product.name,
+        "image": [product.image, ...(product.images || [])],
+        "description": product.description || `اشتري ${product.name} الآن من متجر بريمة بأفضل سعر في المغرب.`,
+        "sku": product.id,
+        "offers": {
+          "@type": "Offer",
+          "url": window.location.href,
+          "priceCurrency": "MAD",
+          "price": product.price,
+          "availability": "https://schema.org/InStock",
+          "itemCondition": "https://schema.org/NewCondition"
+        }
+      };
+      
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.text = JSON.stringify(schema);
+      script.id = 'product-schema';
+      document.head.appendChild(script);
+
+      return () => {
+        const oldScript = document.getElementById('product-schema');
+        if (oldScript) oldScript.remove();
+      };
     }
   }, [product]);
 
@@ -121,10 +151,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-700">
+    <article className="max-w-7xl mx-auto px-4 py-16 animate-in fade-in duration-700">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
         {/* Gallery Section */}
-        <div className="space-y-6 lg:sticky lg:top-28">
+        <section className="space-y-6 lg:sticky lg:top-28">
           <div className="aspect-square bg-white rounded-[50px] overflow-hidden shadow-2xl border-4 border-white relative group">
             <img 
               src={activeImage} 
@@ -140,16 +170,17 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
                   key={idx} 
                   onClick={() => setActiveImage(img)}
                   className={`aspect-square rounded-2xl overflow-hidden border-4 transition-all ${activeImage === img ? 'border-emerald-500 scale-105 shadow-lg' : 'border-white shadow-sm hover:border-emerald-200'}`}
+                  aria-label={`عرض الصورة ${idx + 1}`}
                 >
-                  <img src={img} className="w-full h-full object-cover" alt={`thumb-${idx}`} />
+                  <img src={img} className="w-full h-full object-cover" alt={`${product.name} - صورة ${idx + 1}`} />
                 </button>
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {/* Info & Form Section */}
-        <div className="space-y-10">
+        <section className="space-y-10">
           {/* Header Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -158,7 +189,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
             </div>
             <h1 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">{product.name}</h1>
             <div className="flex items-center gap-2 text-yellow-400">
-               {[1,2,3,4,5].map(i => <span key={i} className="text-xl">★</span>)}
+               {[1,2,3,4,5].map(i => <span key={i} className="text-xl" aria-hidden="true">★</span>)}
                <span className="text-gray-400 text-sm font-bold mr-2">(+500 تقييم إيجابي)</span>
             </div>
             <div className="flex items-baseline gap-4 mt-6">
@@ -191,10 +222,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
           <div className="bg-white p-8 rounded-[40px] shadow-2xl border-2 border-emerald-500 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
             <div className="mb-8 text-center">
-              <h3 className="text-2xl font-black text-gray-900 flex items-center justify-center gap-2">
+              <h2 className="text-2xl font-black text-gray-900 flex items-center justify-center gap-2">
                 <ShoppingBag className="text-emerald-600" /> اطلب الآن مباشرة
-              </h3>
-              <p className="text-gray-400 font-bold text-sm mt-1">الدفع عند الاستلام والتوصيل مجاني</p>
+              </h2>
+              <p className="text-gray-400 font-bold text-sm mt-1">الدفع عند الاستلام والتوصيل مجاني لمدينة <span className="text-emerald-500">{formData.city || 'كافة المدن'}</span></p>
             </div>
 
             <form onSubmit={handleDirectOrder} className="space-y-6">
@@ -207,6 +238,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
                   className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold transition-all"
                   value={formData.fullName}
                   onChange={e => setFormData({...formData, fullName: e.target.value})}
+                  aria-label="الاسم الكامل"
                 />
               </div>
 
@@ -217,6 +249,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
                   className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold transition-all appearance-none cursor-pointer"
                   value={formData.city}
                   onChange={e => setFormData({...formData, city: e.target.value})}
+                  aria-label="اختر المدينة"
                 >
                   <option value="" disabled>اختر مدينتك</option>
                   {MOROCCAN_CITIES.map(city => (
@@ -236,6 +269,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
                   className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-bold transition-all text-right"
                   value={formData.phone}
                   onChange={e => setFormData({...formData, phone: e.target.value})}
+                  aria-label="رقم الهاتف"
                 />
               </div>
 
@@ -254,7 +288,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
 
           {/* Description */}
           <div className="pt-8 border-t border-gray-100">
-            <h4 className="text-xl font-black mb-4">وصف المنتج:</h4>
+            <h3 className="text-xl font-black mb-4 underline decoration-emerald-200 underline-offset-8">وصف المنتج وتفاصيله:</h3>
             <p className="text-gray-500 text-lg leading-relaxed font-medium">
               {product.description || "هذا المنتج مصمم بعناية فائقة ليلبي جميع احتياجاتكم. يتميز بجودة الخامات واللمسة العصرية التي تناسب ذوقكم الرفيع."}
             </p>
@@ -268,13 +302,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
             >
               <ShoppingCart size={20} /> {isAdded ? 'تمت الإضافة للسلة' : 'أضف للسلة'}
             </button>
-            <button className="p-4 border-2 border-gray-100 rounded-2xl text-gray-400">
+            <button className="p-4 border-2 border-gray-100 rounded-2xl text-gray-400" aria-label="أضف للمفضلة">
               <Heart size={20} />
             </button>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </article>
   );
 };
 
