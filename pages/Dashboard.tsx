@@ -21,7 +21,10 @@ import {
   BarChart,
   User,
   Phone,
-  MapPin
+  MapPin,
+  Eye,
+  Calendar,
+  CreditCard
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -33,8 +36,9 @@ interface DashboardPageProps {
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
 }
 
-const OrdersManager: React.FC<{ orders: Order[], setOrders: (orders: Order[]) => void }> = ({ orders, setOrders }) => {
+const OrdersManager: React.FC<{ orders: Order[], products: Product[], setOrders: (orders: Order[]) => void }> = ({ orders, products, setOrders }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
 
   const updateStatus = (orderId: string, status: Order['status']) => {
     const updated = orders.map(o => o.id === orderId ? { ...o, status } : o);
@@ -60,17 +64,106 @@ const OrdersManager: React.FC<{ orders: Order[], setOrders: (orders: Order[]) =>
     setEditingOrder(null);
   };
 
+  const getProductDetails = (productId: string) => {
+    return products.find(p => p.id === productId);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 relative">
       <h2 className="text-3xl font-black text-gray-900">إدارة الطلبات ({orders.length})</h2>
       
+      {/* Preview Order Modal */}
+      {previewOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-[50px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-8 border-b flex justify-between items-center bg-gray-50 shrink-0">
+              <div>
+                <h3 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+                  <Eye className="text-blue-600" /> معاينة الطلب #{previewOrder.id}
+                </h3>
+                <p className="text-gray-400 text-sm font-bold mt-1">تاريخ الطلب: {new Date(previewOrder.date).toLocaleString('ar-MA')}</p>
+              </div>
+              <button onClick={() => setPreviewOrder(null)} className="p-3 hover:bg-white rounded-full transition-colors bg-gray-100 shadow-sm">
+                <CloseIcon size={24} />
+              </button>
+            </div>
+            
+            <div className="p-8 overflow-y-auto space-y-8">
+              {/* Customer Quick Info */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-emerald-50 p-4 rounded-3xl border border-emerald-100">
+                  <div className="text-emerald-600 mb-1"><User size={18} /></div>
+                  <div className="font-black text-emerald-900">{previewOrder.fullName}</div>
+                  <div className="text-[10px] text-emerald-700 font-bold">الاسم الكامل</div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-3xl border border-blue-100">
+                  <div className="text-blue-600 mb-1"><Phone size={18} /></div>
+                  <div className="font-black text-blue-900" dir="ltr">{previewOrder.phone}</div>
+                  <div className="text-[10px] text-blue-700 font-bold">رقم الهاتف</div>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-3xl border border-orange-100">
+                  <div className="text-orange-600 mb-1"><MapPin size={18} /></div>
+                  <div className="font-black text-orange-900">{previewOrder.city}</div>
+                  <div className="text-[10px] text-orange-700 font-bold">المدينة</div>
+                </div>
+              </div>
+
+              {/* Items List */}
+              <div className="space-y-4">
+                <h4 className="text-xl font-black text-gray-800 border-r-4 border-emerald-500 pr-3">المنتجات المطلوبة</h4>
+                <div className="bg-gray-50 rounded-[32px] p-2 space-y-2">
+                  {previewOrder.items.map((item, idx) => {
+                    const product = getProductDetails(item.productId);
+                    return (
+                      <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-4">
+                        <img 
+                          src={product?.image || 'https://images.unsplash.com/photo-1594732832278-abd644401426?q=80&w=200'} 
+                          className="w-16 h-16 rounded-xl object-cover border" 
+                          alt="product"
+                        />
+                        <div className="flex-grow">
+                          <div className="font-black text-gray-900">{product?.name || 'منتج غير متوفر'}</div>
+                          <div className="text-emerald-600 font-bold text-sm">{product?.price.toLocaleString() || 0} د.م.</div>
+                        </div>
+                        <div className="text-center px-4 py-2 bg-gray-100 rounded-xl">
+                          <div className="text-[10px] font-bold text-gray-400">الكمية</div>
+                          <div className="font-black text-gray-900">x{item.quantity}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Financial Summary */}
+              <div className="bg-gray-900 text-white p-8 rounded-[32px] flex justify-between items-center shadow-2xl">
+                <div>
+                  <div className="text-emerald-400 font-bold text-sm">المجموع الكلي</div>
+                  <div className="text-3xl font-black">{previewOrder.totalPrice.toLocaleString()} <span className="text-sm">درهم مغربي</span></div>
+                </div>
+                <div className="bg-white/10 px-4 py-2 rounded-2xl flex items-center gap-2">
+                  <CreditCard className="text-emerald-400" size={20} />
+                  <span className="font-bold text-sm">الدفع عند الاستلام</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-8 border-t bg-gray-50 shrink-0">
+               <button onClick={() => setPreviewOrder(null)} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all shadow-xl">
+                  إغلاق المعاينة
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Order Modal */}
       {editingOrder && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-8 border-b flex justify-between items-center bg-gray-50">
               <h3 className="text-2xl font-black text-gray-800 flex items-center gap-3">
-                <Edit2 className="text-emerald-600" /> تحرير الطلب
+                <Edit2 className="text-emerald-600" /> تحرير بيانات الزبون
               </h3>
               <button onClick={() => setEditingOrder(null)} className="p-2 hover:bg-white rounded-full transition-colors">
                 <CloseIcon size={24} />
@@ -129,7 +222,9 @@ const OrdersManager: React.FC<{ orders: Order[], setOrders: (orders: Order[]) =>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold text-gray-500">#{order.id}</span>
-                <span className="text-gray-400 text-xs font-bold">{new Date(order.date).toLocaleString('ar-MA')}</span>
+                <span className="text-gray-400 text-xs font-bold flex items-center gap-1">
+                  <Calendar size={12} /> {new Date(order.date).toLocaleDateString('ar-MA')}
+                </span>
               </div>
               <h3 className="text-xl font-black">{order.fullName}</h3>
               <p className="text-emerald-600 font-bold">{order.phone} | {order.city}</p>
@@ -155,9 +250,16 @@ const OrdersManager: React.FC<{ orders: Order[], setOrders: (orders: Order[]) =>
               
               <div className="flex gap-2">
                 <button 
+                  onClick={() => setPreviewOrder(order)}
+                  className="p-3 text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
+                  title="معاينة محتوى الطلب"
+                >
+                  <Eye size={22} />
+                </button>
+                <button 
                   onClick={() => setEditingOrder(order)}
                   className="p-3 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
-                  title="تعديل بيانات الطلب"
+                  title="تعديل بيانات العميل"
                 >
                   <Edit2 size={22} />
                 </button>
@@ -498,7 +600,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </div>
       <div className="flex-grow bg-gray-50/30 p-4 md:p-8 rounded-[50px] min-h-[600px]">
-        {activeTab === 'orders' && <OrdersManager orders={orders} setOrders={setOrders} />}
+        {activeTab === 'orders' && <OrdersManager orders={orders} products={products} setOrders={setOrders} />}
         {activeTab === 'products' && <ProductsManager products={products} setProducts={setProducts} />}
         {activeTab === 'settings' && <SettingsManager settings={settings} setSettings={setSettings} />}
       </div>
