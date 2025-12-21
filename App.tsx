@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link } from 'react-router-dom';
-import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard } from 'lucide-react';
+import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard, Watch, Glasses } from 'lucide-react';
 import { Product, Order, AppSettings, CartItem } from './types.ts';
 import { getStoredProducts, getStoredOrders, getStoredSettings, saveOrders } from './store.ts';
 
@@ -47,7 +47,7 @@ const App: React.FC = () => {
         {/* Navigation */}
         <nav className="bg-white shadow-sm sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 items-center">
+            <div className="flex justify-between h-20 items-center">
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -55,24 +55,26 @@ const App: React.FC = () => {
                 >
                   {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
-                <Link to="/" className="text-2xl font-black text-emerald-600 tracking-tight">
+                <Link to="/" className="text-2xl font-black text-emerald-600 tracking-tight ml-4">
                   متجر بريمة
                 </Link>
-                <div className="hidden md:flex gap-6 mr-8">
-                  <Link to="/" className="text-gray-600 hover:text-emerald-600 font-medium">الرئيسية</Link>
-                  <Link to="/category/electronics" className="text-gray-600 hover:text-emerald-600 font-medium">إلكترونيات</Link>
-                  <Link to="/category/home" className="text-gray-600 hover:text-emerald-600 font-medium">منزل</Link>
-                  <Link to="/category/cars" className="text-gray-600 hover:text-emerald-600 font-medium">سيارات</Link>
+                <div className="hidden lg:flex gap-6 mr-4">
+                  <Link to="/" className="text-gray-600 hover:text-emerald-600 font-bold transition-colors">الرئيسية</Link>
+                  <Link to="/category/electronics" className="text-gray-600 hover:text-emerald-600 font-bold transition-colors">إلكترونيات</Link>
+                  <Link to="/category/watches" className="text-gray-600 hover:text-emerald-600 font-bold flex items-center gap-1 transition-colors"><Watch size={18}/> ساعات</Link>
+                  <Link to="/category/glasses" className="text-gray-600 hover:text-emerald-600 font-bold flex items-center gap-1 transition-colors"><Glasses size={18}/> نظارات</Link>
+                  <Link to="/category/home" className="text-gray-600 hover:text-emerald-600 font-bold transition-colors">منزل</Link>
+                  <Link to="/category/cars" className="text-gray-600 hover:text-emerald-600 font-bold transition-colors">سيارات</Link>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Link to="/dashboard" className="text-gray-500 hover:text-emerald-600 p-2 hidden md:block">
+                <Link to="/dashboard" className="text-gray-500 hover:text-emerald-600 p-2 hidden md:block transition-colors">
                   <LayoutDashboard size={22} />
                 </Link>
-                <Link to="/cart" className="relative p-2 text-gray-500 hover:text-emerald-600 transition-colors">
+                <Link to="/cart" className="relative p-3 bg-gray-50 rounded-2xl text-gray-700 hover:bg-emerald-600 hover:text-white transition-all">
                   <ShoppingCart size={22} />
                   {cart.length > 0 && (
-                    <span className="absolute -top-1 -left-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                    <span className="absolute -top-1 -left-1 bg-red-500 text-white text-[10px] w-6 h-6 flex items-center justify-center rounded-full font-black shadow-lg">
                       {cart.reduce((sum, item) => sum + item.quantity, 0)}
                     </span>
                   )}
@@ -83,12 +85,14 @@ const App: React.FC = () => {
 
           {/* Mobile Menu */}
           {isMenuOpen && (
-            <div className="md:hidden border-t bg-white p-4 space-y-4 shadow-xl">
-              <Link to="/" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-bold border-b">الرئيسية</Link>
-              <Link to="/category/electronics" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-bold border-b">إلكترونيات</Link>
-              <Link to="/category/home" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-bold border-b">منزل</Link>
-              <Link to="/category/cars" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-bold border-b">سيارات</Link>
-              <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block py-2 text-emerald-600 font-bold">لوحة التحكم</Link>
+            <div className="md:hidden border-t bg-white p-6 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
+              <Link to="/" onClick={() => setIsMenuOpen(false)} className="block py-3 text-gray-700 font-black border-b">الرئيسية</Link>
+              <Link to="/category/electronics" onClick={() => setIsMenuOpen(false)} className="block py-3 text-gray-700 font-black border-b">إلكترونيات</Link>
+              <Link to="/category/watches" onClick={() => setIsMenuOpen(false)} className="block py-3 text-emerald-600 font-black border-b flex items-center gap-2"><Watch size={20}/> ساعات</Link>
+              <Link to="/category/glasses" onClick={() => setIsMenuOpen(false)} className="block py-3 text-emerald-600 font-black border-b flex items-center gap-2"><Glasses size={20}/> نظارات</Link>
+              <Link to="/category/home" onClick={() => setIsMenuOpen(false)} className="block py-3 text-gray-700 font-black border-b">منزل</Link>
+              <Link to="/category/cars" onClick={() => setIsMenuOpen(false)} className="block py-3 text-gray-700 font-black border-b">سيارات</Link>
+              <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block py-4 text-emerald-600 font-black bg-emerald-50 rounded-2xl px-4">لوحة التحكم</Link>
             </div>
           )}
         </nav>
@@ -109,34 +113,35 @@ const App: React.FC = () => {
         <footer className="bg-white border-t py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold text-emerald-600 mb-4">متجر بريمة</h3>
-              <p className="text-gray-500 leading-relaxed">وجهتكم الأولى للتسوق الإلكتروني في المغرب. جودة عالية وأسعار منافسة.</p>
+              <h3 className="text-xl font-bold text-emerald-600 mb-4 font-black">متجر بريمة</h3>
+              <p className="text-gray-500 leading-relaxed font-medium">وجهتكم الأولى للتسوق الإلكتروني في المغرب. جودة عالية وأسعار منافسة وتوصيل سريع.</p>
             </div>
             <div>
-              <h4 className="font-bold mb-4">روابط سريعة</h4>
-              <ul className="space-y-2 text-gray-500">
-                <li><Link to="/category/electronics">الإلكترونيات</Link></li>
-                <li><Link to="/category/home">مستلزمات المنزل</Link></li>
-                <li><Link to="/category/cars">السيارات</Link></li>
+              <h4 className="font-black mb-4">أقسام المتجر</h4>
+              <ul className="space-y-2 text-gray-500 font-bold">
+                <li><Link to="/category/watches" className="hover:text-emerald-600 transition-colors">الساعات الفاخرة</Link></li>
+                <li><Link to="/category/glasses" className="hover:text-emerald-600 transition-colors">النظارات العصرية</Link></li>
+                <li><Link to="/category/electronics" className="hover:text-emerald-600 transition-colors">الإلكترونيات</Link></li>
+                <li><Link to="/category/home" className="hover:text-emerald-600 transition-colors">المنزل</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-4">الدعم الفني</h4>
-              <ul className="space-y-2 text-gray-500">
-                <li>سياسة الخصوصية</li>
-                <li>الشروط والأحكام</li>
-                <li>تواصل معنا</li>
+              <h4 className="font-black mb-4">الدعم الفني</h4>
+              <ul className="space-y-2 text-gray-500 font-bold">
+                <li className="hover:text-emerald-600 cursor-pointer">سياسة الخصوصية</li>
+                <li className="hover:text-emerald-600 cursor-pointer">الشروط والأحكام</li>
+                <li className="hover:text-emerald-600 cursor-pointer">تواصل معنا</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-4">طرق الدفع</h4>
-              <div className="flex gap-4">
-                 <CreditCard className="text-gray-400" />
-                 <span className="text-gray-500">الدفع عند الاستلام</span>
+              <h4 className="font-black mb-4">طرق الدفع</h4>
+              <div className="flex gap-4 items-center bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                 <CreditCard className="text-emerald-600" />
+                 <span className="text-emerald-900 font-black text-sm">الدفع عند الاستلام (COD)</span>
               </div>
             </div>
           </div>
-          <div className="text-center mt-12 text-gray-400 border-t pt-8">
+          <div className="text-center mt-12 text-gray-400 border-t pt-8 font-bold">
             &copy; 2024 متجر بريمة. جميع الحقوق محفوظة.
           </div>
         </footer>
