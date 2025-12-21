@@ -28,6 +28,7 @@ export interface AppSettings {
   googleSheetsUrl: string;
   domainName: string;
   nameServers: string;
+  adminPasswordHash: string; // الحقل الجديد
 }
 
 export interface CartItem extends Product {

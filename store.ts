@@ -54,7 +54,8 @@ export const getStoredSettings = (): AppSettings => {
     tiktokPixelId: '',
     googleSheetsUrl: '',
     domainName: '',
-    nameServers: ''
+    nameServers: '',
+    adminPasswordHash: 'YmVycmltYTIwMjQ=' // القيمة الافتراضية: berrima2024
   };
 };
 
