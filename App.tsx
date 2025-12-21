@@ -102,7 +102,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomePage products={products} />} />
             <Route path="/category/:id" element={<CategoryPage products={products} />} />
-            <Route path="/product/:id" element={<ProductDetail products={products} addToCart={addToCart} />} />
+            <Route path="/product/:id" element={<ProductDetail products={products} addToCart={addToCart} setOrders={setOrders} />} />
             <Route path="/cart" element={<CartPage cart={cart} removeFromCart={removeFromCart} />} />
             <Route path="/checkout" element={<CheckoutPage cart={cart} clearCart={clearCart} setOrders={setOrders} />} />
             <Route path="/dashboard/*" element={<DashboardPage products={products} orders={orders} settings={settings} setProducts={setProducts} setOrders={setOrders} setSettings={setSettings} />} />
