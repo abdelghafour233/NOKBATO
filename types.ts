@@ -6,7 +6,8 @@ export interface Product {
   name: string;
   price: number;
   category: Category;
-  image: string;
+  image: string; // الصورة الرئيسية (Thumbnail)
+  images?: string[]; // معرض الصور الإضافية
   description: string;
 }
 
@@ -28,7 +29,7 @@ export interface AppSettings {
   googleSheetsUrl: string;
   domainName: string;
   nameServers: string;
-  adminPasswordHash: string; // الحقل الجديد
+  adminPasswordHash: string;
 }
 
 export interface CartItem extends Product {
