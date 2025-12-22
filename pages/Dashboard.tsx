@@ -6,7 +6,6 @@ import {
   Settings, 
   Package, 
   ShoppingBag, 
-  LogOut, 
   Plus, 
   Trash2, 
   Save, 
@@ -15,9 +14,6 @@ import {
   Upload,
   X as CloseIcon,
   CheckCircle,
-  Database,
-  Globe,
-  BarChart,
   User,
   Phone,
   MapPin,
@@ -25,12 +21,12 @@ import {
   EyeOff,
   Calendar,
   CreditCard,
-  Image as ImageIcon,
   Facebook,
   Play,
   Share2,
   Table,
-  Server
+  Globe,
+  BarChart
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -210,8 +206,9 @@ const OrdersManager: React.FC<{ orders: Order[], products: Product[], setOrders:
   );
 };
 
-const ProductsManager: React.FC<{ products: Product[], setProducts: (products: Product[]) => void }> = ({ products, setProducts }) => {
+const ProductsManager: React.FC<{ products: Product[], setProducts: React.Dispatch<React.SetStateAction<Product[]>> }> = ({ products, setProducts }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState('');
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     price: 0,
@@ -271,31 +268,51 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
     }
 
     if (editingId) {
-      const updated = products.map(p => p.id === editingId ? { ...p, ...formData } as Product : p);
-      setProducts(updated);
-      saveProducts(updated);
+      // 1. حساب القائمة المحدثة
+      const updatedList = products.map(p => 
+        p.id === editingId ? { ...p, ...formData } as Product : p
+      );
+      
+      // 2. تحديث الحالة في App.tsx
+      setProducts(updatedList);
+      
+      // 3. الحفظ الفوري في LocalStorage
+      saveProducts(updatedList);
+      
+      setSuccessMsg('تم تحديث المنتج بنجاح!');
       setEditingId(null);
     } else {
-      const product: Product = {
+      const newProduct: Product = {
         id: Math.random().toString(36).substr(2, 9),
-        name: formData.name,
+        name: formData.name || '',
         price: Number(formData.price),
-        category: formData.category as Category,
-        image: formData.image,
+        category: (formData.category as Category) || 'electronics',
+        image: formData.image || '',
         images: formData.images || [],
         description: formData.description || ''
       };
-      const updated = [product, ...products];
-      setProducts(updated);
-      saveProducts(updated);
+      
+      const newList = [newProduct, ...products];
+      setProducts(newList);
+      saveProducts(newList);
+      setSuccessMsg('تمت إضافة المنتج بنجاح!');
     }
     
+    // إعادة تعيين النموذج
     setFormData({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' });
+    setTimeout(() => setSuccessMsg(''), 3000);
   };
 
   const startEdit = (product: Product) => {
     setEditingId(product.id);
-    setFormData({ ...product, images: product.images || [] });
+    setFormData({
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      image: product.image,
+      images: product.images || [],
+      description: product.description
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -306,22 +323,28 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <h2 className="text-3xl font-black text-gray-900">إدارة المنتجات والمعرض</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-black text-gray-900">إدارة المنتجات والمعرض</h2>
+        {successMsg && (
+          <div className="bg-emerald-100 text-emerald-700 px-6 py-2 rounded-full font-black animate-bounce flex items-center gap-2">
+            <CheckCircle size={20} /> {successMsg}
+          </div>
+        )}
+      </div>
       
       <form onSubmit={handleSubmit} className={`bg-white p-8 rounded-[40px] shadow-sm border-2 transition-all ${editingId ? 'border-emerald-500 bg-emerald-50/10' : 'border-gray-100'} grid grid-cols-1 md:grid-cols-2 gap-8`}>
         <div className="col-span-full flex justify-between border-b pb-4">
-          <h3 className="text-xl font-black text-emerald-600">{editingId ? `تعديل: ${formData.name}` : 'إضافة منتج ومعرض صور'}</h3>
-          {editingId && <button type="button" onClick={cancelEdit} className="text-gray-400 font-bold text-sm"><CloseIcon size={16} /> إلغاء</button>}
+          <h3 className="text-xl font-black text-emerald-600">{editingId ? `تعديل المنتج: ${formData.name}` : 'إضافة منتج جديد'}</h3>
+          {editingId && <button type="button" onClick={cancelEdit} className="text-red-500 font-bold text-sm flex items-center gap-1"><CloseIcon size={16} /> إلغاء التعديل</button>}
         </div>
 
         <div className="md:col-span-1 space-y-4">
-          <label className="text-sm font-black text-gray-500">معرض صور المنتج (يمكنك رفع عدة صور)</label>
+          <label className="text-sm font-black text-gray-500">صور المنتج</label>
           <div onClick={() => fileInputRef.current?.click()} 
                className="border-4 border-dashed border-gray-100 rounded-[32px] p-8 bg-gray-50/50 hover:bg-white hover:border-emerald-200 transition-all cursor-pointer flex flex-col items-center justify-center text-center">
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleImagesUpload} />
             <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border flex items-center justify-center mb-4 text-gray-400"><Upload size={32} /></div>
             <p className="font-black text-gray-700">اضغط لرفع الصور</p>
-            <p className="text-xs text-gray-400">يمكنك اختيار أكثر من صورة في وقت واحد</p>
           </div>
 
           {formData.images && formData.images.length > 0 && (
@@ -367,15 +390,15 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
             <textarea className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 outline-none font-bold h-24"
               placeholder="وصف المنتج..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
           </div>
-          <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl flex items-center justify-center gap-3">
-            {editingId ? <Edit2 size={24} /> : <Plus size={24} />} {editingId ? 'تحديث المنتج' : 'إضافة للمتجر'}
+          <button type="submit" className={`w-full py-5 rounded-2xl font-black text-xl shadow-xl flex items-center justify-center gap-3 transition-all ${editingId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white`}>
+            {editingId ? <><Save size={24} /> حفظ التعديلات</> : <><Plus size={24} /> إضافة للمتجر</>}
           </button>
         </div>
       </form>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map(product => (
-          <div key={product.id} className="bg-white p-5 rounded-[32px] border border-gray-100 flex flex-col gap-4 group">
+          <div key={product.id} className={`bg-white p-5 rounded-[32px] border transition-all ${editingId === product.id ? 'border-emerald-500 scale-95 opacity-50' : 'border-gray-100'} flex flex-col gap-4 group`}>
             <div className="flex gap-4">
               <div className="relative">
                 <img src={product.image} className="w-20 h-20 rounded-2xl object-cover" alt="p" />
@@ -390,8 +413,8 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: (products: P
               </div>
             </div>
             <div className="flex border-t pt-4 gap-2">
-              <button onClick={() => startEdit(product)} className="flex-grow flex items-center justify-center gap-2 p-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold"><Edit2 size={16} /> تعديل</button>
-              <button onClick={() => {if(window.confirm('حذف؟')){const u = products.filter(p=>p.id!==product.id); setProducts(u); saveProducts(u);}}} className="p-3 text-red-300 hover:text-red-500"><Trash2 size={20} /></button>
+              <button onClick={() => startEdit(product)} className="flex-grow flex items-center justify-center gap-2 p-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-colors"><Edit2 size={16} /> تعديل</button>
+              <button onClick={() => {if(window.confirm('هل أنت متأكد من حذف المنتج؟')){const u = products.filter(p=>p.id!==product.id); setProducts(u); saveProducts(u);}}} className="p-3 text-red-300 hover:text-red-600 transition-colors"><Trash2 size={20} /></button>
             </div>
           </div>
         ))}
