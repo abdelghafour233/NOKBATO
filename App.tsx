@@ -35,44 +35,59 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) metaDescription.setAttribute('content', description);
 
-    // 2. Facebook Pixel Injection
+    // 2. Facebook Pixel Dynamic Injection
+    const fbScriptId = 'fb-pixel-logic';
+    const oldFbScript = document.getElementById(fbScriptId);
+    if (oldFbScript) oldFbScript.remove();
+
     if (settings.fbPixelId) {
-      const fbScriptId = 'fb-pixel-script';
-      if (!document.getElementById(fbScriptId)) {
-        const script = document.createElement('script');
-        script.id = fbScriptId;
-        script.text = `
-          !function(f,b,e,v,n,t,s)
-          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];
-          s.parentNode.insertBefore(t,s)}(window, document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '${settings.fbPixelId}');
-          ${settings.fbTestEventCode ? `fbq('set', 'test_event_code', '${settings.fbTestEventCode}');` : ''}
-          fbq('track', 'PageView');
-        `;
-        document.head.appendChild(script);
-      // Fix: Check window.fbq by casting to any to satisfy TypeScript
-      } else if ((window as any).fbq) {
-          // If already exists, just track page view on route change
-          // Fix: Access fbq via window cast to any to resolve 'Cannot find name fbq' errors
-          if (settings.fbTestEventCode) (window as any).fbq('set', 'test_event_code', settings.fbTestEventCode);
-          (window as any).fbq('track', 'PageView');
-      }
+      const script = document.createElement('script');
+      script.id = fbScriptId;
+      script.text = `
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${settings.fbPixelId}');
+        ${settings.fbTestEventCode ? `fbq('set', 'test_event_code', '${settings.fbTestEventCode}');` : ''}
+        fbq('track', 'PageView');
+      `;
+      document.head.appendChild(script);
     }
 
-    // 3. Custom Script Injection Logic
+    // 3. Custom Script Injection (Supports both pure JS and HTML Tags)
+    const customScriptId = 'custom-user-script-container';
+    let container = document.getElementById(customScriptId);
+    if (container) container.remove();
+
     if (settings.customScript) {
-      const scriptId = 'custom-user-script';
-      const oldScript = document.getElementById(scriptId);
-      if (oldScript) oldScript.remove();
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.text = settings.customScript;
-      document.body.appendChild(script);
+      // Create a container to hold the custom scripts/tags
+      const newContainer = document.createElement('div');
+      newContainer.id = customScriptId;
+      newContainer.style.display = 'none';
+      
+      // If the code doesn't start with <script, wrap it or handle carefully
+      // For best compatibility with Facebook/Google snippets, we use innerHTML
+      newContainer.innerHTML = settings.customScript;
+      
+      // Append scripts manually because innerHTML doesn't execute them
+      const scripts = newContainer.getElementsByTagName('script');
+      for (let i = 0; i < scripts.length; i++) {
+        const s = document.createElement('script');
+        if (scripts[i].src) {
+          s.src = scripts[i].src;
+          s.async = true;
+        } else {
+          s.text = scripts[i].text;
+        }
+        document.head.appendChild(s);
+      }
+      
+      document.head.appendChild(newContainer);
     }
   }, [location, settings]);
 
@@ -189,7 +204,7 @@ const App: React.FC = () => {
               <ul className="space-y-2 text-gray-500 font-bold">
                 <li><Link to="/category/watches" className="hover:text-emerald-600 transition-colors">الساعات الفاخرة</Link></li>
                 <li><Link to="/category/glasses" className="hover:text-emerald-600 transition-colors">النظارات العصرية</Link></li>
-                <li><Link to="/category/electronics" className="hover:text-emerald-600 transition-colors">الإلكترونيات</Link></li>
+                <li><Link to="/category/electronics" className="hover:text-emerald-600 transition-colors">إلكترونيات</Link></li>
                 <li><Link to="/category/home" className="hover:text-emerald-600 transition-colors">المنزل</Link></li>
               </ul>
             </div>

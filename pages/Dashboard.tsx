@@ -494,19 +494,21 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings:
               <Code size={28} />
             </div>
             <div>
-              <h3 className="text-2xl font-black text-gray-800">أكواد برمجية مخصصة (JS)</h3>
-              <p className="text-gray-400 font-bold text-sm">ضع هنا أكواد التتبع المخصصة أو أي كود JavaScript ترغب بحقنه في المتجر.</p>
+              <h3 className="text-2xl font-black text-gray-800">أكواد برمجية مخصصة (HTML/JS)</h3>
+              <p className="text-gray-400 font-bold text-sm">يمكنك هنا وضع أكواد Google Tag Manager أو أي سكربتات تتبع أخرى (تقبل وسوم &lt;script&gt;).</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <label className="text-indigo-600 font-black flex items-center gap-2">JavaScript Code</label>
+            <label className="text-indigo-600 font-black flex items-center gap-2">Custom Code / Tags</label>
             <textarea 
               className="w-full p-5 rounded-3xl border-2 border-indigo-50 bg-gray-900 text-emerald-400 font-mono focus:border-indigo-500 outline-none transition-all h-64 text-sm scrollbar-thin scrollbar-thumb-indigo-500"
               value={form.customScript} 
               onChange={e => setForm({...form, customScript: e.target.value})} 
-              placeholder="// اكتب كود جافا سكريبت هنا... 
-// مثال: console.log('Store Halal is running');" 
+              placeholder="<!-- الصق الكود هنا بالكامل مع الوسوم -->
+<script>
+  console.log('Store Halal is active');
+</script>" 
               dir="ltr"
             />
           </div>
