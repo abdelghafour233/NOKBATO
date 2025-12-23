@@ -26,7 +26,8 @@ import {
   Share2,
   Table,
   Globe,
-  BarChart
+  BarChart,
+  ShieldAlert
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -268,17 +269,11 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: React.Dispat
     }
 
     if (editingId) {
-      // 1. حساب القائمة المحدثة
       const updatedList = products.map(p => 
         p.id === editingId ? { ...p, ...formData } as Product : p
       );
-      
-      // 2. تحديث الحالة في App.tsx
       setProducts(updatedList);
-      
-      // 3. الحفظ الفوري في LocalStorage
       saveProducts(updatedList);
-      
       setSuccessMsg('تم تحديث المنتج بنجاح!');
       setEditingId(null);
     } else {
@@ -291,14 +286,11 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: React.Dispat
         images: formData.images || [],
         description: formData.description || ''
       };
-      
       const newList = [newProduct, ...products];
       setProducts(newList);
       saveProducts(newList);
       setSuccessMsg('تمت إضافة المنتج بنجاح!');
     }
-    
-    // إعادة تعيين النموذج
     setFormData({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' });
     setTimeout(() => setSuccessMsg(''), 3000);
   };
@@ -425,13 +417,22 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: React.Dispat
 
 const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings: AppSettings) => void }> = ({ settings, setSettings }) => {
   const [form, setForm] = useState(settings);
+  const [tempPassword, setTempPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSettings(form);
-    saveSettings(form);
+    
+    const updatedSettings = { ...form };
+    if (tempPassword.trim()) {
+      updatedSettings.adminPasswordHash = btoa(tempPassword);
+    }
+
+    setSettings(updatedSettings);
+    saveSettings(updatedSettings);
     setSaved(true);
+    setTempPassword('');
     setTimeout(() => setSaved(false), 2000);
   };
 
@@ -448,6 +449,43 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings:
 
       <form onSubmit={handleSubmit} className="space-y-10 pb-20">
         
+        {/* Security Settings - Password Change */}
+        <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
+          <div className="flex items-center gap-4 border-b pb-6">
+            <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center shadow-inner">
+              <Lock size={28} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-gray-800">إعدادات الأمان</h3>
+              <p className="text-gray-400 font-bold text-sm">تغيير كلمة مرور لوحة التحكم</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-red-600 font-black flex items-center gap-2">
+              <ShieldAlert size={20} /> كلمة المرور الجديدة
+            </label>
+            <div className="relative group">
+              <input 
+                type={showPass ? "text" : "password"}
+                className="w-full p-5 rounded-3xl border-2 border-red-50 bg-red-50/20 text-red-900 font-black focus:border-red-500 focus:bg-white outline-none transition-all placeholder:text-red-200"
+                value={tempPassword} 
+                onChange={e => setTempPassword(e.target.value)} 
+                placeholder="اتركه فارغاً إذا كنت لا ترغب في التغيير" 
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="absolute left-6 top-1/2 -translate-y-1/2 text-red-300 hover:text-red-600 transition-colors"
+              >
+                {showPass ? <EyeOff size={24} /> : <Eye size={24} />}
+              </button>
+            </div>
+            <p className="text-[10px] text-gray-400 font-bold italic mr-2">* كلمة المرور الافتراضية عند أول دخول هي: <span className="text-emerald-600" dir="ltr">halal2024</span></p>
+          </div>
+        </div>
+
         {/* Marketing Pixels Section */}
         <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8">
           <div className="flex items-center gap-4 border-b pb-6">
