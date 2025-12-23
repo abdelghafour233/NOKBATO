@@ -507,7 +507,7 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings:
               onChange={e => setForm({...form, customScript: e.target.value})} 
               placeholder="<!-- الصق الكود هنا بالكامل مع الوسوم -->
 <script>
-  console.log('Store Halal is active');
+  console.log('Store Brima is active');
 </script>" 
               dir="ltr"
             />
@@ -671,7 +671,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-inner">
             <Lock size={40} />
           </div>
-          <h2 className="text-2xl font-black text-gray-800 tracking-tight">إدارة ستور حلال</h2>
+          <h2 className="text-2xl font-black text-gray-800 tracking-tight">إدارة ستور بريمة</h2>
           <p className="text-gray-400 font-bold text-sm mt-1">يُرجى إدخال كلمة المرور للمتابعة</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-6">

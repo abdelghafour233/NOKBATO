@@ -70,7 +70,7 @@ export const getStoredSettings = (): AppSettings => {
     googleAnalyticsId: '',
     tiktokPixelId: '',
     googleSheetsUrl: '',
-    domainName: 'storehalal.com',
+    domainName: 'storebrima.com',
     nameServers: '',
     adminPasswordHash: 'aGFsYWwyMDI0',
     customScript: '' 

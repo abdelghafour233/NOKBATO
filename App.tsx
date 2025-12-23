@@ -19,16 +19,16 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
   useEffect(() => {
     // 1. Update Title & Meta based on Route
     const path = location.pathname;
-    let title = "ستور حلال - تسوق أفضل المنتجات";
+    let title = "ستور بريمة - تسوق أفضل المنتجات";
     let description = "اكتشف أفضل العروض على الإلكترونيات والساعات في المغرب.";
 
     if (path === '/') {
-      title = "الرئيسية | ستور حلال - جودة وسعر";
+      title = "الرئيسية | ستور بريمة - جودة وسعر";
     } else if (path.includes('/category/')) {
       const cat = path.split('/').pop();
-      title = `قسم ${cat} | ستور حلال`;
+      title = `قسم ${cat} | ستور بريمة`;
     } else if (path.includes('/product/')) {
-      title = "عرض المنتج | ستور حلال";
+      title = "عرض المنتج | ستور بريمة";
     }
 
     document.title = title;
@@ -65,16 +65,11 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
     if (container) container.remove();
 
     if (settings.customScript) {
-      // Create a container to hold the custom scripts/tags
       const newContainer = document.createElement('div');
       newContainer.id = customScriptId;
       newContainer.style.display = 'none';
-      
-      // If the code doesn't start with <script, wrap it or handle carefully
-      // For best compatibility with Facebook/Google snippets, we use innerHTML
       newContainer.innerHTML = settings.customScript;
       
-      // Append scripts manually because innerHTML doesn't execute them
       const scripts = newContainer.getElementsByTagName('script');
       for (let i = 0; i < scripts.length; i++) {
         const s = document.createElement('script');
@@ -86,7 +81,6 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
         }
         document.head.appendChild(s);
       }
-      
       document.head.appendChild(newContainer);
     }
   }, [location, settings]);
@@ -139,7 +133,7 @@ const App: React.FC = () => {
                   {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
                 <Link to="/" className="text-2xl font-black text-emerald-600 tracking-tight ml-4">
-                  ستور حلال
+                  ستور بريمة
                 </Link>
                 <div className="hidden lg:flex gap-6 mr-4">
                   <Link to="/" className="text-gray-600 hover:text-emerald-600 font-bold transition-colors">الرئيسية</Link>
@@ -196,7 +190,7 @@ const App: React.FC = () => {
         <footer className="bg-white border-t py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold text-emerald-600 mb-4 font-black">ستور حلال</h3>
+              <h3 className="text-xl font-bold text-emerald-600 mb-4 font-black">ستور بريمة</h3>
               <p className="text-gray-500 leading-relaxed font-medium">وجهتكم الأولى للتسوق الإلكتروني في المغرب. جودة عالية وأسعار منافسة وتوصيل سريع.</p>
             </div>
             <div>
@@ -204,7 +198,7 @@ const App: React.FC = () => {
               <ul className="space-y-2 text-gray-500 font-bold">
                 <li><Link to="/category/watches" className="hover:text-emerald-600 transition-colors">الساعات الفاخرة</Link></li>
                 <li><Link to="/category/glasses" className="hover:text-emerald-600 transition-colors">النظارات العصرية</Link></li>
-                <li><Link to="/category/electronics" className="hover:text-emerald-600 transition-colors">إلكترونيات</Link></li>
+                <li><Link to="/category/electronics" className="hover:text-emerald-600 transition-colors">الإلكترونيات</Link></li>
                 <li><Link to="/category/home" className="hover:text-emerald-600 transition-colors">المنزل</Link></li>
               </ul>
             </div>
@@ -225,7 +219,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="text-center mt-12 text-gray-400 border-t pt-8 font-bold">
-            &copy; 2024 ستور حلال. جميع الحقوق محفوظة.
+            &copy; 2024 ستور بريمة. جميع الحقوق محفوظة.
           </div>
         </footer>
       </div>
