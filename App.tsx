@@ -19,16 +19,16 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
   useEffect(() => {
     // 1. Update Title & Meta based on Route
     const path = location.pathname;
-    let title = "متجر بريمة - تسوق أفضل المنتجات";
+    let title = "ستور حلال - تسوق أفضل المنتجات";
     let description = "اكتشف أفضل العروض على الإلكترونيات والساعات في المغرب.";
 
     if (path === '/') {
-      title = "الرئيسية | متجر بريمة - جودة وسعر";
+      title = "الرئيسية | ستور حلال - جودة وسعر";
     } else if (path.includes('/category/')) {
       const cat = path.split('/').pop();
-      title = `قسم ${cat} | متجر بريمة`;
+      title = `قسم ${cat} | ستور حلال`;
     } else if (path.includes('/product/')) {
-      title = "عرض المنتج | متجر بريمة";
+      title = "عرض المنتج | ستور حلال";
     }
 
     document.title = title;
@@ -89,7 +89,7 @@ const App: React.FC = () => {
                   {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
                 <Link to="/" className="text-2xl font-black text-emerald-600 tracking-tight ml-4">
-                  متجر بريمة
+                  ستور حلال
                 </Link>
                 <div className="hidden lg:flex gap-6 mr-4">
                   <Link to="/" className="text-gray-600 hover:text-emerald-600 font-bold transition-colors">الرئيسية</Link>
@@ -146,7 +146,7 @@ const App: React.FC = () => {
         <footer className="bg-white border-t py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold text-emerald-600 mb-4 font-black">متجر بريمة</h3>
+              <h3 className="text-xl font-bold text-emerald-600 mb-4 font-black">ستور حلال</h3>
               <p className="text-gray-500 leading-relaxed font-medium">وجهتكم الأولى للتسوق الإلكتروني في المغرب. جودة عالية وأسعار منافسة وتوصيل سريع.</p>
             </div>
             <div>
@@ -175,7 +175,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="text-center mt-12 text-gray-400 border-t pt-8 font-bold">
-            &copy; 2024 متجر بريمة. جميع الحقوق محفوظة.
+            &copy; 2024 ستور حلال. جميع الحقوق محفوظة.
           </div>
         </footer>
       </div>

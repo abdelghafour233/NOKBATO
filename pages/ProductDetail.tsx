@@ -50,7 +50,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   useEffect(() => {
     if (product) {
       setActiveImage(product.image);
-      document.title = `${product.name} | متجر بريمة`;
+      document.title = `${product.name} | ستور حلال`;
       
       // Inject JSON-LD for Google Rich Snippets
       const schema = {
@@ -58,7 +58,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
         "@type": "Product",
         "name": product.name,
         "image": [product.image, ...(product.images || [])],
-        "description": product.description || `اشتري ${product.name} الآن من متجر بريمة بأفضل سعر في المغرب.`,
+        "description": product.description || `اشتري ${product.name} الآن من ستور حلال بأفضل سعر في المغرب.`,
         "sku": product.id,
         "offers": {
           "@type": "Offer",

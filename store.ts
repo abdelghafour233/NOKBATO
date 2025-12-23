@@ -69,9 +69,9 @@ export const getStoredSettings = (): AppSettings => {
     googleAnalyticsId: '',
     tiktokPixelId: '',
     googleSheetsUrl: '',
-    domainName: '',
+    domainName: 'storehalal.com',
     nameServers: '',
-    adminPasswordHash: 'YmVycmltYTIwMjQ=' // القيمة الافتراضية: berrima2024
+    adminPasswordHash: 'aGFsYWwyMDI0' // القيمة الافتراضية الجديدة: halal2024
   };
 };
 
