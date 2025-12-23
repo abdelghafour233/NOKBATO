@@ -66,13 +66,14 @@ export const getStoredSettings = (): AppSettings => {
   const stored = localStorage.getItem('settings');
   return stored ? JSON.parse(stored) : {
     fbPixelId: '',
+    fbTestEventCode: '', // افتراضي فارغ
     googleAnalyticsId: '',
     tiktokPixelId: '',
     googleSheetsUrl: '',
     domainName: 'storehalal.com',
     nameServers: '',
     adminPasswordHash: 'aGFsYWwyMDI0',
-    customScript: '' // القيمة الافتراضية فارغة
+    customScript: '' 
   };
 };
 

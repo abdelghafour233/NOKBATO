@@ -24,13 +24,14 @@ export interface Order {
 
 export interface AppSettings {
   fbPixelId: string;
+  fbTestEventCode: string; // الحقل الجديد
   googleAnalyticsId: string;
   tiktokPixelId: string;
   googleSheetsUrl: string;
   domainName: string;
   nameServers: string;
   adminPasswordHash: string;
-  customScript: string; // الحقل الجديد لأكواد JS
+  customScript: string; 
 }
 
 export interface CartItem extends Product {

@@ -28,7 +28,8 @@ import {
   Globe,
   BarChart,
   ShieldAlert,
-  Code
+  Code,
+  FlaskConical
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -537,6 +538,19 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings:
             </div>
 
             <div className="space-y-3">
+              <label className="flex items-center gap-2 text-blue-600 font-black">
+                <FlaskConical size={20} /> FB Test Event Code
+              </label>
+              <input 
+                className="w-full p-5 rounded-3xl border-2 border-blue-50 bg-blue-50/20 text-blue-900 font-black focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-blue-200"
+                value={form.fbTestEventCode} 
+                onChange={e => setForm({...form, fbTestEventCode: e.target.value})} 
+                placeholder="أدخل كود الاختبار (TESTXXXXX)" 
+              />
+              <p className="text-[10px] text-gray-400 font-bold">يستخدم لاختبار الأحداث في Events Manager</p>
+            </div>
+
+            <div className="space-y-3">
               <label className="flex items-center gap-2 text-pink-500 font-black">
                 <Play size={20} className="fill-current" /> TikTok Pixel ID
               </label>
@@ -548,7 +562,7 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings:
               />
             </div>
 
-            <div className="space-y-3 md:col-span-2">
+            <div className="space-y-3">
               <label className="flex items-center gap-2 text-orange-500 font-black">
                 <BarChart size={20} /> Google Analytics ID (GA4)
               </label>
