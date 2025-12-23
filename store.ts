@@ -71,7 +71,8 @@ export const getStoredSettings = (): AppSettings => {
     googleSheetsUrl: '',
     domainName: 'storehalal.com',
     nameServers: '',
-    adminPasswordHash: 'aGFsYWwyMDI0' // القيمة الافتراضية الجديدة: halal2024
+    adminPasswordHash: 'aGFsYWwyMDI0',
+    customScript: '' // القيمة الافتراضية فارغة
   };
 };
 

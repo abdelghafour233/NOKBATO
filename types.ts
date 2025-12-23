@@ -30,6 +30,7 @@ export interface AppSettings {
   domainName: string;
   nameServers: string;
   adminPasswordHash: string;
+  customScript: string; // الحقل الجديد لأكواد JS
 }
 
 export interface CartItem extends Product {

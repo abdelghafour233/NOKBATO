@@ -35,9 +35,18 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) metaDescription.setAttribute('content', description);
 
-    // 2. Pixel Injection Logic (Placeholder for real scripts)
-    if (settings.fbPixelId) {
-      console.log(`FB Pixel Active: ${settings.fbPixelId}`);
+    // 2. Custom Script Injection Logic
+    if (settings.customScript) {
+      const scriptId = 'custom-user-script';
+      // Remove old script if exists
+      const oldScript = document.getElementById(scriptId);
+      if (oldScript) oldScript.remove();
+
+      // Create new script element
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.text = settings.customScript;
+      document.body.appendChild(script);
     }
   }, [location, settings]);
 

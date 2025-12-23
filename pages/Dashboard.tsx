@@ -27,7 +27,8 @@ import {
   Table,
   Globe,
   BarChart,
-  ShieldAlert
+  ShieldAlert,
+  Code
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -482,7 +483,31 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings:
                 {showPass ? <EyeOff size={24} /> : <Eye size={24} />}
               </button>
             </div>
-            <p className="text-[10px] text-gray-400 font-bold italic mr-2">* كلمة المرور الافتراضية عند أول دخول هي: <span className="text-emerald-600" dir="ltr">halal2024</span></p>
+          </div>
+        </div>
+
+        {/* Custom Script Section */}
+        <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8">
+          <div className="flex items-center gap-4 border-b pb-6">
+            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
+              <Code size={28} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-gray-800">أكواد برمجية مخصصة (JS)</h3>
+              <p className="text-gray-400 font-bold text-sm">ضع هنا أكواد التتبع المخصصة أو أي كود JavaScript ترغب بحقنه في المتجر.</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-indigo-600 font-black flex items-center gap-2">JavaScript Code</label>
+            <textarea 
+              className="w-full p-5 rounded-3xl border-2 border-indigo-50 bg-gray-900 text-emerald-400 font-mono focus:border-indigo-500 outline-none transition-all h-64 text-sm scrollbar-thin scrollbar-thumb-indigo-500"
+              value={form.customScript} 
+              onChange={e => setForm({...form, customScript: e.target.value})} 
+              placeholder="// اكتب كود جافا سكريبت هنا... 
+// مثال: console.log('Store Halal is running');" 
+              dir="ltr"
+            />
           </div>
         </div>
 
