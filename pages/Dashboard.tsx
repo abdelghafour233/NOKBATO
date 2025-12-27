@@ -53,7 +53,8 @@ import {
   RotateCcw,
   PlusCircle,
   History,
-  Layout
+  Layout,
+  Key
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -484,6 +485,9 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
 const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = ({ settings, setSettings }) => {
   const [local, setLocal] = useState(settings);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [showPwdFields, setShowPwdFields] = useState(false);
 
   const handleReset = () => {
     if (confirm('⚠️ تنبيه هام: سيتم مسح كافة البيانات (منتجات، طلبات، إعدادات) وإرجاع المتجر لحالته الأصلية. هل أنت متأكد؟')) {
@@ -491,8 +495,39 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
     }
   };
 
+  const handlePasswordUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPasswordInput || !newPasswordInput) {
+      alert('يرجى ملء جميع الحقول');
+      return;
+    }
+
+    if (btoa(currentPasswordInput) !== settings.adminPasswordHash) {
+      alert('كلمة السر الحالية غير صحيحة!');
+      return;
+    }
+
+    if (newPasswordInput.length < 4) {
+      alert('كلمة السر الجديدة يجب أن تكون 4 أحرف على الأقل');
+      return;
+    }
+
+    const updatedSettings = {
+      ...settings,
+      adminPasswordHash: btoa(newPasswordInput)
+    };
+
+    setSettings(updatedSettings);
+    saveSettings(updatedSettings);
+    alert('تم تحديث كلمة السر بنجاح');
+    setCurrentPasswordInput('');
+    setNewPasswordInput('');
+    setShowPwdFields(false);
+  };
+
   return (
     <div className="space-y-8">
+      {/* General Settings */}
       <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
         <h3 className="text-xl font-black dark:text-white flex items-center justify-end gap-2">
            إعدادات التتبع والإعلانات <Facebook size={20} className="text-blue-600" />
@@ -552,6 +587,58 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
         <button onClick={() => { setSettings(local); saveSettings(local); alert('تم الحفظ بنجاح'); }} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
           <Save size={20} /> حفظ الإعدادات
         </button>
+      </div>
+
+      {/* Security Section */}
+      <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
+        <div className="flex items-center justify-end gap-2 text-gray-900 dark:text-white">
+          <h3 className="text-xl font-black">إعدادات الحماية</h3>
+          <Key size={20} className="text-amber-500" />
+        </div>
+        
+        {!showPwdFields ? (
+          <button 
+            onClick={() => setShowPwdFields(true)}
+            className="w-full py-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+          >
+            <Lock size={18} /> تغيير كلمة مرور لوحة التحكم
+          </button>
+        ) : (
+          <form onSubmit={handlePasswordUpdate} className="space-y-4 animate-in fade-in slide-in-from-top-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-black text-gray-500 mb-2">كلمة السر الحالية</label>
+                <input 
+                  required
+                  type="password"
+                  value={currentPasswordInput}
+                  onChange={e => setCurrentPasswordInput(e.target.value)}
+                  className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 dark:text-white focus:border-amber-500 outline-none font-bold text-center"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-gray-500 mb-2">كلمة السر الجديدة</label>
+                <input 
+                  required
+                  type="password"
+                  value={newPasswordInput}
+                  onChange={e => setNewPasswordInput(e.target.value)}
+                  className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 dark:text-white focus:border-emerald-500 outline-none font-bold text-center"
+                  placeholder="كلمة سر جديدة"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+               <button type="submit" className="flex-grow bg-amber-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-amber-600 transition-colors">
+                  تحديث الآن
+               </button>
+               <button type="button" onClick={() => setShowPwdFields(false)} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-2xl font-black">
+                  إلغاء
+               </button>
+            </div>
+          </form>
+        )}
       </div>
 
       {/* Danger Zone */}
