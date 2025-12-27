@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ستور بريمة - لوحة التحكم</title>
     
-    <!-- PWA Meta Tags - تجعل الموقع يفتح كتطبيق مستقل -->
+    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="بريمة أدمن">
@@ -90,7 +90,6 @@
         z-index: -1;
         animation: pulse-radar 2s infinite;
       }
-      /* تحسين عرض الهاتف كالتطبيق */
       @media (max-width: 768px) {
         .admin-footer-nav {
           position: fixed;
@@ -104,6 +103,7 @@
           padding: 12px 0;
           border-top: 1px solid #e5e7eb;
           z-index: 100;
+          padding-bottom: env(safe-area-inset-bottom);
         }
         .dark .admin-footer-nav {
           background: rgba(17, 24, 39, 0.9);
