@@ -60,9 +60,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isRadarActive, setIsRadarActive] = useState(false);
+  // تم تغيير الحالة الافتراضية إلى true لتكون نشطة دائماً
+  const [isRadarActive, setIsRadarActive] = useState(true);
   const location = useLocation();
   const lastOrderCount = useRef(orders.length);
+
+  useEffect(() => {
+    // طلب صلاحيات الإشعارات تلقائياً إذا كان الرادار نشطاً
+    if (isRadarActive && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, [isRadarActive]);
 
   useEffect(() => {
     if (!isRadarActive) return;
@@ -71,7 +79,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
       const currentOrders = getStoredOrders();
       if (currentOrders.length > lastOrderCount.current) {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        audio.play().catch(() => console.log('Audio blocked by browser'));
+        audio.play().catch(() => console.log('Audio playback requires user interaction first'));
         
         if ('vibrate' in navigator) {
           navigator.vibrate([200, 100, 200]);
@@ -98,15 +106,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
     };
   }, [isRadarActive, setOrders]);
 
-  const requestNotificationPermission = () => {
-    if ('Notification' in window) {
+  const toggleRadar = () => {
+    if (!isRadarActive && 'Notification' in window) {
       Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          setIsRadarActive(true);
-        }
+        setIsRadarActive(true);
       });
     } else {
-      setIsRadarActive(true);
+      setIsRadarActive(!isRadarActive);
     }
   };
 
@@ -170,7 +176,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
         </div>
         
         <button 
-          onClick={isRadarActive ? () => setIsRadarActive(false) : requestNotificationPermission}
+          onClick={toggleRadar}
           className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-black transition-all shadow-lg ${isRadarActive ? 'bg-emerald-600 text-white radar-pulse shadow-emerald-200' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-700'}`}
         >
           {isRadarActive ? <Radio className="animate-pulse" size={20} /> : <BellOff size={20} />}
