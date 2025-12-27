@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard, Watch, Glasses, Smartphone, Home, Car, ShoppingBag, Sun, Moon } from 'lucide-react';
+import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard, Watch, Glasses, Smartphone, Home, Car, ShoppingBag, Sun, Moon, Truck } from 'lucide-react';
 import { Product, Order, AppSettings, CartItem } from './types.ts';
 import { getStoredProducts, getStoredOrders, getStoredSettings, saveOrders } from './store.ts';
 
@@ -105,76 +105,88 @@ const App: React.FC = () => {
     <HashRouter>
       <SEOManager settings={settings} />
       <div className="min-h-screen flex flex-col font-cairo bg-[#FDFDFD] dark:bg-gray-950 transition-colors duration-300">
-        {/* Modern Navigation */}
-        <nav className="glass sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 shadow-sm transition-all">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 md:h-20 items-center">
-              <div className="flex items-center gap-2 md:gap-4">
-                <button 
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="lg:hidden p-2 rounded-xl hover:bg-emerald-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
-                  aria-label="القائمة"
-                >
-                  {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
-                <Link to="/" className="text-xl md:text-2xl font-black text-emerald-600 tracking-tight flex items-center gap-2">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <ShoppingBag size={20} />
-                  </div>
-                  <span className="hidden xs:inline dark:text-emerald-500">ستور بريمة</span>
-                </Link>
-                <div className="hidden lg:flex gap-6 mr-8 border-r dark:border-gray-800 pr-8">
-                  <Link to="/" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm">الرئيسية</Link>
-                  <Link to="/category/electronics" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Smartphone size={16}/> إلكترونيات</Link>
-                  <Link to="/category/watches" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Watch size={16}/> ساعات</Link>
-                  <Link to="/category/glasses" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Glasses size={16}/> نظارات</Link>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 md:gap-4">
-                {/* Dark Mode Toggle */}
-                <button 
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 md:p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-yellow-400 hover:scale-110 transition-all shadow-inner"
-                  title={darkMode ? "تبديل للنظام النهاري" : "تبديل للنظام الليلي"}
-                >
-                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-
-                <Link to="/dashboard" className="text-gray-400 hover:text-emerald-600 p-2 hidden sm:block transition-all" title="لوحة التحكم">
-                  <LayoutDashboard size={22} />
-                </Link>
-                
-                <Link to="/cart" className="relative p-2.5 md:p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" aria-label="سلة التسوق">
-                  <ShoppingCart size={20} className="md:w-6 md:h-6" />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-1 -left-1 bg-red-500 text-white text-[10px] w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full font-black shadow-lg animate-pulse">
-                      {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                    </span>
-                  )}
-                </Link>
-              </div>
+        
+        {/* Sticky Header Container */}
+        <div className="sticky top-0 z-50">
+          {/* Announcement Bar */}
+          <div className="bg-emerald-600 dark:bg-emerald-700 text-white py-2 text-center text-[10px] sm:text-xs md:text-sm font-black tracking-wide shadow-md flex items-center justify-center gap-2 overflow-hidden">
+            <div className="animate-pulse flex items-center gap-2">
+              <Truck size={16} className="hidden xs:block" />
+              التوصيل بالمجان والدفع عند الاستلام في جميع مدن المغرب 🇲🇦
             </div>
           </div>
 
-          {/* Mobile Menu Overlay */}
-          <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}></div>
-          <div className={`fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-900 shadow-2xl z-[60] transform transition-transform duration-300 lg:hidden ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-             <div className="p-6 border-b dark:border-gray-800 flex justify-between items-center">
-                <div className="text-xl font-black text-emerald-600 dark:text-emerald-500">القائمة</div>
-                <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg dark:text-gray-300"><X size={24}/></button>
-             </div>
-             <div className="p-4 space-y-2">
-                <Link to="/" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all">الرئيسية</Link>
-                <Link to="/category/electronics" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Smartphone size={20}/> إلكترونيات</Link>
-                <Link to="/category/watches" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Watch size={20}/> ساعات</Link>
-                <Link to="/category/glasses" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Glasses size={20}/> نظارات</Link>
-                <div className="pt-4 mt-4 border-t dark:border-gray-800">
-                  <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block p-4 bg-gray-900 dark:bg-emerald-600 text-white font-black rounded-xl text-center shadow-lg">لوحة التحكم</Link>
+          {/* Modern Navigation */}
+          <nav className="glass border-b border-gray-100 dark:border-gray-800 shadow-sm transition-all">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16 md:h-20 items-center">
+                <div className="flex items-center gap-2 md:gap-4">
+                  <button 
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="lg:hidden p-2 rounded-xl hover:bg-emerald-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
+                    aria-label="القائمة"
+                  >
+                    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                  </button>
+                  <Link to="/" className="text-xl md:text-2xl font-black text-emerald-600 tracking-tight flex items-center gap-2">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                      <ShoppingBag size={20} />
+                    </div>
+                    <span className="hidden xs:inline dark:text-emerald-500">ستور بريمة</span>
+                  </Link>
+                  <div className="hidden lg:flex gap-6 mr-8 border-r dark:border-gray-800 pr-8">
+                    <Link to="/" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm">الرئيسية</Link>
+                    <Link to="/category/electronics" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Smartphone size={16}/> إلكترونيات</Link>
+                    <Link to="/category/watches" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Watch size={16}/> ساعات</Link>
+                    <Link to="/category/glasses" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Glasses size={16}/> نظارات</Link>
+                  </div>
                 </div>
-             </div>
-          </div>
-        </nav>
+                
+                <div className="flex items-center gap-2 md:gap-4">
+                  {/* Dark Mode Toggle */}
+                  <button 
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="p-2 md:p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-yellow-400 hover:scale-110 transition-all shadow-inner"
+                    title={darkMode ? "تبديل للنظام النهاري" : "تبديل للنظام الليلي"}
+                  >
+                    {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                  </button>
+
+                  <Link to="/dashboard" className="text-gray-400 hover:text-emerald-600 p-2 hidden sm:block transition-all" title="لوحة التحكم">
+                    <LayoutDashboard size={22} />
+                  </Link>
+                  
+                  <Link to="/cart" className="relative p-2.5 md:p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" aria-label="سلة التسوق">
+                    <ShoppingCart size={20} className="md:w-6 md:h-6" />
+                    {cart.length > 0 && (
+                      <span className="absolute -top-1 -left-1 bg-red-500 text-white text-[10px] w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full font-black shadow-lg animate-pulse">
+                        {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Menu Overlay */}
+            <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}></div>
+            <div className={`fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-900 shadow-2xl z-[60] transform transition-transform duration-300 lg:hidden ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+              <div className="p-6 border-b dark:border-gray-800 flex justify-between items-center">
+                  <div className="text-xl font-black text-emerald-600 dark:text-emerald-500">القائمة</div>
+                  <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg dark:text-gray-300"><X size={24}/></button>
+              </div>
+              <div className="p-4 space-y-2">
+                  <Link to="/" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all">الرئيسية</Link>
+                  <Link to="/category/electronics" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Smartphone size={20}/> إلكترونيات</Link>
+                  <Link to="/category/watches" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Watch size={20}/> ساعات</Link>
+                  <Link to="/category/glasses" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Glasses size={20}/> نظارات</Link>
+                  <div className="pt-4 mt-4 border-t dark:border-gray-800">
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block p-4 bg-gray-900 dark:bg-emerald-600 text-white font-black rounded-xl text-center shadow-lg">لوحة التحكم</Link>
+                  </div>
+              </div>
+            </div>
+          </nav>
+        </div>
 
         {/* Content */}
         <main className="flex-grow">
