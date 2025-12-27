@@ -417,18 +417,61 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
 
 const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ products, setProducts }) => {
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState<Partial<Product>>({ name: '', price: 0, category: 'electronics', image: '', description: '' });
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState<Partial<Product>>({ 
+    name: '', 
+    price: 0, 
+    category: 'electronics', 
+    image: '', 
+    description: '' 
+  });
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const saveProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.image) return alert('أضف صورة');
-    const newProduct = { ...formData, id: Math.random().toString(36).substr(2, 9) } as Product;
-    const updated = [...products, newProduct];
-    setProducts(updated);
-    saveProducts(updated);
-    setShowModal(false);
+  const openAddModal = () => {
+    setEditingProduct(null);
     setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (product: Product) => {
+    setEditingProduct(product);
+    setFormData(product);
+    setShowModal(true);
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.image) return alert('يرجى إضافة صورة للمنتج');
+
+    let updatedProducts: Product[];
+
+    if (editingProduct) {
+      // تعديل منتج موجود
+      updatedProducts = products.map(p => 
+        p.id === editingProduct.id ? { ...formData, id: p.id } as Product : p
+      );
+      alert('تم تحديث المنتج بنجاح');
+    } else {
+      // إضافة منتج جديد
+      const newProduct = { 
+        ...formData, 
+        id: Math.random().toString(36).substr(2, 9) 
+      } as Product;
+      updatedProducts = [...products, newProduct];
+      alert('تم إضافة المنتج الجديد بنجاح');
+    }
+
+    setProducts(updatedProducts);
+    saveProducts(updatedProducts);
+    setShowModal(false);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) {
+      const updated = products.filter(p => p.id !== id);
+      setProducts(updated);
+      saveProducts(updated);
+    }
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -442,39 +485,152 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
   return (
     <div className="space-y-6">
-      <button onClick={() => setShowModal(true)} className="w-full bg-emerald-600 text-white p-4 rounded-2xl font-black flex items-center justify-center gap-2">
-        <Plus size={20} /> إضافة منتج
+      <button 
+        onClick={openAddModal} 
+        className="w-full bg-emerald-600 text-white p-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all"
+      >
+        <PlusCircle size={20} /> إضافة منتج جديد
       </button>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {products.map(p => (
-          <div key={p.id} className="bg-white dark:bg-gray-900 p-4 rounded-3xl border dark:border-gray-800 flex gap-4 items-center">
-            <img src={p.image} className="w-16 h-16 rounded-xl object-cover" alt="" />
-            <div className="flex-grow text-right">
-              <h4 className="font-black text-sm dark:text-white">{p.name}</h4>
-              <p className="text-emerald-600 font-black text-xs">{p.price.toLocaleString()} د.م.</p>
+          <div key={p.id} className="bg-white dark:bg-gray-900 p-4 rounded-3xl border border-gray-100 dark:border-gray-800 flex gap-4 items-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="relative group">
+              <img src={p.image} className="w-20 h-20 rounded-2xl object-cover shadow-sm" alt="" />
+              <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                 <ImageIcon size={20} className="text-white" />
+              </div>
             </div>
-            <button onClick={() => { setProducts(products.filter(pr=>pr.id!==p.id)); saveProducts(products.filter(pr=>pr.id!==p.id)); }} className="p-2 text-red-500"><Trash2 size={18}/></button>
+            
+            <div className="flex-grow text-right space-y-1">
+              <h4 className="font-black text-sm dark:text-white line-clamp-1">{p.name}</h4>
+              <div className="flex items-center justify-end gap-2">
+                 <span className="text-emerald-600 font-black text-sm">{p.price.toLocaleString()} د.م.</span>
+                 <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full font-bold">{p.category}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 border-r dark:border-gray-800 pr-4">
+              <button 
+                onClick={() => openEditModal(p)} 
+                className="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all"
+                title="تعديل"
+              >
+                <Edit2 size={16}/>
+              </button>
+              <button 
+                onClick={() => handleDelete(p.id)} 
+                className="p-2 bg-red-50 dark:bg-red-950/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                title="حذف"
+              >
+                <Trash2 size={16}/>
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {products.length === 0 && (
+        <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-200 dark:border-gray-800">
+          <Package size={48} className="mx-auto text-gray-200 mb-4" />
+          <p className="text-gray-400 font-black italic">لا توجد منتجات حالياً، أضف أول منتج لك!</p>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[40px] shadow-2xl p-6 md:p-8 animate-in zoom-in duration-300">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black dark:text-white">إضافة منتج</h3>
-              <button onClick={() => setShowModal(false)}><X size={24}/></button>
+              <h3 className="text-xl font-black dark:text-white">
+                {editingProduct ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+              </h3>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500">
+                <X size={24}/>
+              </button>
             </div>
-            <form onSubmit={saveProduct} className="space-y-4 text-right">
-              <div onClick={() => fileInput.current?.click()} className="border-2 border-dashed p-8 rounded-2xl text-center cursor-pointer dark:bg-gray-800 dark:border-gray-700">
-                {formData.image ? <img src={formData.image} className="w-20 h-20 mx-auto rounded-xl object-cover" /> : <Upload className="mx-auto text-gray-400" />}
-                <p className="text-xs font-bold text-gray-400 mt-2">انقر لتحميل الصورة</p>
+            <form onSubmit={handleSave} className="space-y-4 text-right">
+              <div 
+                onClick={() => fileInput.current?.click()} 
+                className="group relative border-2 border-dashed border-gray-100 dark:border-gray-800 p-8 rounded-[30px] text-center cursor-pointer dark:bg-gray-800/50 hover:border-emerald-500 transition-all overflow-hidden"
+              >
+                {formData.image ? (
+                  <div className="relative">
+                    <img src={formData.image} className="w-32 h-32 mx-auto rounded-2xl object-cover shadow-lg" />
+                    <div className="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                       <RefreshCw size={24} className="text-white animate-spin-slow" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-4">
+                    <Upload className="mx-auto text-emerald-500 mb-2" size={32} />
+                    <p className="text-sm font-black text-gray-500">انقر لتحميل صورة المنتج</p>
+                    <p className="text-[10px] text-gray-400 mt-1 font-bold">يفضل أن تكون الصورة مربعة وبجودة عالية</p>
+                  </div>
+                )}
                 <input type="file" ref={fileInput} onChange={handleUpload} className="hidden" accept="image/*" />
               </div>
-              <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white font-bold" placeholder="اسم المنتج" />
-              <input required type="number" value={formData.price} onChange={e=>setFormData({...formData, price:Number(e.target.value)})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white font-bold" placeholder="السعر" />
-              <textarea required rows={3} value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white font-bold" placeholder="الوصف"></textarea>
-              <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black">حفظ المنتج</button>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-black text-gray-400 mb-1 mr-2">اسم المنتج</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={formData.name} 
+                    onChange={e=>setFormData({...formData, name:e.target.value})} 
+                    className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all" 
+                    placeholder="مثال: هاتف سامسونج S23" 
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-black text-gray-400 mb-1 mr-2">السعر (د.م.)</label>
+                    <input 
+                      required 
+                      type="number" 
+                      value={formData.price} 
+                      onChange={e=>setFormData({...formData, price:Number(e.target.value)})} 
+                      className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all" 
+                      placeholder="0.00" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-gray-400 mb-1 mr-2">التصنيف</label>
+                    <select 
+                      value={formData.category} 
+                      onChange={e=>setFormData({...formData, category:e.target.value as any})} 
+                      className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="electronics">إلكترونيات</option>
+                      <option value="watches">ساعات</option>
+                      <option value="glasses">نظارات</option>
+                      <option value="home">منزل</option>
+                      <option value="cars">سيارات</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-gray-400 mb-1 mr-2">وصف المنتج</label>
+                  <textarea 
+                    required 
+                    rows={4} 
+                    value={formData.description} 
+                    onChange={e=>setFormData({...formData, description:e.target.value})} 
+                    className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all resize-none" 
+                    placeholder="اكتب تفاصيل المنتج ومميزاته هنا..."
+                  ></textarea>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                {editingProduct ? <Save size={20}/> : <Plus size={20}/>}
+                {editingProduct ? 'حفظ التغييرات' : 'إضافة للمتجر الآن'}
+              </button>
             </form>
           </div>
         </div>
