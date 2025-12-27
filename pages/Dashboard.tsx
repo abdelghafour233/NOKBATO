@@ -30,9 +30,11 @@ import {
   Smartphone,
   LayoutDashboard,
   LogOut,
-  // Fix: Added missing Facebook and FlaskConical icons to resolve errors on lines 463 and 467
   Facebook,
-  FlaskConical
+  FlaskConical,
+  // إضافة الأيقونات الجديدة
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -47,6 +49,7 @@ interface DashboardPageProps {
 const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, settings, setProducts, setOrders, setSettings }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // حالة إظهار كلمة المرور
   const [isRadarActive, setIsRadarActive] = useState(false);
   const location = useLocation();
   const lastOrderCount = useRef(orders.length);
@@ -124,14 +127,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
             <h1 className="text-3xl font-black dark:text-white">دخول الإدارة</h1>
             <p className="text-gray-400 font-bold">يرجى إدخال كلمة المرور للمتابعة</p>
           </div>
-          <input 
-            type="password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none text-center text-2xl tracking-widest"
-            placeholder="••••••••"
-            autoFocus
-          />
+          
+          <div className="relative group">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none text-center text-2xl tracking-widest transition-all"
+              placeholder="••••••••"
+              autoFocus
+            />
+            <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors p-2"
+            >
+              {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+            </button>
+          </div>
+
           <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-black text-xl shadow-xl transition-all">
             تسجيل الدخول
           </button>
