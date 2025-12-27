@@ -1,19 +1,73 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types.ts';
-import { ShoppingBag, ChevronLeft, Star, Truck, ShieldCheck, Headphones, Zap, Gift, ArrowRight, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, Star, Truck, ShieldCheck, Headphones, Zap, Gift, ArrowRight, Facebook, Twitter, MessageCircle, Copy, Check } from 'lucide-react';
 
 interface HomePageProps {
   products: Product[];
 }
+
+const ProductCard: React.FC<{ product: Product, shareUrl: string }> = ({ product, shareUrl }) => {
+  const [copied, setCopied] = useState(false);
+  const productLink = `${shareUrl}/#/product/${product.id}`;
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(productLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-3xl md:rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl dark:hover:shadow-emerald-900/10 transition-all group border border-gray-100 dark:border-gray-700 flex flex-col h-full">
+      <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] overflow-hidden">
+        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col gap-1 md:gap-2">
+          <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-2 md:px-3 py-1 rounded-full text-[8px] md:text-[10px] font-black text-emerald-600 dark:text-emerald-400 shadow-sm uppercase tracking-wider">Premium</div>
+        </div>
+      </Link>
+      <div className="p-4 md:p-6 flex flex-col flex-grow">
+        <h3 className="text-sm md:text-lg font-black text-gray-900 dark:text-white mb-2 line-clamp-1">{product.name}</h3>
+        <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl mb-4">
+          {product.price.toLocaleString()} <span className="text-[10px] md:text-sm">د.م.</span>
+        </div>
+        
+        {/* Social Share Buttons with Copy Link */}
+        <div className="flex items-center gap-2 mt-auto pt-4 border-t dark:border-gray-700">
+          <span className="text-[9px] font-black text-gray-400 hidden sm:block">مشاركة:</span>
+          <div className="flex gap-2">
+            <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + productLink)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
+              <MessageCircle size={14} />
+            </a>
+            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productLink)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+              <Facebook size={14} />
+            </a>
+            <button 
+              onClick={handleCopy}
+              className={`p-2 rounded-lg transition-all ${copied ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'}`}
+              title="نسخ الرابط"
+            >
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+            </button>
+          </div>
+          <Link to={`/product/${product.id}`} className="mr-auto w-8 h-8 md:w-10 md:h-10 bg-emerald-600 text-white rounded-lg flex items-center justify-center hover:bg-emerald-700 transition-all shadow-lg">
+            <ShoppingBag size={16} />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HomePage: React.FC<HomePageProps> = ({ products }) => {
   const shareUrl = window.location.origin;
 
   return (
     <div className="overflow-hidden transition-colors duration-300">
-      {/* Refined Hero Section */}
+      {/* Hero Section */}
       <section className="relative bg-white dark:bg-gray-950 pt-8 pb-16 lg:pt-16 lg:pb-28 px-4 overflow-hidden">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
           <div className="lg:w-1/2 space-y-6 md:space-y-8 text-center lg:text-right z-10 animate-in fade-in slide-in-from-right duration-1000">
@@ -90,7 +144,7 @@ const HomePage: React.FC<HomePageProps> = ({ products }) => {
         </div>
       </section>
 
-      {/* Product Grid with Social Sharing */}
+      {/* Product Grid */}
       <section className="py-16 md:py-24 max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div className="text-right">
@@ -104,39 +158,7 @@ const HomePage: React.FC<HomePageProps> = ({ products }) => {
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-8">
           {products.map(product => (
-            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-3xl md:rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl dark:hover:shadow-emerald-900/10 transition-all group border border-gray-100 dark:border-gray-700 flex flex-col h-full">
-              <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] overflow-hidden">
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col gap-1 md:gap-2">
-                  <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-2 md:px-3 py-1 rounded-full text-[8px] md:text-[10px] font-black text-emerald-600 dark:text-emerald-400 shadow-sm uppercase tracking-wider">Premium</div>
-                </div>
-              </Link>
-              <div className="p-4 md:p-6 flex flex-col flex-grow">
-                <h3 className="text-sm md:text-lg font-black text-gray-900 dark:text-white mb-2 line-clamp-1">{product.name}</h3>
-                <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl mb-4">
-                  {product.price.toLocaleString()} <span className="text-[10px] md:text-sm">د.م.</span>
-                </div>
-                
-                {/* Social Share Buttons */}
-                <div className="flex items-center gap-2 mt-auto pt-4 border-t dark:border-gray-700">
-                  <span className="text-[9px] font-black text-gray-400 hidden sm:block">مشاركة:</span>
-                  <div className="flex gap-2">
-                    <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
-                      <MessageCircle size={14} />
-                    </a>
-                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                      <Facebook size={14} />
-                    </a>
-                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-50 text-gray-900 dark:text-white dark:bg-gray-700 rounded-lg hover:bg-black hover:text-white transition-all">
-                      <Twitter size={14} />
-                    </a>
-                  </div>
-                  <Link to={`/product/${product.id}`} className="mr-auto w-8 h-8 md:w-10 md:h-10 bg-emerald-600 text-white rounded-lg flex items-center justify-center hover:bg-emerald-700 transition-all shadow-lg">
-                    <ShoppingBag size={16} />
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <ProductCard key={product.id} product={product} shareUrl={shareUrl} />
           ))}
         </div>
       </section>

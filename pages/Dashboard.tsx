@@ -32,7 +32,6 @@ import {
   LogOut,
   Facebook,
   FlaskConical,
-  // إضافة الأيقونات الجديدة
   Eye,
   EyeOff
 } from 'lucide-react';
@@ -49,7 +48,7 @@ interface DashboardPageProps {
 const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, settings, setProducts, setOrders, setSettings }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // حالة إظهار كلمة المرور
+  const [showPassword, setShowPassword] = useState(false);
   const [isRadarActive, setIsRadarActive] = useState(false);
   const location = useLocation();
   const lastOrderCount = useRef(orders.length);
@@ -83,10 +82,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
       }
     };
 
-    // مراقبة التغييرات في التخزين المحلي (في حال تم الطلب من تبويب آخر)
     window.addEventListener('storage', checkForNewOrders);
-    
-    // فحص دوري كل 5 ثواني احتياطاً
     const interval = setInterval(checkForNewOrders, 5000);
 
     return () => {
@@ -121,7 +117,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <form onSubmit={handleLogin} className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-md space-y-8">
           <div className="text-center space-y-2">
-            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
               <Lock size={40} />
             </div>
             <h1 className="text-3xl font-black dark:text-white">دخول الإدارة</h1>
@@ -133,20 +129,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
               type={showPassword ? "text" : "password"} 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none text-center text-2xl tracking-widest transition-all"
+              className="w-full p-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none text-center text-2xl tracking-widest transition-all pr-14 pl-14"
               placeholder="••••••••"
               autoFocus
             />
+            {/* أيقونة العين المحسنة */}
             <button 
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors p-2"
+              className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all p-2 rounded-xl hover:bg-emerald-50 dark:hover:bg-gray-700 ${showPassword ? 'text-emerald-600 scale-110' : 'text-gray-400'}`}
+              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
             >
               {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
             </button>
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none group-focus-within:text-emerald-500 transition-colors">
+               <Lock size={20} />
+            </div>
           </div>
 
-          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-black text-xl shadow-xl transition-all">
+          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-black text-xl shadow-xl transition-all active:scale-95 shadow-emerald-100 dark:shadow-none">
             تسجيل الدخول
           </button>
         </form>
@@ -156,7 +157,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 pb-32 lg:pb-8">
-      {/* Header Dashboard with Radar */}
+      {/* Header Dashboard */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
         <div>
           <h1 className="text-4xl font-black dark:text-white mb-2">لوحة التحكم</h1>
@@ -173,7 +174,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Sidebar Nav - Desktop */}
         <aside className="lg:col-span-3 hidden lg:block space-y-2">
           <Link to="/dashboard" className={`flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${location.pathname === '/dashboard' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-100' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
             <BarChart size={20} /> الإحصائيات
@@ -197,7 +197,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
           </button>
         </aside>
 
-        {/* Main Content Area */}
         <main className="lg:col-span-9">
           <Routes>
             <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
@@ -208,7 +207,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
         </main>
       </div>
 
-      {/* Mobile App Navigation Bar */}
       <nav className="admin-footer-nav lg:hidden">
         <Link to="/dashboard" className={`flex flex-col items-center gap-1 ${location.pathname === '/dashboard' ? 'text-emerald-600' : 'text-gray-400'}`}>
           <BarChart size={24} />
@@ -237,7 +235,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 };
 
 // --- Sub-components (Stats, Orders, Products, Settings) ---
-
 const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ orders, products }) => {
   const totalSales = orders.reduce((sum, o) => sum + o.totalPrice, 0);
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
