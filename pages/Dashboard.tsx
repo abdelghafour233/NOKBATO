@@ -8,8 +8,7 @@ import {
   getStoredOrders, 
   getStoredDeletedOrders,
   getStoredProducts,
-  getStoredSettings,
-  factoryReset 
+  getStoredSettings 
 } from '../store';
 import { 
   Settings, 
@@ -508,14 +507,6 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setPr
           </div>
         </div>
         <button onClick={() => { setSettings(local); saveSettings(local); alert('✅ تم حفظ كافة الإعدادات بنجاح'); }} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all">حفظ الإعدادات</button>
-      </div>
-
-      <div className="bg-red-50 dark:bg-red-900/10 p-10 rounded-[50px] border border-red-100 dark:border-red-900/20 text-center">
-        <h3 className="text-xl font-black text-red-600 mb-6 flex items-center justify-center gap-3"><AlertTriangle size={24} /> منطقة الخطر</h3>
-        <p className="text-sm font-bold text-red-400 mb-8 px-4 leading-relaxed">تنبيه: زر إعادة ضبط المصنع سيقوم بمسح كافة المنتجات والطلبات والإعدادات نهائياً ولا يمكن التراجع.</p>
-        <button onClick={factoryReset} className="w-full max-w-sm mx-auto bg-white dark:bg-gray-950 text-red-600 border-2 border-red-200 py-5 rounded-3xl font-black hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3">
-          <RefreshCw size={20}/> مسح كل البيانات والبدء من جديد
-        </button>
       </div>
     </div>
   );
