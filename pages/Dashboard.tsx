@@ -400,6 +400,8 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                     <option value="electronics">إلكترونيات</option>
                     <option value="watches">ساعات</option>
                     <option value="glasses">نظارات</option>
+                    <option value="cars">السيارات</option>
+                    <option value="home">مستلزمات المنزل</option>
                   </select>
                 </div>
 

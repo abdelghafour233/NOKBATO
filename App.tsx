@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard, Watch, Glasses, Smartphone, Home, Car, ShoppingBag, Sun, Moon, Truck } from 'lucide-react';
@@ -148,11 +147,13 @@ const App: React.FC = () => {
                     </div>
                     <span className="hidden xs:inline dark:text-emerald-500">ستور بريمة</span>
                   </Link>
-                  <div className="hidden lg:flex gap-6 mr-8 border-r dark:border-gray-800 pr-8">
-                    <Link to="/" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm">الرئيسية</Link>
-                    <Link to="/category/electronics" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Smartphone size={16}/> إلكترونيات</Link>
-                    <Link to="/category/watches" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Watch size={16}/> ساعات</Link>
-                    <Link to="/category/glasses" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-sm flex items-center gap-1"><Glasses size={16}/> نظارات</Link>
+                  <div className="hidden lg:flex gap-4 xl:gap-6 mr-6 xl:mr-8 border-r dark:border-gray-800 pr-6 xl:pr-8">
+                    <Link to="/" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm">الرئيسية</Link>
+                    <Link to="/category/electronics" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Smartphone size={16}/> إلكترونيات</Link>
+                    <Link to="/category/watches" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Watch size={16}/> ساعات</Link>
+                    <Link to="/category/glasses" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Glasses size={16}/> نظارات</Link>
+                    <Link to="/category/cars" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Car size={16}/> السيارات</Link>
+                    <Link to="/category/home" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Home size={16}/> المنزل</Link>
                   </div>
                 </div>
                 
@@ -189,11 +190,13 @@ const App: React.FC = () => {
                   <div className="text-xl font-black text-emerald-600 dark:text-emerald-500">القائمة</div>
                   <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg dark:text-gray-300"><X size={24}/></button>
               </div>
-              <div className="p-4 space-y-2">
+              <div className="p-4 space-y-2 h-[calc(100%-80px)] overflow-y-auto">
                   <Link to="/" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all">الرئيسية</Link>
                   <Link to="/category/electronics" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Smartphone size={20}/> إلكترونيات</Link>
                   <Link to="/category/watches" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Watch size={20}/> ساعات</Link>
                   <Link to="/category/glasses" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Glasses size={20}/> نظارات</Link>
+                  <Link to="/category/cars" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Car size={20}/> السيارات</Link>
+                  <Link to="/category/home" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Home size={20}/> مستلزمات المنزل</Link>
                   <div className="pt-4 mt-4 border-t dark:border-gray-800">
                     <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block p-4 bg-gray-900 dark:bg-emerald-600 text-white font-black rounded-xl text-center shadow-lg">لوحة التحكم</Link>
                   </div>
@@ -227,6 +230,7 @@ const App: React.FC = () => {
                 <li><Link to="/category/watches" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">الساعات الفاخرة</Link></li>
                 <li><Link to="/category/glasses" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">النظارات العصرية</Link></li>
                 <li><Link to="/category/electronics" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">الإلكترونيات</Link></li>
+                <li><Link to="/category/cars" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">السيارات</Link></li>
               </ul>
             </div>
             <div>
