@@ -1,6 +1,9 @@
 
 import { Product, Order, AppSettings } from './types';
 
+// تغيير هذا الرقم سيجبر المتصفح على تحديث المنتجات لدى جميع المستخدمين
+const DATA_VERSION = "1.2"; 
+
 export const INITIAL_PRODUCTS: Product[] = [
   {
     id: '1',
@@ -53,6 +56,15 @@ export const INITIAL_PRODUCTS: Product[] = [
 ];
 
 export const getStoredProducts = (): Product[] => {
+  const currentVersion = localStorage.getItem('data_version');
+  
+  // إذا كان الإصدار مختلفاً، نقوم بتحديث البيانات الافتراضية
+  if (currentVersion !== DATA_VERSION) {
+    localStorage.setItem('products', JSON.stringify(INITIAL_PRODUCTS));
+    localStorage.setItem('data_version', DATA_VERSION);
+    return INITIAL_PRODUCTS;
+  }
+
   const stored = localStorage.getItem('products');
   return stored ? JSON.parse(stored) : INITIAL_PRODUCTS;
 };
@@ -66,7 +78,7 @@ export const getStoredSettings = (): AppSettings => {
   const stored = localStorage.getItem('settings');
   return stored ? JSON.parse(stored) : {
     fbPixelId: '',
-    fbTestEventCode: '', // افتراضي فارغ
+    fbTestEventCode: '', 
     googleAnalyticsId: '',
     tiktokPixelId: '',
     googleSheetsUrl: '',
@@ -80,3 +92,8 @@ export const getStoredSettings = (): AppSettings => {
 export const saveProducts = (products: Product[]) => localStorage.setItem('products', JSON.stringify(products));
 export const saveOrders = (orders: Order[]) => localStorage.setItem('orders', JSON.stringify(orders));
 export const saveSettings = (settings: AppSettings) => localStorage.setItem('settings', JSON.stringify(settings));
+
+export const factoryReset = () => {
+  localStorage.clear();
+  window.location.reload();
+};

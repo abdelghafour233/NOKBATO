@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Product, Order, AppSettings, Category } from '../types';
-import { saveProducts, saveOrders, saveSettings, getStoredOrders, getStoredProducts } from '../store';
+import { saveProducts, saveOrders, saveSettings, getStoredOrders, getStoredProducts, factoryReset } from '../store';
 import { 
   Settings, 
   Package, 
@@ -37,7 +37,9 @@ import {
   Upload,
   Image as ImageIcon,
   ChevronDown,
-  X
+  X,
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -349,20 +351,46 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
 const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = ({ settings, setSettings }) => {
   const [local, setLocal] = useState(settings);
+
+  const handleReset = () => {
+    if (confirm('⚠️ تنبيه هام: سيتم مسح كافة البيانات (منتجات، طلبات، إعدادات) وإرجاع المتجر لحالته الأصلية. هل أنت متأكد؟')) {
+      factoryReset();
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
-      <h3 className="text-xl font-black dark:text-white">الإعدادات</h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs font-bold text-gray-400 mb-1">Facebook Pixel ID</label>
-          <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white" />
+    <div className="space-y-8">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
+        <h3 className="text-xl font-black dark:text-white flex items-center justify-end gap-2">
+           الإعدادات العامة <Settings size={20} className="text-gray-400" />
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-400 mb-1">Facebook Pixel ID</label>
+            <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 mb-1">أكواد مخصصة (Header)</label>
+            <textarea rows={4} value={local.customScript} onChange={e=>setLocal({...local, customScript:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white font-mono text-xs"></textarea>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 mb-1">أكواد مخصصة (Header)</label>
-          <textarea rows={4} value={local.customScript} onChange={e=>setLocal({...local, customScript:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white font-mono text-xs"></textarea>
-        </div>
+        <button onClick={() => { setSettings(local); saveSettings(local); alert('تم الحفظ بنجاح'); }} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg">حفظ الإعدادات</button>
       </div>
-      <button onClick={() => { setSettings(local); saveSettings(local); alert('تم الحفظ'); }} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black">حفظ الإعدادات</button>
+
+      {/* Danger Zone */}
+      <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-[35px] border border-red-100 dark:border-red-900/30 space-y-4 text-right">
+        <div className="flex items-center justify-end gap-2 text-red-600">
+           <h3 className="text-lg font-black">إدارة البيانات (منطقة الخطر)</h3>
+           <AlertTriangle size={20} />
+        </div>
+        <p className="text-red-500 text-xs font-bold">إذا كانت التغييرات لا تظهر أو تريد مسح "الأرشفة القديمة" تماماً، استخدم الزر أدناه:</p>
+        <button 
+          onClick={handleReset}
+          className="w-full bg-white dark:bg-gray-900 text-red-600 border-2 border-red-200 dark:border-red-900/50 py-4 rounded-2xl font-black hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"
+        >
+          <RefreshCw size={18} /> إعادة ضبط المصنع ومسح التخزين المؤقت
+        </button>
+      </div>
     </div>
   );
 };
