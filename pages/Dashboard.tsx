@@ -35,7 +35,9 @@ import {
   Eye,
   EyeOff,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronDown,
+  X
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -46,6 +48,13 @@ interface DashboardPageProps {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
 }
+
+const MOROCCAN_CITIES = [
+  "الدار البيضاء", "الرباط", "مراكش", "فاس", "طنجة", "أغادير", "مكناس", 
+  "وجدة", "القنيطرة", "تطوان", "تمارة", "سلا", "آسفي", "العيون", 
+  "المحمدية", "بني ملال", "الجديدة", "تازة", "الناظور", "سطات", 
+  "خريبكة", "القصر الكبير", "العرائش", "الخميسات", "تارودانت"
+];
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, settings, setProducts, setOrders, setSettings }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -262,6 +271,8 @@ const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ ord
 };
 
 const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, setOrders }) => {
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+
   const updateStatus = (id: string, status: Order['status']) => {
     const updated = orders.map(o => o.id === id ? { ...o, status } : o);
     setOrders(updated);
@@ -274,6 +285,15 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
       setOrders(updated);
       saveOrders(updated);
     }
+  };
+
+  const handleEditSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+    const updated = orders.map(o => o.id === editingOrder.id ? editingOrder : o);
+    setOrders(updated);
+    saveOrders(updated);
+    setEditingOrder(null);
   };
 
   return (
@@ -292,8 +312,17 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                   <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center dark:text-white">
                     <User size={20} />
                   </div>
-                  <div>
-                    <h3 className="font-black text-xl dark:text-white">{order.fullName}</h3>
+                  <div className="flex-grow">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-black text-xl dark:text-white">{order.fullName}</h3>
+                      <button 
+                        onClick={() => setEditingOrder(order)}
+                        className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all"
+                        title="تعديل بيانات الطلب"
+                      >
+                        <Edit2 size={20} />
+                      </button>
+                    </div>
                     <div className="text-gray-400 font-bold text-xs flex items-center gap-2">
                        <Calendar size={12} /> {new Date(order.date).toLocaleDateString('ar-MA')}
                     </div>
@@ -337,6 +366,93 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
             </div>
           </div>
         ))
+      )}
+
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b dark:border-gray-800 flex justify-between items-center">
+               <h3 className="text-2xl font-black dark:text-white">تعديل بيانات الطلب</h3>
+               <button onClick={() => setEditingOrder(null)} className="text-gray-400 hover:text-gray-600"><X size={32}/></button>
+            </div>
+            <form onSubmit={handleEditSave} className="p-8 space-y-6">
+               <div className="space-y-2">
+                  <label className="font-black text-sm text-gray-500 dark:text-gray-400">الاسم الكامل للزبون</label>
+                  <div className="relative">
+                    <User className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
+                    <input 
+                      required 
+                      type="text" 
+                      value={editingOrder.fullName} 
+                      onChange={e => setEditingOrder({...editingOrder, fullName: e.target.value})} 
+                      className="w-full p-4 pr-12 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" 
+                    />
+                  </div>
+               </div>
+               
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">رقم الهاتف</label>
+                    <div className="relative">
+                      <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
+                      <input 
+                        required 
+                        type="tel" 
+                        value={editingOrder.phone} 
+                        onChange={e => setEditingOrder({...editingOrder, phone: e.target.value})} 
+                        className="w-full p-4 pr-12 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold text-right" 
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">المدينة</label>
+                    <div className="relative">
+                      <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 z-10" size={18} />
+                      <select 
+                        required 
+                        value={editingOrder.city} 
+                        onChange={e => setEditingOrder({...editingOrder, city: e.target.value})} 
+                        className="w-full p-4 pr-12 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer"
+                      >
+                        {MOROCCAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
+                      </select>
+                      <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                    </div>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">المبلغ الإجمالي (د.م.)</label>
+                    <input 
+                      required 
+                      type="number" 
+                      value={editingOrder.totalPrice} 
+                      onChange={e => setEditingOrder({...editingOrder, totalPrice: Number(e.target.value)})} 
+                      className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">حالة الطلب</label>
+                    <select 
+                      value={editingOrder.status} 
+                      onChange={e => setEditingOrder({...editingOrder, status: e.target.value as any})} 
+                      className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer"
+                    >
+                      <option value="pending">قيد الانتظار</option>
+                      <option value="shipped">تم الشحن</option>
+                      <option value="delivered">تم التوصيل</option>
+                    </select>
+                  </div>
+               </div>
+
+               <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
+                 <Save size={24} /> حفظ البيانات المعدلة
+               </button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
