@@ -1,7 +1,8 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Product, Order, AppSettings, Category } from '../types';
-import { saveProducts, saveOrders, saveSettings } from '../store';
+import { saveProducts, saveOrders, saveSettings, getStoredOrders, getStoredProducts } from '../store';
 import { 
   Settings, 
   Package, 
@@ -11,24 +12,26 @@ import {
   Save, 
   Lock,
   Edit2,
-  Upload,
-  X as CloseIcon,
   CheckCircle,
   User,
   Phone,
   MapPin,
-  Eye,
-  EyeOff,
   Calendar,
   CreditCard,
-  Facebook,
-  Play,
-  Share2,
   Table,
   Globe,
   BarChart,
   ShieldAlert,
   Code,
+  Bell,
+  BellOff,
+  Radio,
+  ExternalLink,
+  Smartphone,
+  LayoutDashboard,
+  LogOut,
+  // Fix: Added missing Facebook and FlaskConical icons to resolve errors on lines 463 and 467
+  Facebook,
   FlaskConical
 } from 'lucide-react';
 
@@ -41,659 +44,96 @@ interface DashboardPageProps {
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
 }
 
-const OrdersManager: React.FC<{ orders: Order[], products: Product[], setOrders: (orders: Order[]) => void }> = ({ orders, products, setOrders }) => {
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
-
-  const updateStatus = (orderId: string, status: Order['status']) => {
-    const updated = orders.map(o => o.id === orderId ? { ...o, status } : o);
-    setOrders(updated);
-    saveOrders(updated);
-  };
-
-  const deleteOrder = (orderId: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-      const updated = orders.filter(o => o.id !== orderId);
-      setOrders(updated);
-      saveOrders(updated);
-    }
-  };
-
-  const handleEditOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingOrder) return;
-
-    const updated = orders.map(o => o.id === editingOrder.id ? editingOrder : o);
-    setOrders(updated);
-    saveOrders(updated);
-    setEditingOrder(null);
-  };
-
-  const getProductDetails = (productId: string) => {
-    return products.find(p => p.id === productId);
-  };
-
-  return (
-    <div className="space-y-6 animate-in fade-in duration-500 relative">
-      <h2 className="text-3xl font-black text-gray-900">إدارة الطلبات ({orders.length})</h2>
-      
-      {/* Preview Modal */}
-      {previewOrder && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[50px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
-            <div className="p-8 border-b flex justify-between items-center bg-gray-50 shrink-0">
-              <div>
-                <h3 className="text-2xl font-black text-gray-800 flex items-center gap-3">
-                  <Eye className="text-blue-600" /> معاينة الطلب #{previewOrder.id}
-                </h3>
-                <p className="text-gray-400 text-sm font-bold mt-1">تاريخ الطلب: {new Date(previewOrder.date).toLocaleString('ar-MA')}</p>
-              </div>
-              <button onClick={() => setPreviewOrder(null)} className="p-3 hover:bg-white rounded-full transition-colors bg-gray-100 shadow-sm">
-                <CloseIcon size={24} />
-              </button>
-            </div>
-            
-            <div className="p-8 overflow-y-auto space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-emerald-50 p-4 rounded-3xl border border-emerald-100">
-                  <User className="text-emerald-600 mb-1" size={18} />
-                  <div className="font-black text-emerald-900">{previewOrder.fullName}</div>
-                  <div className="text-[10px] text-emerald-700 font-bold uppercase">الاسم</div>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-3xl border border-blue-100">
-                  <Phone className="text-blue-600 mb-1" size={18} />
-                  <div className="font-black text-blue-900" dir="ltr">{previewOrder.phone}</div>
-                  <div className="text-[10px] text-blue-700 font-bold uppercase">الهاتف</div>
-                </div>
-                <div className="bg-orange-50 p-4 rounded-3xl border border-orange-100">
-                  <MapPin className="text-orange-600 mb-1" size={18} />
-                  <div className="font-black text-orange-900">{previewOrder.city}</div>
-                  <div className="text-[10px] text-orange-700 font-bold uppercase">المدينة</div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-xl font-black text-gray-800 border-r-4 border-emerald-500 pr-3">المنتجات</h4>
-                <div className="bg-gray-50 rounded-[32px] p-2 space-y-2">
-                  {previewOrder.items.map((item, idx) => {
-                    const product = getProductDetails(item.productId);
-                    return (
-                      <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-4">
-                        <img src={product?.image} className="w-16 h-16 rounded-xl object-cover border" alt="p" />
-                        <div className="flex-grow">
-                          <div className="font-black text-gray-900">{product?.name || 'منتج محذوف'}</div>
-                          <div className="text-emerald-600 font-bold text-sm">{product?.price.toLocaleString() || 0} د.م.</div>
-                        </div>
-                        <div className="bg-gray-100 px-4 py-2 rounded-xl font-black">x{item.quantity}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="bg-gray-900 text-white p-8 rounded-[32px] flex justify-between items-center shadow-2xl">
-                <div>
-                  <div className="text-emerald-400 font-bold text-sm">المجموع الكلي</div>
-                  <div className="text-3xl font-black">{previewOrder.totalPrice.toLocaleString()} د.م.</div>
-                </div>
-                <div className="bg-white/10 px-4 py-2 rounded-2xl flex items-center gap-2">
-                  <CreditCard className="text-emerald-400" size={20} />
-                  <span className="font-bold text-sm">COD</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-8 border-t bg-gray-50 shrink-0">
-               <button onClick={() => setPreviewOrder(null)} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all shadow-xl">إغلاق</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Order Modal */}
-      {editingOrder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden">
-            <div className="p-8 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="text-2xl font-black text-gray-800">تحرير بيانات الزبون</h3>
-              <button onClick={() => setEditingOrder(null)}><CloseIcon size={24} /></button>
-            </div>
-            <form onSubmit={handleEditOrder} className="p-8 space-y-6">
-              <input required className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 outline-none font-bold"
-                value={editingOrder.fullName} onChange={e => setEditingOrder({...editingOrder, fullName: e.target.value})} placeholder="الاسم" />
-              <input required className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 outline-none font-bold"
-                value={editingOrder.phone} onChange={e => setEditingOrder({...editingOrder, phone: e.target.value})} placeholder="الهاتف" />
-              <input required className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 outline-none font-bold"
-                value={editingOrder.city} onChange={e => setEditingOrder({...editingOrder, city: e.target.value})} placeholder="المدينة" />
-              <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl">حفظ</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="grid gap-6">
-        {orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(order => (
-          <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6 hover:shadow-md transition-all">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
-                <span className="bg-gray-100 px-3 py-1 rounded-full text-gray-500">#{order.id}</span>
-                <Calendar size={12} /> {new Date(order.date).toLocaleDateString('ar-MA')}
-              </div>
-              <h3 className="text-xl font-black">{order.fullName}</h3>
-              <p className="text-emerald-600 font-bold">{order.phone} | {order.city}</p>
-              <div className="text-sm font-bold text-gray-900">{order.totalPrice.toLocaleString()} د.م.</div>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              <select value={order.status} onChange={(e) => updateStatus(order.id, e.target.value as Order['status'])}
-                className={`p-3 rounded-xl font-bold border-2 outline-none ${
-                  order.status === 'delivered' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' :
-                  order.status === 'shipped' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-orange-500 bg-orange-50 text-orange-700'
-                }`}>
-                <option value="pending">قيد الانتظار</option>
-                <option value="shipped">تم الشحن</option>
-                <option value="delivered">تم التوصيل</option>
-              </select>
-              
-              <div className="flex gap-2">
-                <button onClick={() => setPreviewOrder(order)} className="p-3 text-blue-500 hover:bg-blue-50 rounded-xl"><Eye size={22} /></button>
-                <button onClick={() => setEditingOrder(order)} className="p-3 text-emerald-500 hover:bg-emerald-50 rounded-xl"><Edit2 size={22} /></button>
-                <button onClick={() => deleteOrder(order.id)} className="p-3 text-red-300 hover:text-red-500 rounded-xl"><Trash2 size={22} /></button>
-              </div>
-            </div>
-          </div>
-        ))}
-        {orders.length === 0 && <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 font-bold">لا توجد طلبات</div>}
-      </div>
-    </div>
-  );
-};
-
-const ProductsManager: React.FC<{ products: Product[], setProducts: React.Dispatch<React.SetStateAction<Product[]>> }> = ({ products, setProducts }) => {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [formData, setFormData] = useState<Partial<Product>>({
-    name: '',
-    price: 0,
-    category: 'electronics',
-    image: '',
-    images: [],
-    description: ''
-  });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []) as File[];
-    if (files.length === 0) return;
-
-    files.forEach((file: File) => {
-      if (file.size > 2 * 1024 * 1024) {
-        alert("إحدى الصور كبيرة جداً (أقصى حد 2 ميجابايت)");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setFormData(prev => {
-          const newImages = [...(prev.images || []), result];
-          return {
-            ...prev,
-            images: newImages,
-            image: prev.image || result
-          };
-        });
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeGalleryImage = (index: number) => {
-    setFormData(prev => {
-      const newImages = [...(prev.images || [])];
-      const removed = newImages.splice(index, 1)[0];
-      let newMain = prev.image;
-      if (removed === prev.image) {
-        newMain = newImages[0] || '';
-      }
-      return { ...prev, images: newImages, image: newMain };
-    });
-  };
-
-  const setAsMainImage = (url: string) => {
-    setFormData(prev => ({ ...prev, image: url }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.price || !formData.image) {
-      alert('يرجى ملء البيانات وتحميل صورة واحدة على الأقل');
-      return;
-    }
-
-    if (editingId) {
-      const updatedList = products.map(p => 
-        p.id === editingId ? { ...p, ...formData } as Product : p
-      );
-      setProducts(updatedList);
-      saveProducts(updatedList);
-      setSuccessMsg('تم تحديث المنتج بنجاح!');
-      setEditingId(null);
-    } else {
-      const newProduct: Product = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: formData.name || '',
-        price: Number(formData.price),
-        category: (formData.category as Category) || 'electronics',
-        image: formData.image || '',
-        images: formData.images || [],
-        description: formData.description || ''
-      };
-      const newList = [newProduct, ...products];
-      setProducts(newList);
-      saveProducts(newList);
-      setSuccessMsg('تمت إضافة المنتج بنجاح!');
-    }
-    setFormData({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' });
-    setTimeout(() => setSuccessMsg(''), 3000);
-  };
-
-  const startEdit = (product: Product) => {
-    setEditingId(product.id);
-    setFormData({
-      name: product.name,
-      price: product.price,
-      category: product.category,
-      image: product.image,
-      images: product.images || [],
-      description: product.description
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setFormData({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' });
-  };
-
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-black text-gray-900">إدارة المنتجات والمعرض</h2>
-        {successMsg && (
-          <div className="bg-emerald-100 text-emerald-700 px-6 py-2 rounded-full font-black animate-bounce flex items-center gap-2">
-            <CheckCircle size={20} /> {successMsg}
-          </div>
-        )}
-      </div>
-      
-      <form onSubmit={handleSubmit} className={`bg-white p-8 rounded-[40px] shadow-sm border-2 transition-all ${editingId ? 'border-emerald-500 bg-emerald-50/10' : 'border-gray-100'} grid grid-cols-1 md:grid-cols-2 gap-8`}>
-        <div className="col-span-full flex justify-between border-b pb-4">
-          <h3 className="text-xl font-black text-emerald-600">{editingId ? `تعديل المنتج: ${formData.name}` : 'إضافة منتج جديد'}</h3>
-          {editingId && <button type="button" onClick={cancelEdit} className="text-red-500 font-bold text-sm flex items-center gap-1"><CloseIcon size={16} /> إلغاء التعديل</button>}
-        </div>
-
-        <div className="md:col-span-1 space-y-4">
-          <label className="text-sm font-black text-gray-500">صور المنتج</label>
-          <div onClick={() => fileInputRef.current?.click()} 
-               className="border-4 border-dashed border-gray-100 rounded-[32px] p-8 bg-gray-50/50 hover:bg-white hover:border-emerald-200 transition-all cursor-pointer flex flex-col items-center justify-center text-center">
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleImagesUpload} />
-            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border flex items-center justify-center mb-4 text-gray-400"><Upload size={32} /></div>
-            <p className="font-black text-gray-700">اضغط لرفع الصور</p>
-          </div>
-
-          {formData.images && formData.images.length > 0 && (
-            <div className="grid grid-cols-4 gap-3 mt-4">
-              {formData.images.map((img, idx) => (
-                <div key={idx} className={`relative group aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.image === img ? 'border-emerald-500 shadow-lg scale-105' : 'border-gray-100'}`}>
-                  <img src={img} className="w-full h-full object-cover" alt="prev" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
-                    <button type="button" onClick={() => setAsMainImage(img)} className="text-[10px] bg-emerald-500 text-white px-2 py-1 rounded-full font-bold">رئيسية</button>
-                    <button type="button" onClick={() => removeGalleryImage(idx)} className="text-[10px] bg-red-500 text-white px-2 py-1 rounded-full font-bold">حذف</button>
-                  </div>
-                  {formData.image === img && <div className="absolute top-1 right-1 bg-emerald-500 text-white p-1 rounded-full"><CheckCircle size={10} /></div>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-500">اسم المنتج</label>
-            <input required placeholder="اسم المنتج..." className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 outline-none font-bold focus:border-emerald-500"
-              value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-500">السعر (د.م.)</label>
-            <input required type="number" placeholder="السعر..." className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 outline-none font-bold focus:border-emerald-500"
-              value={formData.price || ''} onChange={e => setFormData({...formData, price: Number(e.target.value)})} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-500">الفئة</label>
-            <select className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 outline-none font-bold"
-              value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
-              <option value="electronics">إلكترونيات</option>
-              <option value="watches">ساعات</option>
-              <option value="glasses">نظارات</option>
-              <option value="home">منزل</option>
-              <option value="cars">سيارات</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-500">وصف المنتج</label>
-            <textarea className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 outline-none font-bold h-24"
-              placeholder="وصف المنتج..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
-          </div>
-          <button type="submit" className={`w-full py-5 rounded-2xl font-black text-xl shadow-xl flex items-center justify-center gap-3 transition-all ${editingId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white`}>
-            {editingId ? <><Save size={24} /> حفظ التعديلات</> : <><Plus size={24} /> إضافة للمتجر</>}
-          </button>
-        </div>
-      </form>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map(product => (
-          <div key={product.id} className={`bg-white p-5 rounded-[32px] border transition-all ${editingId === product.id ? 'border-emerald-500 scale-95 opacity-50' : 'border-gray-100'} flex flex-col gap-4 group`}>
-            <div className="flex gap-4">
-              <div className="relative">
-                <img src={product.image} className="w-20 h-20 rounded-2xl object-cover" alt="p" />
-                {product.images && product.images.length > 1 && (
-                  <div className="absolute -bottom-2 -right-2 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black">+{product.images.length - 1}</div>
-                )}
-              </div>
-              <div className="flex-grow">
-                <h4 className="font-black text-sm line-clamp-1">{product.name}</h4>
-                <div className="text-emerald-600 font-black text-lg">{product.price.toLocaleString()} د.م.</div>
-                <div className="text-[10px] text-gray-400 font-bold uppercase">{product.category}</div>
-              </div>
-            </div>
-            <div className="flex border-t pt-4 gap-2">
-              <button onClick={() => startEdit(product)} className="flex-grow flex items-center justify-center gap-2 p-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-colors"><Edit2 size={16} /> تعديل</button>
-              <button onClick={() => {if(window.confirm('هل أنت متأكد من حذف المنتج؟')){const u = products.filter(p=>p.id!==product.id); setProducts(u); saveProducts(u);}}} className="p-3 text-red-300 hover:text-red-600 transition-colors"><Trash2 size={20} /></button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const SettingsManager: React.FC<{ settings: AppSettings, setSettings: (settings: AppSettings) => void }> = ({ settings, setSettings }) => {
-  const [form, setForm] = useState(settings);
-  const [tempPassword, setTempPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const updatedSettings = { ...form };
-    if (tempPassword.trim()) {
-      updatedSettings.adminPasswordHash = btoa(tempPassword);
-    }
-
-    setSettings(updatedSettings);
-    saveSettings(updatedSettings);
-    setSaved(true);
-    setTempPassword('');
-    setTimeout(() => setSaved(false), 2000);
-  };
-
-  return (
-    <div className="space-y-12 animate-in fade-in duration-500 max-w-5xl">
-      <div className="flex justify-between items-center">
-        <h2 className="text-4xl font-black text-gray-900">إعدادات المتجر والتتبع</h2>
-        {saved && (
-          <div className="bg-emerald-100 text-emerald-700 px-6 py-2 rounded-full font-black flex items-center gap-2 animate-bounce">
-            <CheckCircle size={20} /> تم حفظ جميع التغييرات
-          </div>
-        )}
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-10 pb-20">
-        
-        {/* Security Settings - Password Change */}
-        <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
-          <div className="flex items-center gap-4 border-b pb-6">
-            <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center shadow-inner">
-              <Lock size={28} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-gray-800">إعدادات الأمان</h3>
-              <p className="text-gray-400 font-bold text-sm">تغيير كلمة مرور لوحة التحكم</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <label className="text-red-600 font-black flex items-center gap-2">
-              <ShieldAlert size={20} /> كلمة المرور الجديدة
-            </label>
-            <div className="relative group">
-              <input 
-                type={showPass ? "text" : "password"}
-                className="w-full p-5 rounded-3xl border-2 border-red-50 bg-red-50/20 text-red-900 font-black focus:border-red-500 focus:bg-white outline-none transition-all placeholder:text-red-200"
-                value={tempPassword} 
-                onChange={e => setTempPassword(e.target.value)} 
-                placeholder="اتركه فارغاً إذا كنت لا ترغب في التغيير" 
-              />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute left-6 top-1/2 -translate-y-1/2 text-red-300 hover:text-red-600 transition-colors"
-              >
-                {showPass ? <EyeOff size={24} /> : <Eye size={24} />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Custom Script Section */}
-        <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8">
-          <div className="flex items-center gap-4 border-b pb-6">
-            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
-              <Code size={28} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-gray-800">أكواد برمجية مخصصة (HTML/JS)</h3>
-              <p className="text-gray-400 font-bold text-sm">يمكنك هنا وضع أكواد Google Tag Manager أو أي سكربتات تتبع أخرى (تقبل وسوم &lt;script&gt;).</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="text-indigo-600 font-black flex items-center gap-2">Custom Code / Tags</label>
-            <textarea 
-              className="w-full p-5 rounded-3xl border-2 border-indigo-50 bg-gray-900 text-emerald-400 font-mono focus:border-indigo-500 outline-none transition-all h-64 text-sm scrollbar-thin scrollbar-thumb-indigo-500"
-              value={form.customScript} 
-              onChange={e => setForm({...form, customScript: e.target.value})} 
-              placeholder="<!-- الصق الكود هنا بالكامل مع الوسوم -->
-<script>
-  console.log('Store Brima is active');
-</script>" 
-              dir="ltr"
-            />
-          </div>
-        </div>
-
-        {/* Marketing Pixels Section */}
-        <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8">
-          <div className="flex items-center gap-4 border-b pb-6">
-            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner">
-              <Share2 size={28} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-gray-800">أدوات التتبع والتسويق</h3>
-              <p className="text-gray-400 font-bold text-sm">أدخل معرفات البيكسل لتتبع التحويلات (Facebook, TikTok, GA)</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-blue-600 font-black">
-                <Facebook size={20} /> Facebook Pixel ID
-              </label>
-              <input 
-                className="w-full p-5 rounded-3xl border-2 border-blue-50 bg-blue-50/20 text-blue-900 font-black focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-blue-200"
-                value={form.fbPixelId} 
-                onChange={e => setForm({...form, fbPixelId: e.target.value})} 
-                placeholder="أدخل المعرف (مثلاً: 123456789)" 
-              />
-            </div>
-
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-blue-600 font-black">
-                <FlaskConical size={20} /> FB Test Event Code
-              </label>
-              <input 
-                className="w-full p-5 rounded-3xl border-2 border-blue-50 bg-blue-50/20 text-blue-900 font-black focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-blue-200"
-                value={form.fbTestEventCode} 
-                onChange={e => setForm({...form, fbTestEventCode: e.target.value})} 
-                placeholder="أدخل كود الاختبار (TESTXXXXX)" 
-              />
-              <p className="text-[10px] text-gray-400 font-bold">يستخدم لاختبار الأحداث في Events Manager</p>
-            </div>
-
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-pink-500 font-black">
-                <Play size={20} className="fill-current" /> TikTok Pixel ID
-              </label>
-              <input 
-                className="w-full p-5 rounded-3xl border-2 border-pink-50 bg-pink-50/20 text-pink-900 font-black focus:border-pink-500 focus:bg-white outline-none transition-all placeholder:text-pink-200"
-                value={form.tiktokPixelId} 
-                onChange={e => setForm({...form, tiktokPixelId: e.target.value})} 
-                placeholder="أدخل المعرف (مثلاً: C6...)" 
-              />
-            </div>
-
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-orange-500 font-black">
-                <BarChart size={20} /> Google Analytics ID (GA4)
-              </label>
-              <input 
-                className="w-full p-5 rounded-3xl border-2 border-orange-50 bg-orange-50/20 text-orange-900 font-black focus:border-orange-500 focus:bg-white outline-none transition-all placeholder:text-orange-200"
-                value={form.googleAnalyticsId} 
-                onChange={e => setForm({...form, googleAnalyticsId: e.target.value})} 
-                placeholder="أدخل المعرف (G-XXXXXXXXXX)" 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Google Sheets Integration */}
-        <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8">
-          <div className="flex items-center gap-4 border-b pb-6">
-            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
-              <Table size={28} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-gray-800">ربط Google Sheets</h3>
-              <p className="text-gray-400 font-bold text-sm">إرسال الطلبيات تلقائياً إلى ملف إكسل خاص بك</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="text-emerald-600 font-black">Google Sheets Webhook URL</label>
-            <input 
-              className="w-full p-5 rounded-3xl border-2 border-emerald-50 bg-emerald-50/20 text-emerald-900 font-black focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder:text-emerald-200"
-              value={form.googleSheetsUrl} 
-              onChange={e => setForm({...form, googleSheetsUrl: e.target.value})} 
-              placeholder="https://script.google.com/macros/s/..." 
-            />
-          </div>
-        </div>
-
-        {/* Domain Settings */}
-        <div className="bg-white p-8 md:p-12 rounded-[50px] shadow-sm border border-gray-100 space-y-8">
-          <div className="flex items-center gap-4 border-b pb-6">
-            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
-              <Globe size={28} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-gray-800">إعدادات النطاق (Domain)</h3>
-              <p className="text-gray-400 font-bold text-sm">تهيئة اسم المتجر وسيرفرات الأسماء</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-indigo-600 font-black">اسم النطاق</label>
-              <input 
-                className="w-full p-5 rounded-3xl border-2 border-indigo-50 bg-indigo-50/20 text-indigo-900 font-black focus:border-indigo-500 focus:bg-white outline-none transition-all"
-                value={form.domainName} 
-                onChange={e => setForm({...form, domainName: e.target.value})} 
-                placeholder="example.com" 
-              />
-            </div>
-            <div className="space-y-3">
-              <label className="text-indigo-600 font-black">سيرفرات الأسماء (Name Servers)</label>
-              <input 
-                className="w-full p-5 rounded-3xl border-2 border-indigo-50 bg-indigo-50/20 text-indigo-900 font-black focus:border-indigo-500 focus:bg-white outline-none transition-all"
-                value={form.nameServers} 
-                onChange={e => setForm({...form, nameServers: e.target.value})} 
-                placeholder="ns1.example.com, ns2.example.com" 
-              />
-            </div>
-          </div>
-        </div>
-
-        <button 
-          type="submit" 
-          className="w-full py-8 rounded-[35px] font-black text-2xl transition-all shadow-2xl bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-4"
-        >
-          <Save size={32} /> {saved ? 'تم الحفظ بنجاح!' : 'حفظ جميع الإعدادات'}
-        </button>
-      </form>
-    </div>
-  );
-};
-
-const DashboardPage: React.FC<DashboardPageProps> = ({ 
-  products, orders, settings, setProducts, setOrders, setSettings 
-}) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, settings, setProducts, setOrders, setSettings }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'settings'>('orders');
+  const [isRadarActive, setIsRadarActive] = useState(false);
+  const location = useLocation();
+  const lastOrderCount = useRef(orders.length);
+
+  // نظام التنبيهات
+  useEffect(() => {
+    if (!isRadarActive) return;
+
+    const checkForNewOrders = () => {
+      const currentOrders = getStoredOrders();
+      if (currentOrders.length > lastOrderCount.current) {
+        // نغمة التنبيه
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play().catch(() => console.log('Audio blocked by browser'));
+        
+        // الاهتزاز (للموبايل)
+        if ('vibrate' in navigator) {
+          navigator.vibrate([200, 100, 200]);
+        }
+
+        // إشعار المتصفح
+        if (Notification.permission === 'granted') {
+          new Notification('طلب جديد! 💰', {
+            body: `لديك طلب جديد من ${currentOrders[currentOrders.length-1].fullName}`,
+            icon: 'https://cdn-icons-png.flaticon.com/512/1162/1162499.png'
+          });
+        }
+
+        setOrders(currentOrders);
+        lastOrderCount.current = currentOrders.length;
+      }
+    };
+
+    // مراقبة التغييرات في التخزين المحلي (في حال تم الطلب من تبويب آخر)
+    window.addEventListener('storage', checkForNewOrders);
+    
+    // فحص دوري كل 5 ثواني احتياطاً
+    const interval = setInterval(checkForNewOrders, 5000);
+
+    return () => {
+      window.removeEventListener('storage', checkForNewOrders);
+      clearInterval(interval);
+    };
+  }, [isRadarActive, setOrders]);
+
+  const requestNotificationPermission = () => {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          setIsRadarActive(true);
+        }
+      });
+    } else {
+      setIsRadarActive(true);
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (btoa(password) === settings.adminPasswordHash) {
       setIsAuthenticated(true);
-      sessionStorage.setItem('admin_auth', 'true');
-    } else { alert('كلمة المرور غير صحيحة'); }
+    } else {
+      alert('كلمة المرور خاطئة');
+    }
   };
-
-  React.useEffect(() => { if (sessionStorage.getItem('admin_auth') === 'true') setIsAuthenticated(true); }, []);
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto my-20 p-10 bg-white rounded-[40px] shadow-2xl animate-in fade-in zoom-in duration-300">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-inner">
-            <Lock size={40} />
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <form onSubmit={handleLogin} className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-md space-y-8">
+          <div className="text-center space-y-2">
+            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Lock size={40} />
+            </div>
+            <h1 className="text-3xl font-black dark:text-white">دخول الإدارة</h1>
+            <p className="text-gray-400 font-bold">يرجى إدخال كلمة المرور للمتابعة</p>
           </div>
-          <h2 className="text-2xl font-black text-gray-800 tracking-tight">إدارة ستور بريمة</h2>
-          <p className="text-gray-400 font-bold text-sm mt-1">يُرجى إدخال كلمة المرور للمتابعة</p>
-        </div>
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="relative group">
-            <input 
-              type={showPassword ? "text" : "password"} 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="كلمة المرور" 
-              className="w-full p-5 pr-5 pl-14 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none text-center text-2xl font-black transition-all shadow-sm group-hover:border-emerald-200" 
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-emerald-600 transition-colors"
-              title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-            >
-              {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-            </button>
-          </div>
-          <button className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 transition-all">
-            دخول للوحة التحكم
+          <input 
+            type="password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none text-center text-2xl tracking-widest"
+            placeholder="••••••••"
+            autoFocus
+          />
+          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-black text-xl shadow-xl transition-all">
+            تسجيل الدخول
           </button>
         </form>
       </div>
@@ -701,18 +141,357 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-8">
-      <div className="w-full md:w-80 bg-white p-6 rounded-[40px] shadow-sm border border-gray-100 space-y-3 h-fit sticky top-24">
-        <button onClick={() => setActiveTab('orders')} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black transition-all ${activeTab === 'orders' ? 'bg-emerald-600 text-white shadow-xl scale-105' : 'text-gray-500 hover:bg-gray-50'}`}><div className="flex items-center gap-4"><ShoppingBag size={24} /> الطلبات</div></button>
-        <button onClick={() => setActiveTab('products')} className={`w-full flex items-center gap-4 p-5 rounded-3xl font-black transition-all ${activeTab === 'products' ? 'bg-emerald-600 text-white shadow-xl scale-105' : 'text-gray-500 hover:bg-gray-50'}`}><Package size={24} /> المنتجات والمعرض</button>
-        <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-4 p-5 rounded-3xl font-black transition-all ${activeTab === 'settings' ? 'bg-emerald-600 text-white shadow-xl scale-105' : 'text-gray-500 hover:bg-gray-50'}`}><Settings size={24} /> الإعدادات</button>
-        <button onClick={() => {sessionStorage.removeItem('admin_auth'); setIsAuthenticated(false);}} className="w-full p-5 text-red-500 font-black hover:bg-red-50 rounded-3xl transition-all">خروج</button>
+    <div className="max-w-7xl mx-auto px-4 py-8 pb-32 lg:pb-8">
+      {/* Header Dashboard with Radar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+        <div>
+          <h1 className="text-4xl font-black dark:text-white mb-2">لوحة التحكم</h1>
+          <p className="text-gray-400 font-bold">مرحباً بك في مركز إدارة متجر بريمة</p>
+        </div>
+        
+        <button 
+          onClick={isRadarActive ? () => setIsRadarActive(false) : requestNotificationPermission}
+          className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-black transition-all shadow-lg ${isRadarActive ? 'bg-emerald-600 text-white radar-pulse shadow-emerald-200' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-700'}`}
+        >
+          {isRadarActive ? <Radio className="animate-pulse" size={20} /> : <BellOff size={20} />}
+          {isRadarActive ? 'وضع الرادار نشط (تصلك تنبيهات)' : 'تفعيل تنبيهات الطلبات'}
+        </button>
       </div>
-      <div className="flex-grow bg-gray-50/30 p-4 md:p-8 rounded-[50px] min-h-[800px]">
-        {activeTab === 'orders' && <OrdersManager orders={orders} products={products} setOrders={setOrders} />}
-        {activeTab === 'products' && <ProductsManager products={products} setProducts={setProducts} />}
-        {activeTab === 'settings' && <SettingsManager settings={settings} setSettings={setSettings} />}
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Sidebar Nav - Desktop */}
+        <aside className="lg:col-span-3 hidden lg:block space-y-2">
+          <Link to="/dashboard" className={`flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${location.pathname === '/dashboard' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-100' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+            <BarChart size={20} /> الإحصائيات
+          </Link>
+          <Link to="/dashboard/orders" className={`flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${location.pathname === '/dashboard/orders' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-100' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+            <ShoppingBag size={20} /> الطلبات
+            {orders.filter(o => o.status === 'pending').length > 0 && (
+              <span className="mr-auto bg-red-500 text-white text-[10px] px-2 py-1 rounded-full animate-bounce">
+                {orders.filter(o => o.status === 'pending').length}
+              </span>
+            )}
+          </Link>
+          <Link to="/dashboard/products" className={`flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${location.pathname === '/dashboard/products' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-100' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+            <Package size={20} /> المنتجات
+          </Link>
+          <Link to="/dashboard/settings" className={`flex items-center gap-3 p-4 rounded-2xl font-black transition-all ${location.pathname === '/dashboard/settings' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-100' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+            <Settings size={20} /> الإعدادات
+          </Link>
+          <button onClick={() => setIsAuthenticated(false)} className="flex items-center gap-3 p-4 rounded-2xl font-black text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 w-full transition-all mt-10">
+            <LogOut size={20} /> خروج
+          </button>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="lg:col-span-9">
+          <Routes>
+            <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
+            <Route path="/orders" element={<OrdersList orders={orders} setOrders={setOrders} />} />
+            <Route path="/products" element={<ProductsManager products={products} setProducts={setProducts} />} />
+            <Route path="/settings" element={<SettingsManager settings={settings} setSettings={setSettings} />} />
+          </Routes>
+        </main>
       </div>
+
+      {/* Mobile App Navigation Bar */}
+      <nav className="admin-footer-nav lg:hidden">
+        <Link to="/dashboard" className={`flex flex-col items-center gap-1 ${location.pathname === '/dashboard' ? 'text-emerald-600' : 'text-gray-400'}`}>
+          <BarChart size={24} />
+          <span className="text-[10px] font-bold">الرئيسية</span>
+        </Link>
+        <Link to="/dashboard/orders" className={`flex flex-col items-center gap-1 relative ${location.pathname === '/dashboard/orders' ? 'text-emerald-600' : 'text-gray-400'}`}>
+          <ShoppingBag size={24} />
+          <span className="text-[10px] font-bold">الطلبات</span>
+          {orders.filter(o => o.status === 'pending').length > 0 && (
+            <span className="absolute -top-1 -left-1 bg-red-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-black">
+              {orders.filter(o => o.status === 'pending').length}
+            </span>
+          )}
+        </Link>
+        <Link to="/dashboard/products" className={`flex flex-col items-center gap-1 ${location.pathname === '/dashboard/products' ? 'text-emerald-600' : 'text-gray-400'}`}>
+          <Package size={24} />
+          <span className="text-[10px] font-bold">المنتجات</span>
+        </Link>
+        <Link to="/dashboard/settings" className={`flex flex-col items-center gap-1 ${location.pathname === '/dashboard/settings' ? 'text-emerald-600' : 'text-gray-400'}`}>
+          <Settings size={24} />
+          <span className="text-[10px] font-bold">الإعدادات</span>
+        </Link>
+      </nav>
+    </div>
+  );
+};
+
+// --- Sub-components (Stats, Orders, Products, Settings) ---
+
+const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ orders, products }) => {
+  const totalSales = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+  const pendingOrders = orders.filter(o => o.status === 'pending').length;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-4">
+          <CreditCard size={24} />
+        </div>
+        <div className="text-gray-400 font-bold text-sm mb-1">إجمالي المبيعات</div>
+        <div className="text-3xl font-black dark:text-white">{totalSales.toLocaleString()} <span className="text-sm">د.م.</span></div>
+      </div>
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-4">
+          <ShoppingBag size={24} />
+        </div>
+        <div className="text-gray-400 font-bold text-sm mb-1">الطلبات المعلقة</div>
+        <div className="text-3xl font-black dark:text-white">{pendingOrders} <span className="text-sm">طلب</span></div>
+      </div>
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-4">
+          <Package size={24} />
+        </div>
+        <div className="text-gray-400 font-bold text-sm mb-1">إجمالي المنتجات</div>
+        <div className="text-3xl font-black dark:text-white">{products.length} <span className="text-sm">منتج</span></div>
+      </div>
+    </div>
+  );
+};
+
+const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, setOrders }) => {
+  const updateStatus = (id: string, status: Order['status']) => {
+    const updated = orders.map(o => o.id === id ? { ...o, status } : o);
+    setOrders(updated);
+    saveOrders(updated);
+  };
+
+  const deleteOrder = (id: string) => {
+    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+      const updated = orders.filter(o => o.id !== id);
+      setOrders(updated);
+      saveOrders(updated);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {orders.length === 0 ? (
+        <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-[40px] border-2 border-dashed border-gray-100 dark:border-gray-800">
+          <ShoppingBag size={64} className="mx-auto text-gray-200 dark:text-gray-800 mb-4" />
+          <p className="text-gray-400 font-black">لا توجد طلبات حتى الآن</p>
+        </div>
+      ) : (
+        [...orders].reverse().map(order => (
+          <div key={order.id} className={`bg-white dark:bg-gray-900 p-6 md:p-8 rounded-[35px] shadow-sm border-r-8 transition-all hover:scale-[1.01] ${order.status === 'pending' ? 'border-orange-500' : order.status === 'shipped' ? 'border-blue-500' : 'border-emerald-500'}`}>
+            <div className="flex flex-col md:flex-row justify-between gap-6">
+              <div className="space-y-4 flex-grow">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center dark:text-white">
+                    <User size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-xl dark:text-white">{order.fullName}</h3>
+                    <div className="text-gray-400 font-bold text-xs flex items-center gap-2">
+                       <Calendar size={12} /> {new Date(order.date).toLocaleDateString('ar-MA')}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
+                    <Phone size={16} className="text-emerald-500" /> {order.phone}
+                    <a href={`tel:${order.phone}`} className="mr-auto p-2 bg-emerald-100 text-emerald-600 rounded-lg"><Phone size={14}/></a>
+                    <a href={`https://wa.me/212${order.phone.replace(/^0/, '')}`} target="_blank" className="p-2 bg-green-100 text-green-600 rounded-lg"><Smartphone size={14}/></a>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
+                    <MapPin size={16} className="text-emerald-500" /> {order.city}
+                  </div>
+                </div>
+
+                <div className="border-t dark:border-gray-800 pt-4 mt-2">
+                  <div className="text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">محتوى الطلب</div>
+                  <div className="font-bold dark:text-gray-200">إجمالي السعر: <span className="text-emerald-600 dark:text-emerald-400">{order.totalPrice.toLocaleString()} د.م.</span></div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 justify-center min-w-[150px]">
+                <select 
+                  value={order.status}
+                  onChange={(e) => updateStatus(order.id, e.target.value as any)}
+                  className="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 appearance-none cursor-pointer"
+                >
+                  <option value="pending">قيد الانتظار</option>
+                  <option value="shipped">تم الشحن</option>
+                  <option value="delivered">تم التوصيل</option>
+                </select>
+                <button 
+                  onClick={() => deleteOrder(order.id)}
+                  className="flex items-center justify-center gap-2 p-4 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl font-black transition-all"
+                >
+                  <Trash2 size={18} /> حذف الطلب
+                </button>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+
+const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ products, setProducts }) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState<Partial<Product>>({
+    name: '', price: 0, category: 'electronics', image: '', description: ''
+  });
+
+  const saveProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingId) {
+      const updated = products.map(p => p.id === editingId ? { ...p, ...formData } as Product : p);
+      setProducts(updated);
+      saveProducts(updated);
+      setEditingId(null);
+    } else {
+      const newProduct = { ...formData, id: Math.random().toString(36).substr(2, 9) } as Product;
+      const updated = [...products, newProduct];
+      setProducts(updated);
+      saveProducts(updated);
+      setShowAddModal(false);
+    }
+    setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '' });
+  };
+
+  const deleteProduct = (id: string) => {
+    if (confirm('هل تريد حذف هذا المنتج؟')) {
+      const updated = products.filter(p => p.id !== id);
+      setProducts(updated);
+      saveProducts(updated);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-black dark:text-white">قائمة المنتجات ({products.length})</h2>
+        <button onClick={() => { setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '' }); setEditingId(null); setShowAddModal(true); }} className="bg-emerald-600 text-white px-6 py-4 rounded-2xl font-black flex items-center gap-2 shadow-lg shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all">
+          <Plus size={20} /> إضافة منتج جديد
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {products.map(product => (
+          <div key={product.id} className="bg-white dark:bg-gray-900 p-6 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800 flex gap-4 items-center">
+            <img src={product.image} className="w-24 h-24 rounded-2xl object-cover shrink-0" alt="" />
+            <div className="flex-grow">
+              <h4 className="font-black text-lg dark:text-white line-clamp-1">{product.name}</h4>
+              <p className="text-emerald-600 dark:text-emerald-400 font-black">{product.price.toLocaleString()} د.م.</p>
+              <div className="flex gap-2 mt-4">
+                <button onClick={() => { setEditingId(product.id); setFormData(product); setShowAddModal(true); }} className="p-3 bg-gray-50 dark:bg-gray-800 text-gray-500 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all"><Edit2 size={18} /></button>
+                <button onClick={() => deleteProduct(product.id)} className="p-3 bg-gray-50 dark:bg-gray-800 text-gray-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all"><Trash2 size={18} /></button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 border-b dark:border-gray-800 flex justify-between items-center">
+               <h3 className="text-2xl font-black dark:text-white">{editingId ? 'تعديل المنتج' : 'إضافة منتج جديد'}</h3>
+               <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600"><Plus className="rotate-45" size={32}/></button>
+            </div>
+            <form onSubmit={saveProduct} className="p-8 space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">اسم المنتج</label>
+                    <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">السعر (د.م.)</label>
+                    <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">الفئة</label>
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none">
+                      <option value="electronics">إلكترونيات</option>
+                      <option value="watches">ساعات</option>
+                      <option value="glasses">نظارات</option>
+                      <option value="home">منزل</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">رابط الصورة</label>
+                    <input required type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
+                  </div>
+               </div>
+               <div className="space-y-2">
+                  <label className="font-black text-sm text-gray-500 dark:text-gray-400">الوصف</label>
+                  <textarea rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold"></textarea>
+               </div>
+               <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
+                 <Save size={24} /> حفظ المنتج
+               </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = ({ settings, setSettings }) => {
+  const [localSettings, setLocalSettings] = useState(settings);
+
+  const handleSave = () => {
+    setSettings(localSettings);
+    saveSettings(localSettings);
+    alert('تم حفظ الإعدادات بنجاح');
+  };
+
+  return (
+    <div className="space-y-8 bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="flex items-center gap-4 mb-4 border-b dark:border-gray-800 pb-6">
+         <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-500">
+            <Settings size={32} />
+         </div>
+         <div>
+            <h2 className="text-3xl font-black dark:text-white">إعدادات المتجر</h2>
+            <p className="text-gray-400 font-bold">إدارة البكسل، الروابط، والحماية</p>
+         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Facebook size={18} className="text-blue-600"/> Facebook Pixel ID</label>
+            <input type="text" value={localSettings.fbPixelId} onChange={e => setLocalSettings({...localSettings, fbPixelId: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="1234567890" />
+          </div>
+          <div className="space-y-2">
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><FlaskConical size={18} className="text-purple-600"/> Facebook Test Event Code</label>
+            <input type="text" value={localSettings.fbTestEventCode} onChange={e => setLocalSettings({...localSettings, fbTestEventCode: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="TEST12345" />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Table size={18} className="text-green-600"/> رابط Google Sheets</label>
+            <input type="text" value={localSettings.googleSheetsUrl} onChange={e => setLocalSettings({...localSettings, googleSheetsUrl: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="https://docs.google.com/..." />
+          </div>
+          <div className="space-y-2">
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Globe size={18} className="text-emerald-600"/> اسم النطاق (Domain)</label>
+            <input type="text" value={localSettings.domainName} onChange={e => setLocalSettings({...localSettings, domainName: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2 pt-4">
+        <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Code size={18} className="text-gray-500"/> أكواد مخصصة (Header Scripts)</label>
+        <textarea rows={4} value={localSettings.customScript} onChange={e => setLocalSettings({...localSettings, customScript: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-mono text-sm focus:border-emerald-500 outline-none" placeholder="<!-- Insert Analytics or Custom CSS here -->"></textarea>
+      </div>
+
+      <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-xl shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 mt-6">
+        <Save size={24} /> حفظ كافة الإعدادات
+      </button>
     </div>
   );
 };
