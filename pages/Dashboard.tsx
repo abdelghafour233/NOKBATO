@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Product, Order, AppSettings, Category } from '../types';
@@ -39,9 +40,6 @@ import {
   LayoutDashboard,
   LogOut,
   Facebook,
-  FlaskConical,
-  Eye,
-  EyeOff,
   Upload,
   Image as ImageIcon,
   ChevronDown,
@@ -54,8 +52,43 @@ import {
   History,
   Layout,
   Key,
-  Images
+  Images,
+  // Added missing Eye and EyeOff icons
+  Eye,
+  EyeOff
 } from 'lucide-react';
+
+// وظيفة لضغط وتصغير حجم الصور لضمان عملها على الهاتف
+const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height *= maxWidth / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width *= maxHeight / height;
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      // تقليل الجودة إلى 0.7 لتقليص الحجم بشكل كبير
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+  });
+};
 
 interface DashboardPageProps {
   products: Product[];
@@ -179,14 +212,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
           </Link>
         </aside>
 
-        <main className="lg:col-span-9">
+        <div className="lg:col-span-9">
           <Routes>
             <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
             <Route path="/orders" element={<OrdersList orders={orders} setOrders={setOrders} />} />
             <Route path="/products" element={<ProductsManager products={products} setProducts={setProducts} />} />
             <Route path="/settings" element={<SettingsManager settings={settings} setSettings={setSettings} />} />
           </Routes>
-        </main>
+        </div>
       </div>
 
       <nav className="admin-footer-nav lg:hidden">
@@ -294,7 +327,6 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
 
   return (
     <div className="space-y-6">
-      {/* Tabs Menu */}
       <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl">
         <button 
           onClick={() => setView('active')}
@@ -417,6 +449,7 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
 
 const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ products, setProducts }) => {
   const [showModal, setShowModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<Partial<Product>>({ 
     name: '', 
@@ -441,29 +474,34 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     setShowModal(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.image) return alert('يرجى إضافة صورة رئيسية للمنتج');
-
+    
+    setIsProcessing(true);
     let updatedProducts: Product[];
 
     if (editingProduct) {
       updatedProducts = products.map(p => 
         p.id === editingProduct.id ? { ...formData, id: p.id } as Product : p
       );
-      alert('تم تحديث المنتج بنجاح');
     } else {
       const newProduct = { 
         ...formData, 
         id: Math.random().toString(36).substr(2, 9) 
       } as Product;
       updatedProducts = [...products, newProduct];
-      alert('تم إضافة المنتج الجديد بنجاح');
     }
 
-    setProducts(updatedProducts);
-    saveProducts(updatedProducts);
-    setShowModal(false);
+    try {
+      setProducts(updatedProducts);
+      saveProducts(updatedProducts);
+      setShowModal(false);
+    } catch (err) {
+      alert('خطأ: الصور قد تكون كبيرة جداً لمساحة الهاتف. حاول رفع صور أقل أو أصغر.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -474,29 +512,45 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     }
   };
 
-  const handleMainUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsProcessing(true);
       const reader = new FileReader();
-      reader.onloadend = () => setFormData({ ...formData, image: reader.result as string });
-      // Fix for TypeScript unknown type error in handleMainUpload by explicitly casting file to any
-      reader.readAsDataURL(file as any);
+      reader.onloadend = async () => {
+        const compressed = await compressImage(reader.result as string, 800, 800);
+        setFormData({ ...formData, image: compressed });
+        setIsProcessing(false);
+      };
+      // Explicit cast to Blob to handle potential TypeScript inference issues
+      reader.readAsDataURL(file as Blob);
     }
   };
 
-  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          images: [...(prev.images || []), reader.result as string]
-        }));
-      };
-      // Fix for TypeScript unknown type error in handleGalleryUpload by explicitly casting file to any
-      reader.readAsDataURL(file as any);
-    });
+    if (files.length === 0) return;
+    
+    setIsProcessing(true);
+    const newImages: string[] = [];
+
+    // معالجة الصور واحدة تلو الأخرى لضمان عدم تعليق المتصفح على الهاتف
+    for (const file of files) {
+      const base64 = await new Promise<string>((res) => {
+        const reader = new FileReader();
+        reader.onloadend = () => res(reader.result as string);
+        // Explicit cast to Blob to handle potential TypeScript inference issues
+        reader.readAsDataURL(file as Blob);
+      });
+      const compressed = await compressImage(base64, 800, 800);
+      newImages.push(compressed);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      images: [...(prev.images || []), ...newImages]
+    }));
+    setIsProcessing(false);
   };
 
   const removeGalleryImage = (index: number) => {
@@ -520,69 +574,53 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
           <div key={p.id} className="bg-white dark:bg-gray-900 p-4 rounded-3xl border border-gray-100 dark:border-gray-800 flex gap-4 items-center shadow-sm hover:shadow-md transition-shadow">
             <div className="relative group">
               <img src={p.image} className="w-20 h-20 rounded-2xl object-cover shadow-sm" alt="" />
-              <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black">
-                 {p.images?.length || 0} صور إضافية
-              </div>
+              {p.images && p.images.length > 0 && (
+                <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center text-white text-[10px] font-black">
+                   +{p.images.length}
+                </div>
+              )}
             </div>
             
             <div className="flex-grow text-right space-y-1">
               <h4 className="font-black text-sm dark:text-white line-clamp-1">{p.name}</h4>
               <div className="flex items-center justify-end gap-2">
                  <span className="text-emerald-600 font-black text-sm">{p.price.toLocaleString()} د.م.</span>
-                 <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full font-bold">{p.category}</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-2 border-r dark:border-gray-800 pr-4">
-              <button 
-                onClick={() => openEditModal(p)} 
-                className="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all"
-                title="تعديل"
-              >
-                <Edit2 size={16}/>
-              </button>
-              <button 
-                onClick={() => handleDelete(p.id)} 
-                className="p-2 bg-red-50 dark:bg-red-950/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
-                title="حذف"
-              >
-                <Trash2 size={16}/>
-              </button>
+              <button onClick={() => openEditModal(p)} className="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 rounded-xl"><Edit2 size={16}/></button>
+              <button onClick={() => handleDelete(p.id)} className="p-2 bg-red-50 dark:bg-red-950/20 text-red-500 rounded-xl"><Trash2 size={16}/></button>
             </div>
           </div>
         ))}
       </div>
 
-      {products.length === 0 && (
-        <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-200 dark:border-gray-800">
-          <Package size={48} className="mx-auto text-gray-200 mb-4" />
-          <p className="text-gray-400 font-black italic">لا توجد منتجات حالياً، أضف أول منتج لك!</p>
-        </div>
-      )}
-
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[40px] shadow-2xl p-6 md:p-8 animate-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
+            {isProcessing && (
+              <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 z-[210] flex flex-col items-center justify-center rounded-[40px]">
+                <RefreshCw size={40} className="text-emerald-600 animate-spin mb-4" />
+                <p className="font-black dark:text-white">جاري معالجة الصور للهاتف...</p>
+              </div>
+            )}
+            
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black dark:text-white">
-                {editingProduct ? 'تعديل المنتج' : 'إضافة منتج جديد'}
-              </h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500">
-                <X size={24}/>
-              </button>
+              <h3 className="text-xl font-black dark:text-white">{editingProduct ? 'تعديل المنتج' : 'إضافة منتج'}</h3>
+              <button onClick={() => setShowModal(false)}><X size={24}/></button>
             </div>
+            
             <form onSubmit={handleSave} className="space-y-6 text-right">
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Main Image */}
                 <div className="space-y-2">
                   <label className="block text-xs font-black text-gray-400 mr-2">الصورة الرئيسية</label>
                   <div 
                     onClick={() => mainFileInput.current?.click()} 
-                    className="group relative border-2 border-dashed border-gray-100 dark:border-gray-800 p-4 rounded-[30px] text-center cursor-pointer dark:bg-gray-800/50 hover:border-emerald-500 transition-all overflow-hidden aspect-square flex flex-col items-center justify-center"
+                    className="group relative border-2 border-dashed border-gray-100 dark:border-gray-800 p-4 rounded-[30px] text-center cursor-pointer dark:bg-gray-800/50 hover:border-emerald-500 transition-all aspect-square flex flex-col items-center justify-center"
                   >
                     {formData.image ? (
-                      <img src={formData.image} className="w-full h-full rounded-2xl object-cover shadow-lg" />
+                      <img src={formData.image} className="w-full h-full rounded-2xl object-cover" />
                     ) : (
                       <>
                         <Upload className="text-emerald-500 mb-2" size={24} />
@@ -593,29 +631,18 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                   </div>
                 </div>
 
-                {/* Gallery Images */}
                 <div className="space-y-2">
-                  <label className="block text-xs font-black text-gray-400 mr-2">معرض الصور (إضافي)</label>
+                  <label className="block text-xs font-black text-gray-400 mr-2">معرض الصور</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(formData.images || []).map((img, idx) => (
-                      <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden shadow-sm">
+                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden shadow-sm">
                         <img src={img} className="w-full h-full object-cover" />
-                        <button 
-                          type="button"
-                          onClick={() => removeGalleryImage(idx)}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        <button type="button" onClick={() => removeGalleryImage(idx)} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg"><Trash2 size={12} /></button>
                       </div>
                     ))}
-                    <button 
-                      type="button"
-                      onClick={() => galleryFileInput.current?.click()}
-                      className="aspect-square border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-emerald-500 hover:text-emerald-500 transition-all"
-                    >
+                    <button type="button" onClick={() => galleryFileInput.current?.click()} className="aspect-square border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-emerald-500">
                       <Plus size={20} />
-                      <span className="text-[8px] font-black mt-1">إضافة صورة</span>
+                      <span className="text-[8px] font-black mt-1">إضافة</span>
                     </button>
                   </div>
                   <input type="file" ref={galleryFileInput} onChange={handleGalleryUpload} className="hidden" accept="image/*" multiple />
@@ -623,65 +650,22 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-black text-gray-400 mb-1 mr-2">اسم المنتج</label>
-                  <input 
-                    required 
-                    type="text" 
-                    value={formData.name} 
-                    onChange={e=>setFormData({...formData, name:e.target.value})} 
-                    className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all" 
-                    placeholder="مثال: هاتف سامسونج S23" 
-                  />
-                </div>
-
+                <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500" placeholder="اسم المنتج" />
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-gray-400 mb-1 mr-2">السعر (د.م.)</label>
-                    <input 
-                      required 
-                      type="number" 
-                      value={formData.price} 
-                      onChange={e=>setFormData({...formData, price:Number(e.target.value)})} 
-                      className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all" 
-                      placeholder="0.00" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-gray-400 mb-1 mr-2">التصنيف</label>
-                    <select 
-                      value={formData.category} 
-                      onChange={e=>setFormData({...formData, category:e.target.value as any})} 
-                      className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
-                    >
-                      <option value="electronics">إلكترونيات</option>
-                      <option value="watches">ساعات</option>
-                      <option value="glasses">نظارات</option>
-                      <option value="home">منزل</option>
-                      <option value="cars">سيارات</option>
-                    </select>
-                  </div>
+                  <input required type="number" value={formData.price} onChange={e=>setFormData({...formData, price:Number(e.target.value)})} className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500" placeholder="السعر" />
+                  <select value={formData.category} onChange={e=>setFormData({...formData, category:e.target.value as any})} className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500">
+                    <option value="electronics">إلكترونيات</option>
+                    <option value="watches">ساعات</option>
+                    <option value="glasses">نظارات</option>
+                    <option value="home">منزل</option>
+                    <option value="cars">سيارات</option>
+                  </select>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-black text-gray-400 mb-1 mr-2">وصف المنتج</label>
-                  <textarea 
-                    required 
-                    rows={4} 
-                    value={formData.description} 
-                    onChange={e=>setFormData({...formData, description:e.target.value})} 
-                    className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all resize-none" 
-                    placeholder="اكتب تفاصيل المنتج ومميزاته هنا..."
-                  ></textarea>
-                </div>
+                <textarea required rows={4} value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 resize-none" placeholder="وصف المنتج"></textarea>
               </div>
 
-              <button 
-                type="submit" 
-                className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                {editingProduct ? <Save size={20}/> : <Plus size={20}/>}
-                {editingProduct ? 'حفظ التغييرات' : 'إضافة للمتجر الآن'}
+              <button type="submit" disabled={isProcessing} className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-emerald-700 disabled:opacity-50">
+                {editingProduct ? 'حفظ التغييرات' : 'إضافة المنتج الآن'}
               </button>
             </form>
           </div>
@@ -698,173 +682,22 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
   const [showPwdFields, setShowPwdFields] = useState(false);
 
   const handleReset = () => {
-    if (confirm('⚠️ تنبيه هام: سيتم مسح كافة البيانات (منتجات، طلبات، إعدادات) وإرجاع المتجر لحالته الأصلية. هل أنت متأكد؟')) {
+    if (confirm('⚠️ تنبيه هام: سيتم مسح كافة البيانات وإرجاع المتجر لحالته الأصلية. هل أنت متأكد؟')) {
       factoryReset();
     }
   };
 
   const handlePasswordUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentPasswordInput || !newPasswordInput) {
-      alert('يرجى ملء جميع الحقول');
-      return;
-    }
-
     if (btoa(currentPasswordInput) !== settings.adminPasswordHash) {
-      alert('كلمة السر الحالية غير صحيحة!');
-      return;
+      return alert('كلمة السر الحالية غير صحيحة!');
     }
-
-    if (newPasswordInput.length < 4) {
-      alert('كلمة السر الجديدة يجب أن تكون 4 أحرف على الأقل');
-      return;
-    }
-
-    const updatedSettings = {
-      ...settings,
-      adminPasswordHash: btoa(newPasswordInput)
-    };
-
-    setSettings(updatedSettings);
-    saveSettings(updatedSettings);
+    const updated = { ...settings, adminPasswordHash: btoa(newPasswordInput) };
+    setSettings(updated);
+    saveSettings(updated);
     alert('تم تحديث كلمة السر بنجاح');
-    setCurrentPasswordInput('');
-    setNewPasswordInput('');
     setShowPwdFields(false);
   };
 
   return (
-    <div className="space-y-8">
-      {/* General Settings */}
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
-        <h3 className="text-xl font-black dark:text-white flex items-center justify-end gap-2">
-           إعدادات التتبع والإعلانات <Facebook size={20} className="text-blue-600" />
-        </h3>
-        <div className="space-y-6">
-          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border dark:border-gray-800 space-y-4">
-            <div>
-              <label className="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 flex items-center justify-end gap-1">
-                رقم بيكسيل فيسبوك (Pixel ID) <ShieldAlert size={14} />
-              </label>
-              <input 
-                type="text" 
-                placeholder="1234567890"
-                value={local.fbPixelId} 
-                onChange={e=>setLocal({...local, fbPixelId:e.target.value})} 
-                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 dark:text-white focus:border-emerald-500 outline-none font-bold" 
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-black text-emerald-600 dark:text-emerald-400 mb-2 flex items-center justify-end gap-1">
-                كود اختبار الأحداث (Test Event Code) <Zap size={14} fill="currentColor" />
-              </label>
-              <input 
-                type="text" 
-                placeholder="TEST12345"
-                value={local.fbTestEventCode} 
-                onChange={e=>setLocal({...local, fbTestEventCode:e.target.value})} 
-                className="w-full p-3 rounded-xl border-2 border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-gray-900 dark:text-white focus:border-emerald-500 outline-none font-bold" 
-              />
-            </div>
-            <div className="pt-2 border-t dark:border-gray-800">
-              <label className="block text-xs font-black text-orange-500 dark:text-orange-400 mb-2 flex items-center justify-end gap-1">
-                جوجل أدسنس (Google AdSense ID) <Layout size={14} />
-              </label>
-              <input 
-                type="text" 
-                placeholder="ca-pub-XXXXXXXXXXXXXXXX"
-                value={local.googleAdSenseId} 
-                onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} 
-                className="w-full p-3 rounded-xl border-2 border-orange-100 dark:border-orange-900/20 bg-white dark:bg-gray-900 dark:text-white focus:border-orange-500 outline-none font-bold" 
-              />
-              <p className="text-[10px] text-gray-400 mt-1 font-bold">ضع معرف الناشر الخاص بك لتفعيل الإعلانات على المتجر</p>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-2">أكواد مخصصة (Custom Script Header)</label>
-            <textarea 
-              rows={4} 
-              placeholder="<!-- ضع أكواد التتبع المخصصة هنا -->"
-              value={local.customScript} 
-              onChange={e=>setLocal({...local, customScript:e.target.value})} 
-              className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white font-mono text-xs outline-none focus:border-emerald-500"
-            ></textarea>
-          </div>
-        </div>
-        <button onClick={() => { setSettings(local); saveSettings(local); alert('تم الحفظ بنجاح'); }} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
-          <Save size={20} /> حفظ الإعدادات
-        </button>
-      </div>
-
-      {/* Security Section */}
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
-        <div className="flex items-center justify-end gap-2 text-gray-900 dark:text-white">
-          <h3 className="text-xl font-black">إعدادات الحماية</h3>
-          <Key size={20} className="text-amber-500" />
-        </div>
-        
-        {!showPwdFields ? (
-          <button 
-            onClick={() => setShowPwdFields(true)}
-            className="w-full py-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
-          >
-            <Lock size={18} /> تغيير كلمة مرور لوحة التحكم
-          </button>
-        ) : (
-          <form onSubmit={handlePasswordUpdate} className="space-y-4 animate-in fade-in slide-in-from-top-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black text-gray-500 mb-2">كلمة السر الحالية</label>
-                <input 
-                  required
-                  type="password"
-                  value={currentPasswordInput}
-                  onChange={e => setCurrentPasswordInput(e.target.value)}
-                  className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 dark:text-white focus:border-amber-500 outline-none font-bold text-center"
-                  placeholder="••••••••"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-black text-gray-500 mb-2">كلمة السر الجديدة</label>
-                <input 
-                  required
-                  type="password"
-                  value={newPasswordInput}
-                  onChange={e => setNewPasswordInput(e.target.value)}
-                  className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 dark:text-white focus:border-emerald-500 outline-none font-bold text-center"
-                  placeholder="كلمة سر جديدة"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-               <button type="submit" className="flex-grow bg-amber-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-amber-600 transition-colors">
-                  تحديث الآن
-               </button>
-               <button type="button" onClick={() => setShowPwdFields(false)} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-2xl font-black">
-                  إلغاء
-               </button>
-            </div>
-          </form>
-        )}
-      </div>
-
-      {/* Danger Zone */}
-      <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-[35px] border border-red-100 dark:border-red-900/30 space-y-4 text-right">
-        <div className="flex items-center justify-end gap-2 text-red-600">
-           <h3 className="text-lg font-black">إدارة البيانات (منطقة الخطر)</h3>
-           <AlertTriangle size={20} />
-        </div>
-        <p className="text-red-500 text-xs font-bold">إذا كانت التغييرات لا تظهر أو تريد مسح "الأرشفة القديمة" تماماً، استخدم الزر أدناه:</p>
-        <button 
-          onClick={handleReset}
-          className="w-full bg-white dark:bg-gray-900 text-red-600 border-2 border-red-200 dark:border-red-900/50 py-4 rounded-2xl font-black hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"
-        >
-          <RefreshCw size={18} /> إعادة ضبط المصنع ومسح التخزين المؤقت
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default DashboardPage;
+    <div className

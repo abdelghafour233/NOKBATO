@@ -52,7 +52,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   const product = products.find(p => p.id === id);
   
   const [activeImage, setActiveImage] = useState<string>('');
-  const [isAdded, setIsAdded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -77,12 +76,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   if (!product) {
     return <div className="py-24 text-center font-black text-2xl text-gray-400 dark:text-gray-600">المنتج غير متاح حالياً</div>;
   }
-
-  const handleAddToCart = () => {
-    addToCart(product);
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
-  };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(productUrl).then(() => {
@@ -119,12 +112,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
     }, 1200);
   };
 
-  const galleryImages = product.images && product.images.length > 0 ? product.images : [product.image];
+  // مصفوفة تحتوي على الصورة الرئيسية + صور المعرض
+  const allImages = [product.image, ...(product.images || [])];
 
   if (isSuccess) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center animate-in zoom-in duration-500">
-        <div className="bg-white dark:bg-gray-900 p-12 rounded-[50px] shadow-2xl border-t-8 border-emerald-500 transition-colors">
+        <div className="bg-white dark:bg-gray-900 p-12 rounded-[50px] shadow-2xl border-t-8 border-emerald-500">
           <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
             <CheckCircle size={48} />
           </div>
@@ -156,7 +150,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
           </div>
           
           <div className="flex gap-4 overflow-x-auto py-2 scrollbar-hide">
-            {galleryImages.map((img, idx) => (
+            {allImages.map((img, idx) => (
               <button 
                 key={idx} 
                 onClick={() => setActiveImage(img)}
@@ -182,26 +176,21 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
             </div>
           </div>
 
-          {/* Social Share Section */}
           <div className="flex flex-wrap items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-3xl border border-gray-100 dark:border-gray-700">
              <span className="text-xs font-black text-gray-400">شارك مع أصدقائك:</span>
              <div className="flex gap-3">
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-green-200 dark:shadow-none" title="واتساب"><MessageCircle size={20}/></a>
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-blue-200 dark:shadow-none" title="فيسبوك"><Facebook size={20}/></a>
-                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-gray-200 dark:shadow-none" title="تويتر (X)"><Twitter size={20}/></a>
-                
+                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center hover:scale-110 shadow-lg" title="واتساب"><MessageCircle size={20}/></a>
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:scale-110 shadow-lg" title="فيسبوك"><Facebook size={20}/></a>
                 <button 
                   onClick={handleCopyLink}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center hover:scale-110 transition-all shadow-lg ${copied ? 'bg-emerald-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
-                  title="نسخ الرابط"
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center hover:scale-110 shadow-lg ${copied ? 'bg-emerald-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
                 >
                   {copied ? <Check size={20} /> : <Copy size={20} />}
                 </button>
              </div>
           </div>
 
-          {/* Order Form */}
-          <div className="bg-white dark:bg-gray-900 p-6 md:p-10 rounded-[40px] shadow-2xl border-t-8 border-emerald-500 space-y-6 relative transition-colors">
+          <div className="bg-white dark:bg-gray-900 p-6 md:p-10 rounded-[40px] shadow-2xl border-t-8 border-emerald-500 space-y-6 transition-colors">
             <div className="text-center space-y-1">
               <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">أدخل معلوماتك للطلب</h2>
               <p className="text-gray-400 dark:text-gray-500 font-bold text-xs">سنتصل بك لتأكيد طلبك وتوصيله مجاناً</p>
@@ -215,7 +204,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
 
               <div className="relative group">
                 <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 z-10" size={18} />
-                <select required className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-700 focus:border-emerald-500 outline-none font-bold transition-all appearance-none cursor-pointer" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})}>
+                <select required className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-700 focus:border-emerald-500 outline-none font-bold transition-all appearance-none" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})}>
                   <option value="" disabled>اختر مدينتك</option>
                   {MOROCCAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                 </select>
@@ -227,7 +216,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
                 <input required type="tel" dir="ltr" placeholder="رقم الهاتف" className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-700 focus:border-emerald-500 outline-none font-bold transition-all text-right" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
               </div>
 
-              <button type="submit" disabled={isSubmitting} className={`w-full py-6 rounded-2xl text-white font-black text-xl md:text-2xl shadow-xl transition-all flex items-center justify-center gap-3 animate-pulse-subtle ${isSubmitting ? 'bg-gray-400' : 'bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700 dark:hover:bg-emerald-400 active:scale-95 shadow-emerald-200 dark:shadow-none'}`}>
+              <button type="submit" disabled={isSubmitting} className={`w-full py-6 rounded-2xl text-white font-black text-xl md:text-2xl shadow-xl transition-all flex items-center justify-center gap-3 ${isSubmitting ? 'bg-gray-400' : 'bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700 active:scale-95'}`}>
                 {isSubmitting ? 'جاري الإرسال...' : 'اضغط هنا للطلب الآن'} <Zap fill="currentColor"/>
               </button>
             </form>
@@ -235,8 +224,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
         </section>
       </div>
 
-      {/* Description Section - New */}
-      <section className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800 mb-20 animate-in fade-in slide-in-from-bottom duration-700">
+      <section className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800 mb-20">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl">
             <FileText size={24} />
@@ -248,7 +236,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
         </div>
       </section>
 
-      {/* Reviews & Testimonials Section */}
       <section className="mt-20 space-y-12">
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-6 py-2 rounded-full font-black text-sm">
@@ -276,24 +263,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
                     <div className="text-[10px] text-gray-400 font-bold">{review.city} • {review.date}</div>
                  </div>
                </div>
-               <div className="absolute top-8 left-8 text-gray-100 dark:text-gray-800 -z-10 group-hover:text-emerald-50 dark:group-hover:text-emerald-900/10 transition-colors">
-                  <Award size={64} />
-               </div>
              </div>
            ))}
-        </div>
-
-        <div className="bg-emerald-50 dark:bg-emerald-950/20 p-8 md:p-12 rounded-[50px] border border-emerald-100 dark:border-emerald-900/50 flex flex-col md:flex-row items-center justify-between gap-8">
-           <div className="text-right space-y-2">
-              <h3 className="text-2xl font-black text-emerald-900 dark:text-emerald-100">انضم إلى قائمة زبنائنا السعداء</h3>
-              <p className="text-emerald-700 dark:text-emerald-400 font-bold">نضمن لك الجودة والرضا في كل عملية شراء.</p>
-           </div>
-           <div className="flex -space-x-4 rtl:space-x-reverse">
-              {[...Array(6)].map((_, i) => (
-                <img key={i} src={`https://i.pravatar.cc/150?u=${i+10}`} className="w-14 h-14 rounded-full border-4 border-white dark:border-gray-900 shadow-xl" alt="client" />
-              ))}
-              <div className="w-14 h-14 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-black border-4 border-white dark:border-gray-900 shadow-xl">+5k</div>
-           </div>
         </div>
       </section>
     </div>
