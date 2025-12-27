@@ -17,7 +17,11 @@ import {
   ChevronDown,
   Star,
   ShieldCheck,
-  Zap
+  Zap,
+  Facebook,
+  Twitter,
+  MessageCircle,
+  Award
 } from 'lucide-react';
 
 interface ProductDetailProps {
@@ -31,6 +35,13 @@ const MOROCCAN_CITIES = [
   "وجدة", "القنيطرة", "تطوان", "تمارة", "سلا", "آسفي", "العيون", 
   "المحمدية", "بني ملال", "الجديدة", "تازة", "الناظور", "سطات", 
   "خريبكة", "القصر الكبير", "العرائش", "الخميسات", "تارودانت"
+];
+
+// مراجعات العملاء الممتازة
+const MOCK_REVIEWS = [
+  { name: "أحمد المراكشي", city: "مراكش", comment: "منتج رائع جداً، الجودة تفوق التوقعات. التوصيل كان سريعاً والتعامل احترافي.", rating: 5, date: "قبل يومين" },
+  { name: "فاطمة الزهراء", city: "الرباط", comment: "شكراً ستور بريمة، تعامل راقي ومنتجات أصلية. أنصح الجميع بالتعامل معهم.", rating: 5, date: "قبل 4 أيام" },
+  { name: "ياسين برادة", city: "طنجة", comment: "هذه المرة الثانية التي أطلب فيها من المتجر، دائماً في الموعد والمنتجات قمة في الأناقة.", rating: 5, date: "قبل أسبوع" },
 ];
 
 const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setOrders }) => {
@@ -48,6 +59,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
     city: '',
     phone: ''
   });
+
+  const shareUrl = window.location.origin;
 
   useEffect(() => {
     if (product) {
@@ -117,8 +130,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   }
 
   return (
-    <article className="max-w-7xl mx-auto px-4 py-8 md:py-16 transition-colors duration-300">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-16">
+    <div className="max-w-7xl mx-auto px-4 py-8 md:py-16 transition-colors duration-300">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-16 mb-20">
         
         {/* Images Column */}
         <section className="lg:col-span-7 space-y-6">
@@ -158,20 +171,14 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
             </div>
           </div>
 
-          {/* Quick Trust Badges */}
-          <div className="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-900 p-4 rounded-3xl border border-gray-100 dark:border-gray-800 transition-colors">
-            <div className="flex flex-col items-center gap-1">
-              <Truck size={20} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-[8px] md:text-[10px] font-black dark:text-gray-400">توصيل مجاني</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <CheckCircle size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <span className="text-[8px] md:text-[10px] font-black dark:text-gray-400">الدفع عند الاستلام</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <RefreshCcw size={20} className="text-orange-600 dark:text-orange-400" />
-              <span className="text-[8px] md:text-[10px] font-black dark:text-gray-400">استرجاع سهل</span>
-            </div>
+          {/* Social Share Section */}
+          <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-3xl border border-gray-100 dark:border-gray-700">
+             <span className="text-xs font-black text-gray-400">شارك مع أصدقائك:</span>
+             <div className="flex gap-3">
+                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-green-200 dark:shadow-none"><MessageCircle size={20}/></a>
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-blue-200 dark:shadow-none"><Facebook size={20}/></a>
+                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-gray-200 dark:shadow-none"><Twitter size={20}/></a>
+             </div>
           </div>
 
           {/* Order Form */}
@@ -206,17 +213,58 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
               </button>
             </form>
           </div>
-
-          {/* Detailed Info */}
-          <div className="space-y-4 pt-6">
-            <h3 className="text-xl font-black border-r-4 border-emerald-500 pr-3 dark:text-white">لماذا تختار هذا المنتج؟</h3>
-            <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-bold text-sm md:text-base">
-              {product.description || "هذا المنتج مختار بعناية من أفضل المصانع العالمية لضمان تجربة مستخدم فريدة وجودة تدوم طويلاً. نحن في ستور بريمة لا نبيع إلا ما نثق به."}
-            </p>
-          </div>
         </section>
       </div>
-    </article>
+
+      {/* Reviews & Testimonials Section */}
+      <section className="mt-20 space-y-12">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-6 py-2 rounded-full font-black text-sm">
+             <Star size={16} fill="currentColor"/> آراء عملائنا المتميزين
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white">لماذا يثق بنا آلاف المغاربة؟ 🇲🇦</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           {MOCK_REVIEWS.map((review, i) => (
+             <div key={i} className="bg-white dark:bg-gray-900 p-8 rounded-[40px] shadow-lg border border-gray-100 dark:border-gray-800 relative group hover:-translate-y-2 transition-transform">
+               <div className="flex text-yellow-400 mb-6">
+                 {[...Array(review.rating)].map((_, i) => <Star key={i} size={18} fill="currentColor"/>)}
+               </div>
+               <p className="text-gray-600 dark:text-gray-300 font-bold leading-relaxed mb-8 italic">"{review.comment}"</p>
+               <div className="flex items-center gap-4 border-t dark:border-gray-800 pt-6">
+                 <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center font-black">
+                    {review.name[0]}
+                 </div>
+                 <div>
+                    <div className="font-black text-gray-900 dark:text-white flex items-center gap-2">
+                       {review.name}
+                       <CheckCircle size={14} className="text-emerald-500" />
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-bold">{review.city} • {review.date}</div>
+                 </div>
+               </div>
+               <div className="absolute top-8 left-8 text-gray-100 dark:text-gray-800 -z-10 group-hover:text-emerald-50 dark:group-hover:text-emerald-900/10 transition-colors">
+                  <Award size={64} />
+               </div>
+             </div>
+           ))}
+        </div>
+
+        <div className="bg-emerald-50 dark:bg-emerald-950/20 p-8 md:p-12 rounded-[50px] border border-emerald-100 dark:border-emerald-900/50 flex flex-col md:flex-row items-center justify-between gap-8">
+           <div className="text-right space-y-2">
+              <h3 className="text-2xl font-black text-emerald-900 dark:text-emerald-100">انضم إلى قائمة زبنائنا السعداء</h3>
+              <p className="text-emerald-700 dark:text-emerald-400 font-bold">نضمن لك الجودة والرضا في كل عملية شراء.</p>
+           </div>
+           <div className="flex -space-x-4 rtl:space-x-reverse">
+              {[...Array(6)].map((_, i) => (
+                <img key={i} src={`https://i.pravatar.cc/150?u=${i+10}`} className="w-14 h-14 rounded-full border-4 border-white dark:border-gray-900 shadow-xl" alt="client" />
+              ))}
+              <div className="w-14 h-14 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-black border-4 border-white dark:border-gray-900 shadow-xl">+5k</div>
+           </div>
+        </div>
+      </section>
+    </div>
   );
 };
 

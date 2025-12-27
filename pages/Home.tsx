@@ -2,13 +2,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types.ts';
-import { ShoppingBag, ChevronLeft, Star, Truck, ShieldCheck, Headphones, Zap, Gift, ArrowRight } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, Star, Truck, ShieldCheck, Headphones, Zap, Gift, ArrowRight, Facebook, Twitter, MessageCircle } from 'lucide-react';
 
 interface HomePageProps {
   products: Product[];
 }
 
 const HomePage: React.FC<HomePageProps> = ({ products }) => {
+  const shareUrl = window.location.origin;
+
   return (
     <div className="overflow-hidden transition-colors duration-300">
       {/* Refined Hero Section */}
@@ -88,7 +90,7 @@ const HomePage: React.FC<HomePageProps> = ({ products }) => {
         </div>
       </section>
 
-      {/* Product Grid */}
+      {/* Product Grid with Social Sharing */}
       <section className="py-16 md:py-24 max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div className="text-right">
@@ -109,14 +111,28 @@ const HomePage: React.FC<HomePageProps> = ({ products }) => {
                   <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-2 md:px-3 py-1 rounded-full text-[8px] md:text-[10px] font-black text-emerald-600 dark:text-emerald-400 shadow-sm uppercase tracking-wider">Premium</div>
                 </div>
               </Link>
-              <div className="p-4 md:p-8 flex flex-col flex-grow">
-                <h3 className="text-sm md:text-xl font-black text-gray-900 dark:text-white mb-2 md:mb-4 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">{product.name}</h3>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto gap-2 md:gap-0">
-                  <div className="text-emerald-600 dark:text-emerald-400">
-                    <div className="text-lg md:text-2xl font-black">{product.price.toLocaleString()} <span className="text-[10px] md:text-sm font-bold">د.م.</span></div>
+              <div className="p-4 md:p-6 flex flex-col flex-grow">
+                <h3 className="text-sm md:text-lg font-black text-gray-900 dark:text-white mb-2 line-clamp-1">{product.name}</h3>
+                <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl mb-4">
+                  {product.price.toLocaleString()} <span className="text-[10px] md:text-sm">د.م.</span>
+                </div>
+                
+                {/* Social Share Buttons */}
+                <div className="flex items-center gap-2 mt-auto pt-4 border-t dark:border-gray-700">
+                  <span className="text-[9px] font-black text-gray-400 hidden sm:block">مشاركة:</span>
+                  <div className="flex gap-2">
+                    <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
+                      <MessageCircle size={14} />
+                    </a>
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                      <Facebook size={14} />
+                    </a>
+                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-50 text-gray-900 dark:text-white dark:bg-gray-700 rounded-lg hover:bg-black hover:text-white transition-all">
+                      <Twitter size={14} />
+                    </a>
                   </div>
-                  <Link to={`/product/${product.id}`} className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 dark:bg-gray-700 rounded-xl md:rounded-2xl text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-600 dark:hover:bg-emerald-500 hover:text-white transition-all shadow-inner">
-                    <ShoppingBag size={18} md:size={22} />
+                  <Link to={`/product/${product.id}`} className="mr-auto w-8 h-8 md:w-10 md:h-10 bg-emerald-600 text-white rounded-lg flex items-center justify-center hover:bg-emerald-700 transition-all shadow-lg">
+                    <ShoppingBag size={16} />
                   </Link>
                 </div>
               </div>
