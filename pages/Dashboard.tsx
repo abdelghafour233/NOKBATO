@@ -52,7 +52,8 @@ import {
   Zap,
   RotateCcw,
   PlusCircle,
-  History
+  History,
+  Layout
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -494,7 +495,7 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
     <div className="space-y-8">
       <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
         <h3 className="text-xl font-black dark:text-white flex items-center justify-end gap-2">
-           إعدادات التتبع <Facebook size={20} className="text-blue-600" />
+           إعدادات التتبع والإعلانات <Facebook size={20} className="text-blue-600" />
         </h3>
         <div className="space-y-6">
           <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border dark:border-gray-800 space-y-4">
@@ -521,7 +522,19 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
                 onChange={e=>setLocal({...local, fbTestEventCode:e.target.value})} 
                 className="w-full p-3 rounded-xl border-2 border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-gray-900 dark:text-white focus:border-emerald-500 outline-none font-bold" 
               />
-              <p className="text-[10px] text-gray-400 mt-1 font-bold">يستخدم للتأكد من وصول البيانات لفيسبوك في وضع الاختبار</p>
+            </div>
+            <div className="pt-2 border-t dark:border-gray-800">
+              <label className="block text-xs font-black text-orange-500 dark:text-orange-400 mb-2 flex items-center justify-end gap-1">
+                جوجل أدسنس (Google AdSense ID) <Layout size={14} />
+              </label>
+              <input 
+                type="text" 
+                placeholder="ca-pub-XXXXXXXXXXXXXXXX"
+                value={local.googleAdSenseId} 
+                onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} 
+                className="w-full p-3 rounded-xl border-2 border-orange-100 dark:border-orange-900/20 bg-white dark:bg-gray-900 dark:text-white focus:border-orange-500 outline-none font-bold" 
+              />
+              <p className="text-[10px] text-gray-400 mt-1 font-bold">ضع معرف الناشر الخاص بك لتفعيل الإعلانات على المتجر</p>
             </div>
           </div>
 

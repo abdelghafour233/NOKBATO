@@ -84,6 +84,7 @@ export const getStoredSettings = (): AppSettings => {
     fbPixelId: '',
     fbTestEventCode: '', 
     googleAnalyticsId: '',
+    googleAdSenseId: '', // قيمة افتراضية فارغة
     tiktokPixelId: '',
     googleSheetsUrl: '',
     domainName: 'storebrima.com',

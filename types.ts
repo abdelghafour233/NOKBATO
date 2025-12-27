@@ -24,8 +24,9 @@ export interface Order {
 
 export interface AppSettings {
   fbPixelId: string;
-  fbTestEventCode: string; // الحقل الجديد
+  fbTestEventCode: string; 
   googleAnalyticsId: string;
+  googleAdSenseId: string; // الحقل الجديد لأدسنس
   tiktokPixelId: string;
   googleSheetsUrl: string;
   domainName: string;

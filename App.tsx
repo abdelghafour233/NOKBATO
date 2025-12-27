@@ -57,6 +57,20 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
       `;
       document.head.appendChild(script);
     }
+
+    // Google AdSense Logic
+    const adsenseScriptId = 'adsense-logic';
+    const oldAdsenseScript = document.getElementById(adsenseScriptId);
+    if (oldAdsenseScript) oldAdsenseScript.remove();
+
+    if (settings.googleAdSenseId) {
+      const script = document.createElement('script');
+      script.id = adsenseScriptId;
+      script.async = true;
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.googleAdSenseId}`;
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+    }
   }, [location, settings]);
 
   return null;
