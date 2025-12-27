@@ -2,7 +2,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Product, Order, AppSettings, Category } from '../types';
-import { saveProducts, saveOrders, saveSettings, getStoredOrders, getStoredProducts, factoryReset } from '../store';
+import { 
+  saveProducts, 
+  saveOrders, 
+  saveDeletedOrders,
+  saveSettings, 
+  getStoredOrders, 
+  getStoredDeletedOrders,
+  getStoredProducts, 
+  factoryReset 
+} from '../store';
 import { 
   Settings, 
   Package, 
@@ -40,7 +49,10 @@ import {
   X,
   RefreshCw,
   AlertTriangle,
-  Zap
+  Zap,
+  RotateCcw,
+  PlusCircle,
+  History
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -206,7 +218,9 @@ const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ ord
 );
 
 const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, setOrders }) => {
+  const [view, setView] = useState<'active' | 'trash'>('active');
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [deletedOrders, setDeletedOrders] = useState<Order[]>(getStoredDeletedOrders());
 
   const updateStatus = (id: string, status: Order['status']) => {
     const updated = orders.map(o => o.id === id ? { ...o, status } : o);
@@ -214,11 +228,40 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
     saveOrders(updated);
   };
 
-  const deleteOrder = (id: string) => {
-    if (confirm('حذف هذا الطلب؟')) {
-      const updated = orders.filter(o => o.id !== id);
-      setOrders(updated);
-      saveOrders(updated);
+  const moveToTrash = (id: string) => {
+    const orderToTrash = orders.find(o => o.id === id);
+    if (orderToTrash && confirm('هل تريد نقل هذا الطلب إلى سلة المحذوفات؟')) {
+      const newOrders = orders.filter(o => o.id !== id);
+      const newTrash = [...deletedOrders, orderToTrash];
+      
+      setOrders(newOrders);
+      saveOrders(newOrders);
+      
+      setDeletedOrders(newTrash);
+      saveDeletedOrders(newTrash);
+    }
+  };
+
+  const restoreFromTrash = (id: string) => {
+    const orderToRestore = deletedOrders.find(o => o.id === id);
+    if (orderToRestore) {
+      const newTrash = deletedOrders.filter(o => o.id !== id);
+      const newOrders = [...orders, orderToRestore];
+      
+      setDeletedOrders(newTrash);
+      saveDeletedOrders(newTrash);
+      
+      setOrders(newOrders);
+      saveOrders(newOrders);
+      alert(`تم استرجاع طلب ${orderToRestore.fullName} بنجاح!`);
+    }
+  };
+
+  const permanentDelete = (id: string) => {
+    if (confirm('حذف نهائي؟ لا يمكن التراجع عن هذه الخطوة.')) {
+      const newTrash = deletedOrders.filter(o => o.id !== id);
+      setDeletedOrders(newTrash);
+      saveDeletedOrders(newTrash);
     }
   };
 
@@ -231,33 +274,121 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
     setEditingOrder(null);
   };
 
+  const addFezSample = () => {
+    const sample: Order = {
+      id: Math.random().toString(36).substr(2, 9),
+      fullName: "كمال الفاسي",
+      city: "فاس",
+      phone: "0612345678",
+      items: [],
+      totalPrice: 1200,
+      date: new Date().toISOString(),
+      status: 'pending'
+    };
+    const updated = [...orders, sample];
+    setOrders(updated);
+    saveOrders(updated);
+  };
+
   return (
-    <div className="space-y-4">
-      {[...orders].reverse().map(order => (
-        <div key={order.id} className={`bg-white dark:bg-gray-900 p-5 rounded-[30px] border-r-4 shadow-sm ${order.status === 'pending' ? 'border-orange-500' : 'border-emerald-500'}`}>
-          <div className="flex justify-between items-start">
-            <div className="space-y-2">
-              <h3 className="font-black dark:text-white">{order.fullName}</h3>
-              <div className="flex gap-4 text-xs font-bold text-gray-400">
-                <span className="flex items-center gap-1"><Phone size={12}/> {order.phone}</span>
-                <span className="flex items-center gap-1"><MapPin size={12}/> {order.city}</span>
+    <div className="space-y-6">
+      {/* Tabs Menu */}
+      <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl">
+        <button 
+          onClick={() => setView('active')}
+          className={`flex-1 py-3 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${view === 'active' ? 'bg-white dark:bg-gray-700 text-emerald-600 shadow-sm' : 'text-gray-400'}`}
+        >
+          <ShoppingBag size={18} /> الطلبات النشطة ({orders.length})
+        </button>
+        <button 
+          onClick={() => setView('trash')}
+          className={`flex-1 py-3 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${view === 'trash' ? 'bg-white dark:bg-gray-700 text-red-500 shadow-sm' : 'text-gray-400'}`}
+        >
+          <Trash2 size={18} /> المحذوفات ({deletedOrders.length})
+        </button>
+      </div>
+
+      {view === 'active' ? (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center px-2">
+             <h2 className="font-black dark:text-white">قائمة الطلبات</h2>
+             <button onClick={addFezSample} className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                <Plus size={12} /> إضافة طلب فاس تجريبي
+             </button>
+          </div>
+          
+          {[...orders].reverse().map(order => (
+            <div key={order.id} className={`bg-white dark:bg-gray-900 p-5 rounded-[30px] border-r-4 shadow-sm ${order.status === 'pending' ? 'border-orange-500' : 'border-emerald-500'}`}>
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <h3 className="font-black dark:text-white">{order.fullName}</h3>
+                  <div className="flex gap-4 text-xs font-bold text-gray-400">
+                    <span className="flex items-center gap-1"><Phone size={12}/> {order.phone}</span>
+                    <span className="flex items-center gap-1 font-black text-emerald-600/70"><MapPin size={12}/> {order.city}</span>
+                  </div>
+                  <div className="text-emerald-600 font-black">{order.totalPrice.toLocaleString()} د.م.</div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => setEditingOrder(order)} className="p-2 bg-gray-50 dark:bg-gray-800 text-emerald-600 rounded-lg"><Edit2 size={16}/></button>
+                  <button onClick={() => moveToTrash(order.id)} className="p-2 bg-gray-50 dark:bg-gray-800 text-red-500 rounded-lg"><Trash2 size={16}/></button>
+                </div>
               </div>
-              <div className="text-emerald-600 font-black">{order.totalPrice.toLocaleString()} د.م.</div>
+              <div className="mt-4">
+                <select value={order.status} onChange={(e) => updateStatus(order.id, e.target.value as any)} className="w-full p-2 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-xs font-bold border-none">
+                  <option value="pending">قيد الانتظار</option>
+                  <option value="shipped">تم الشحن</option>
+                  <option value="delivered">تم التوصيل</option>
+                </select>
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <button onClick={() => setEditingOrder(order)} className="p-2 bg-gray-50 dark:bg-gray-800 text-emerald-600 rounded-lg"><Edit2 size={16}/></button>
-              <button onClick={() => deleteOrder(order.id)} className="p-2 bg-gray-50 dark:bg-gray-800 text-red-500 rounded-lg"><Trash2 size={16}/></button>
+          ))}
+
+          {orders.length === 0 && (
+            <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-200 dark:border-gray-800">
+               <ShoppingBag size={48} className="mx-auto text-gray-200 mb-4" />
+               <p className="text-gray-400 font-black italic">لا توجد طلبات نشطة حالياً</p>
             </div>
-          </div>
-          <div className="mt-4">
-            <select value={order.status} onChange={(e) => updateStatus(order.id, e.target.value as any)} className="w-full p-2 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white text-xs font-bold border-none">
-              <option value="pending">قيد الانتظار</option>
-              <option value="shipped">تم الشحن</option>
-              <option value="delivered">تم التوصيل</option>
-            </select>
-          </div>
+          )}
         </div>
-      ))}
+      ) : (
+        <div className="space-y-4">
+          <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl text-red-600 text-xs font-bold text-center mb-6">
+             ⚠️ الطلبيات هنا محذوفة مؤقتاً، يمكنك استرجاعها في أي وقت.
+          </div>
+          
+          {[...deletedOrders].reverse().map(order => (
+            <div key={order.id} className="bg-white dark:bg-gray-900 p-5 rounded-[30px] border-r-4 border-gray-300 dark:border-gray-700 shadow-sm opacity-80">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-black dark:text-white line-through text-gray-400">{order.fullName}</h3>
+                  <p className="text-[10px] font-bold text-gray-400">{order.city} • {order.totalPrice} د.م.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => restoreFromTrash(order.id)} 
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow-md shadow-emerald-100"
+                  >
+                    <RotateCcw size={14} /> استرجاع
+                  </button>
+                  <button 
+                    onClick={() => permanentDelete(order.id)} 
+                    className="p-2 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl"
+                  >
+                    <Trash2 size={16}/>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {deletedOrders.length === 0 && (
+            <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-200 dark:border-gray-800">
+               <History size={48} className="mx-auto text-gray-200 mb-4" />
+               <p className="text-gray-400 font-black italic">سلة المحذوفات فارغة</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {editingOrder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">

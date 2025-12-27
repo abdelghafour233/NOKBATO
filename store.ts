@@ -58,7 +58,6 @@ export const INITIAL_PRODUCTS: Product[] = [
 export const getStoredProducts = (): Product[] => {
   const currentVersion = localStorage.getItem('data_version');
   
-  // إذا كان الإصدار مختلفاً، نقوم بتحديث البيانات الافتراضية
   if (currentVersion !== DATA_VERSION) {
     localStorage.setItem('products', JSON.stringify(INITIAL_PRODUCTS));
     localStorage.setItem('data_version', DATA_VERSION);
@@ -71,6 +70,11 @@ export const getStoredProducts = (): Product[] => {
 
 export const getStoredOrders = (): Order[] => {
   const stored = localStorage.getItem('orders');
+  return stored ? JSON.parse(stored) : [];
+};
+
+export const getStoredDeletedOrders = (): Order[] => {
+  const stored = localStorage.getItem('deleted_orders');
   return stored ? JSON.parse(stored) : [];
 };
 
@@ -91,6 +95,7 @@ export const getStoredSettings = (): AppSettings => {
 
 export const saveProducts = (products: Product[]) => localStorage.setItem('products', JSON.stringify(products));
 export const saveOrders = (orders: Order[]) => localStorage.setItem('orders', JSON.stringify(orders));
+export const saveDeletedOrders = (orders: Order[]) => localStorage.setItem('deleted_orders', JSON.stringify(orders));
 export const saveSettings = (settings: AppSettings) => localStorage.setItem('settings', JSON.stringify(settings));
 
 export const factoryReset = () => {
