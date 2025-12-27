@@ -114,6 +114,14 @@ const App: React.FC = () => {
 
   const clearCart = () => setCart([]);
 
+  const categoryShortcuts = [
+    { id: 'electronics', label: 'إلكترونيات', icon: <Smartphone size={20}/> },
+    { id: 'watches', label: 'ساعات', icon: <Watch size={20}/> },
+    { id: 'glasses', label: 'نظارات', icon: <Glasses size={20}/> },
+    { id: 'cars', label: 'السيارات', icon: <Car size={20}/> },
+    { id: 'home', label: 'المنزل', icon: <Home size={20}/> },
+  ];
+
   return (
     <HashRouter>
       <SEOManager settings={settings} />
@@ -145,20 +153,19 @@ const App: React.FC = () => {
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                       <ShoppingBag size={20} />
                     </div>
-                    <span className="hidden xs:inline dark:text-emerald-500">ستور بريمة</span>
+                    <span className="hidden xs:inline dark:text-emerald-500 font-black">ستور بريمة</span>
                   </Link>
                   <div className="hidden lg:flex gap-4 xl:gap-6 mr-6 xl:mr-8 border-r dark:border-gray-800 pr-6 xl:pr-8">
                     <Link to="/" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm">الرئيسية</Link>
-                    <Link to="/category/electronics" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Smartphone size={16}/> إلكترونيات</Link>
-                    <Link to="/category/watches" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Watch size={16}/> ساعات</Link>
-                    <Link to="/category/glasses" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Glasses size={16}/> نظارات</Link>
-                    <Link to="/category/cars" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Car size={16}/> السيارات</Link>
-                    <Link to="/category/home" className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1"><Home size={16}/> المنزل</Link>
+                    {categoryShortcuts.map(cat => (
+                      <Link key={cat.id} to={`/category/${cat.id}`} className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-500 font-bold transition-all text-xs xl:text-sm flex items-center gap-1">
+                        {cat.icon} {cat.label}
+                      </Link>
+                    ))}
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2 md:gap-4">
-                  {/* Dark Mode Toggle */}
                   <button 
                     onClick={() => setDarkMode(!darkMode)}
                     className="p-2 md:p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-yellow-400 hover:scale-110 transition-all shadow-inner"
@@ -183,6 +190,22 @@ const App: React.FC = () => {
               </div>
             </div>
 
+            {/* Mobile Category Scroll Bar - NEW */}
+            <div className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-50 dark:border-gray-800 flex overflow-x-auto no-scrollbar py-3 px-2 gap-3 shadow-inner">
+              {categoryShortcuts.map(cat => (
+                <Link 
+                  key={cat.id} 
+                  to={`/category/${cat.id}`} 
+                  className="flex flex-col items-center gap-1.5 min-w-[70px] shrink-0 p-2 rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors"
+                >
+                  <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-500 shadow-sm">
+                    {cat.icon}
+                  </div>
+                  <span className="text-[10px] font-black text-gray-600 dark:text-gray-400">{cat.label}</span>
+                </Link>
+              ))}
+            </div>
+
             {/* Mobile Menu Overlay */}
             <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}></div>
             <div className={`fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-900 shadow-2xl z-[60] transform transition-transform duration-300 lg:hidden ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -192,11 +215,11 @@ const App: React.FC = () => {
               </div>
               <div className="p-4 space-y-2 h-[calc(100%-80px)] overflow-y-auto">
                   <Link to="/" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all">الرئيسية</Link>
-                  <Link to="/category/electronics" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Smartphone size={20}/> إلكترونيات</Link>
-                  <Link to="/category/watches" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Watch size={20}/> ساعات</Link>
-                  <Link to="/category/glasses" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Glasses size={20}/> نظارات</Link>
-                  <Link to="/category/cars" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Car size={20}/> السيارات</Link>
-                  <Link to="/category/home" onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3"><Home size={20}/> مستلزمات المنزل</Link>
+                  {categoryShortcuts.map(cat => (
+                    <Link key={cat.id} to={`/category/${cat.id}`} onClick={() => setIsMenuOpen(false)} className="block p-4 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all flex items-center gap-3">
+                      {cat.icon} {cat.label}
+                    </Link>
+                  ))}
                   <div className="pt-4 mt-4 border-t dark:border-gray-800">
                     <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block p-4 bg-gray-900 dark:bg-emerald-600 text-white font-black rounded-xl text-center shadow-lg">لوحة التحكم</Link>
                   </div>
@@ -227,10 +250,9 @@ const App: React.FC = () => {
             <div>
               <h4 className="font-black text-gray-900 dark:text-white mb-6 text-lg">أقسامنا</h4>
               <ul className="space-y-3 text-gray-500 dark:text-gray-400 font-bold text-sm">
-                <li><Link to="/category/watches" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">الساعات الفاخرة</Link></li>
-                <li><Link to="/category/glasses" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">النظارات العصرية</Link></li>
-                <li><Link to="/category/electronics" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">الإلكترونيات</Link></li>
-                <li><Link to="/category/cars" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">السيارات</Link></li>
+                {categoryShortcuts.map(cat => (
+                  <li key={cat.id}><Link to={`/category/${cat.id}`} className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">{cat.label}</Link></li>
+                ))}
               </ul>
             </div>
             <div>
