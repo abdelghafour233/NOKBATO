@@ -13,9 +13,9 @@ import {
   Lock,
   Edit2,
   CheckCircle,
-  User,
-  Phone,
-  MapPin,
+  User, 
+  Phone, 
+  MapPin, 
   Calendar,
   CreditCard,
   Table,
@@ -33,7 +33,9 @@ import {
   Facebook,
   FlaskConical,
   Eye,
-  EyeOff
+  EyeOff,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -53,23 +55,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   const location = useLocation();
   const lastOrderCount = useRef(orders.length);
 
-  // نظام التنبيهات
   useEffect(() => {
     if (!isRadarActive) return;
 
     const checkForNewOrders = () => {
       const currentOrders = getStoredOrders();
       if (currentOrders.length > lastOrderCount.current) {
-        // نغمة التنبيه
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
         audio.play().catch(() => console.log('Audio blocked by browser'));
         
-        // الاهتزاز (للموبايل)
         if ('vibrate' in navigator) {
           navigator.vibrate([200, 100, 200]);
         }
 
-        // إشعار المتصفح
         if (Notification.permission === 'granted') {
           new Notification('طلب جديد! 💰', {
             body: `لديك طلب جديد من ${currentOrders[currentOrders.length-1].fullName}`,
@@ -133,7 +131,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
               placeholder="••••••••"
               autoFocus
             />
-            {/* أيقونة العين المحسنة */}
             <button 
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -157,7 +154,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 pb-32 lg:pb-8">
-      {/* Header Dashboard */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
         <div>
           <h1 className="text-4xl font-black dark:text-white mb-2">لوحة التحكم</h1>
@@ -234,7 +230,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   );
 };
 
-// --- Sub-components (Stats, Orders, Products, Settings) ---
 const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ orders, products }) => {
   const totalSales = orders.reduce((sum, o) => sum + o.totalPrice, 0);
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
@@ -353,9 +348,25 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '', price: 0, category: 'electronics', image: '', description: ''
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const saveProduct = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.image) {
+      alert('يرجى تحميل صورة للمنتج');
+      return;
+    }
     if (editingId) {
       const updated = products.map(p => p.id === editingId ? { ...p, ...formData } as Product : p);
       setProducts(updated);
@@ -406,13 +417,50 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-            <div className="p-8 border-b dark:border-gray-800 flex justify-between items-center">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
+            <div className="p-8 border-b dark:border-gray-800 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-900 z-10">
                <h3 className="text-2xl font-black dark:text-white">{editingId ? 'تعديل المنتج' : 'إضافة منتج جديد'}</h3>
                <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600"><Plus className="rotate-45" size={32}/></button>
             </div>
             <form onSubmit={saveProduct} className="p-8 space-y-6">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Image Upload Area */}
+                  <div className="md:col-span-2 space-y-4">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">صورة المنتج</label>
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[30px] p-10 flex flex-col items-center justify-center gap-4 hover:border-emerald-500 cursor-pointer transition-all bg-gray-50 dark:bg-gray-800 group overflow-hidden relative"
+                    >
+                      {formData.image ? (
+                        <>
+                          <img src={formData.image} className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" alt="Preview" />
+                          <div className="relative z-10 flex flex-col items-center">
+                            <CheckCircle size={48} className="text-emerald-500 mb-2" />
+                            <span className="font-black text-emerald-600">تم اختيار الصورة بنجاح</span>
+                            <span className="text-xs text-gray-400">انقر لتغييرها</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-16 h-16 bg-white dark:bg-gray-700 rounded-2xl flex items-center justify-center text-gray-400 group-hover:text-emerald-500 transition-colors">
+                            <Upload size={32} />
+                          </div>
+                          <div className="text-center">
+                             <div className="font-black text-gray-900 dark:text-white">انقر لتحميل الصورة</div>
+                             <div className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG (أقصى حجم 5MB)</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleImageUpload} 
+                      className="hidden" 
+                      accept="image/*" 
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <label className="font-black text-sm text-gray-500 dark:text-gray-400">اسم المنتج</label>
                     <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
@@ -421,26 +469,23 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                     <label className="font-black text-sm text-gray-500 dark:text-gray-400">السعر (د.م.)</label>
                     <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <label className="font-black text-sm text-gray-500 dark:text-gray-400">الفئة</label>
-                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none">
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer">
                       <option value="electronics">إلكترونيات</option>
                       <option value="watches">ساعات</option>
                       <option value="glasses">نظارات</option>
                       <option value="home">منزل</option>
+                      <option value="cars">سيارات</option>
                     </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">رابط الصورة</label>
-                    <input required type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
                   </div>
                </div>
                <div className="space-y-2">
-                  <label className="font-black text-sm text-gray-500 dark:text-gray-400">الوصف</label>
-                  <textarea rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold"></textarea>
+                  <label className="font-black text-sm text-gray-500 dark:text-gray-400">الوصف الكامل للمنتج</label>
+                  <textarea rows={6} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="اكتب وصفاً تفصيلياً يشرح مميزات المنتج وفوائده للزبائن..."></textarea>
                </div>
                <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
-                 <Save size={24} /> حفظ المنتج
+                 <Save size={24} /> حفظ المنتج والبيانات
                </button>
             </form>
           </div>

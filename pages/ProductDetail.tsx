@@ -22,9 +22,9 @@ import {
   Twitter,
   MessageCircle,
   Award,
-  // إضافة أيقونة النسخ
   Copy,
-  Check
+  Check,
+  FileText
 } from 'lucide-react';
 
 interface ProductDetailProps {
@@ -55,7 +55,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   const [isAdded, setIsAdded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [copied, setCopied] = useState(false); // حالة نسخ الرابط
+  const [copied, setCopied] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -190,7 +190,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
                 <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-blue-200 dark:shadow-none" title="فيسبوك"><Facebook size={20}/></a>
                 <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-gray-200 dark:shadow-none" title="تويتر (X)"><Twitter size={20}/></a>
                 
-                {/* زر نسخ الرابط */}
                 <button 
                   onClick={handleCopyLink}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center hover:scale-110 transition-all shadow-lg ${copied ? 'bg-emerald-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
@@ -235,6 +234,19 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
           </div>
         </section>
       </div>
+
+      {/* Description Section - New */}
+      <section className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800 mb-20 animate-in fade-in slide-in-from-bottom duration-700">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl">
+            <FileText size={24} />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">وصف المنتج</h2>
+        </div>
+        <div className="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 font-bold leading-relaxed whitespace-pre-wrap text-lg">
+          {product.description || "لا يوجد وصف متاح لهذا المنتج حالياً."}
+        </div>
+      </section>
 
       {/* Reviews & Testimonials Section */}
       <section className="mt-20 space-y-12">
