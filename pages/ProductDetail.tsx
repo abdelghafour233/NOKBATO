@@ -21,7 +21,10 @@ import {
   Facebook,
   Twitter,
   MessageCircle,
-  Award
+  Award,
+  // إضافة أيقونة النسخ
+  Copy,
+  Check
 } from 'lucide-react';
 
 interface ProductDetailProps {
@@ -37,7 +40,6 @@ const MOROCCAN_CITIES = [
   "خريبكة", "القصر الكبير", "العرائش", "الخميسات", "تارودانت"
 ];
 
-// مراجعات العملاء الممتازة
 const MOCK_REVIEWS = [
   { name: "أحمد المراكشي", city: "مراكش", comment: "منتج رائع جداً، الجودة تفوق التوقعات. التوصيل كان سريعاً والتعامل احترافي.", rating: 5, date: "قبل يومين" },
   { name: "فاطمة الزهراء", city: "الرباط", comment: "شكراً ستور بريمة، تعامل راقي ومنتجات أصلية. أنصح الجميع بالتعامل معهم.", rating: 5, date: "قبل 4 أيام" },
@@ -53,6 +55,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   const [isAdded, setIsAdded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [copied, setCopied] = useState(false); // حالة نسخ الرابط
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -61,6 +64,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   });
 
   const shareUrl = window.location.origin;
+  const productUrl = `${shareUrl}/#/product/${id}`;
 
   useEffect(() => {
     if (product) {
@@ -78,6 +82,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
     addToCart(product);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(productUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   const handleDirectOrder = (e: React.FormEvent) => {
@@ -172,12 +183,21 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
           </div>
 
           {/* Social Share Section */}
-          <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-3xl border border-gray-100 dark:border-gray-700">
+          <div className="flex flex-wrap items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-3xl border border-gray-100 dark:border-gray-700">
              <span className="text-xs font-black text-gray-400">شارك مع أصدقائك:</span>
              <div className="flex gap-3">
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-green-200 dark:shadow-none"><MessageCircle size={20}/></a>
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-blue-200 dark:shadow-none"><Facebook size={20}/></a>
-                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(shareUrl + '/#/product/' + product.id)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-gray-200 dark:shadow-none"><Twitter size={20}/></a>
+                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-green-200 dark:shadow-none" title="واتساب"><MessageCircle size={20}/></a>
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-blue-200 dark:shadow-none" title="فيسبوك"><Facebook size={20}/></a>
+                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-gray-200 dark:shadow-none" title="تويتر (X)"><Twitter size={20}/></a>
+                
+                {/* زر نسخ الرابط */}
+                <button 
+                  onClick={handleCopyLink}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center hover:scale-110 transition-all shadow-lg ${copied ? 'bg-emerald-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
+                  title="نسخ الرابط"
+                >
+                  {copied ? <Check size={20} /> : <Copy size={20} />}
+                </button>
              </div>
           </div>
 
