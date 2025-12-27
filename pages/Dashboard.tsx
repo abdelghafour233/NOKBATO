@@ -39,7 +39,8 @@ import {
   ChevronDown,
   X,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -362,19 +363,51 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
     <div className="space-y-8">
       <div className="bg-white dark:bg-gray-900 p-6 rounded-[35px] border dark:border-gray-800 space-y-6 text-right">
         <h3 className="text-xl font-black dark:text-white flex items-center justify-end gap-2">
-           الإعدادات العامة <Settings size={20} className="text-gray-400" />
+           إعدادات التتبع <Facebook size={20} className="text-blue-600" />
         </h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1">Facebook Pixel ID</label>
-            <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white" />
+        <div className="space-y-6">
+          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border dark:border-gray-800 space-y-4">
+            <div>
+              <label className="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 flex items-center justify-end gap-1">
+                رقم بيكسيل فيسبوك (Pixel ID) <ShieldAlert size={14} />
+              </label>
+              <input 
+                type="text" 
+                placeholder="1234567890"
+                value={local.fbPixelId} 
+                onChange={e=>setLocal({...local, fbPixelId:e.target.value})} 
+                className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 dark:text-white focus:border-emerald-500 outline-none font-bold" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-black text-emerald-600 dark:text-emerald-400 mb-2 flex items-center justify-end gap-1">
+                كود اختبار الأحداث (Test Event Code) <Zap size={14} fill="currentColor" />
+              </label>
+              <input 
+                type="text" 
+                placeholder="TEST12345"
+                value={local.fbTestEventCode} 
+                onChange={e=>setLocal({...local, fbTestEventCode:e.target.value})} 
+                className="w-full p-3 rounded-xl border-2 border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-gray-900 dark:text-white focus:border-emerald-500 outline-none font-bold" 
+              />
+              <p className="text-[10px] text-gray-400 mt-1 font-bold">يستخدم للتأكد من وصول البيانات لفيسبوك في وضع الاختبار</p>
+            </div>
           </div>
+
           <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1">أكواد مخصصة (Header)</label>
-            <textarea rows={4} value={local.customScript} onChange={e=>setLocal({...local, customScript:e.target.value})} className="w-full p-3 rounded-xl border dark:bg-gray-800 dark:text-white font-mono text-xs"></textarea>
+            <label className="block text-xs font-bold text-gray-400 mb-2">أكواد مخصصة (Custom Script Header)</label>
+            <textarea 
+              rows={4} 
+              placeholder="<!-- ضع أكواد التتبع المخصصة هنا -->"
+              value={local.customScript} 
+              onChange={e=>setLocal({...local, customScript:e.target.value})} 
+              className="w-full p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:text-white font-mono text-xs outline-none focus:border-emerald-500"
+            ></textarea>
           </div>
         </div>
-        <button onClick={() => { setSettings(local); saveSettings(local); alert('تم الحفظ بنجاح'); }} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg">حفظ الإعدادات</button>
+        <button onClick={() => { setSettings(local); saveSettings(local); alert('تم الحفظ بنجاح'); }} className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
+          <Save size={20} /> حفظ الإعدادات
+        </button>
       </div>
 
       {/* Danger Zone */}
