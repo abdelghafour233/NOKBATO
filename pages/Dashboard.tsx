@@ -60,13 +60,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  // تم تغيير الحالة الافتراضية إلى true لتكون نشطة دائماً
+  // الرادار نشط دائماً كما هو مطلوب
   const [isRadarActive, setIsRadarActive] = useState(true);
   const location = useLocation();
   const lastOrderCount = useRef(orders.length);
 
   useEffect(() => {
-    // طلب صلاحيات الإشعارات تلقائياً إذا كان الرادار نشطاً
+    // تفعيل الإشعارات تلقائياً
     if (isRadarActive && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
@@ -78,16 +78,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
     const checkForNewOrders = () => {
       const currentOrders = getStoredOrders();
       if (currentOrders.length > lastOrderCount.current) {
+        // نغمة تنبيه قوية
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        audio.play().catch(() => console.log('Audio playback requires user interaction first'));
+        audio.play().catch(() => console.log('التنبيه الصوتي يحتاج لتفاعل أول مرة'));
         
         if ('vibrate' in navigator) {
-          navigator.vibrate([200, 100, 200]);
+          navigator.vibrate([300, 100, 300]);
         }
 
         if (Notification.permission === 'granted') {
-          new Notification('طلب جديد! 💰', {
-            body: `لديك طلب جديد من ${currentOrders[currentOrders.length-1].fullName}`,
+          new Notification('💰 طلب جديد وصل!', {
+            body: `زبون جديد: ${currentOrders[currentOrders.length-1].fullName}`,
             icon: 'https://cdn-icons-png.flaticon.com/512/1162/1162499.png'
           });
         }
@@ -97,23 +98,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
       }
     };
 
-    window.addEventListener('storage', checkForNewOrders);
     const interval = setInterval(checkForNewOrders, 5000);
-
-    return () => {
-      window.removeEventListener('storage', checkForNewOrders);
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [isRadarActive, setOrders]);
 
   const toggleRadar = () => {
-    if (!isRadarActive && 'Notification' in window) {
-      Notification.requestPermission().then(permission => {
-        setIsRadarActive(true);
-      });
-    } else {
-      setIsRadarActive(!isRadarActive);
+    // الرادار يبقى نشطاً دائماً، الزر هنا فقط للتأكيد البصري أو إعادة الطلب
+    if (Notification.permission !== 'granted') {
+      Notification.requestPermission();
     }
+    setIsRadarActive(true);
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -128,7 +122,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   if (!isAuthenticated) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <form onSubmit={handleLogin} className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-md space-y-8">
+        <form onSubmit={handleLogin} className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500">
           <div className="text-center space-y-2">
             <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
               <Lock size={40} />
@@ -150,7 +144,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all p-2 rounded-xl hover:bg-emerald-50 dark:hover:bg-gray-700 ${showPassword ? 'text-emerald-600 scale-110' : 'text-gray-400'}`}
-              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
             >
               {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
             </button>
@@ -177,10 +170,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
         
         <button 
           onClick={toggleRadar}
-          className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-black transition-all shadow-lg ${isRadarActive ? 'bg-emerald-600 text-white radar-pulse shadow-emerald-200' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-700'}`}
+          className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-black transition-all shadow-lg bg-emerald-600 text-white radar-pulse shadow-emerald-200`}
         >
-          {isRadarActive ? <Radio className="animate-pulse" size={20} /> : <BellOff size={20} />}
-          {isRadarActive ? 'وضع الرادار نشط (تصلك تنبيهات)' : 'تفعيل تنبيهات الطلبات'}
+          <Radio className="animate-pulse" size={20} />
+          تنبيهات الطلبات نشطة دائماً 🛰️
         </button>
       </div>
 
@@ -250,22 +243,22 @@ const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ ord
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-700">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all">
         <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-4">
           <CreditCard size={24} />
         </div>
         <div className="text-gray-400 font-bold text-sm mb-1">إجمالي المبيعات</div>
         <div className="text-3xl font-black dark:text-white">{totalSales.toLocaleString()} <span className="text-sm">د.م.</span></div>
       </div>
-      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all">
         <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-4">
           <ShoppingBag size={24} />
         </div>
         <div className="text-gray-400 font-bold text-sm mb-1">الطلبات المعلقة</div>
         <div className="text-3xl font-black dark:text-white">{pendingOrders} <span className="text-sm">طلب</span></div>
       </div>
-      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all">
         <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-4">
           <Package size={24} />
         </div>
@@ -311,19 +304,19 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
         </div>
       ) : (
         [...orders].reverse().map(order => (
-          <div key={order.id} className={`bg-white dark:bg-gray-900 p-6 md:p-8 rounded-[35px] shadow-sm border-r-8 transition-all hover:scale-[1.01] ${order.status === 'pending' ? 'border-orange-500' : order.status === 'shipped' ? 'border-blue-500' : 'border-emerald-500'}`}>
+          <div key={order.id} className={`bg-white dark:bg-gray-900 p-5 md:p-8 rounded-[35px] shadow-sm border-r-8 transition-all hover:scale-[1.01] ${order.status === 'pending' ? 'border-orange-500' : order.status === 'shipped' ? 'border-blue-500' : 'border-emerald-500'}`}>
             <div className="flex flex-col md:flex-row justify-between gap-6">
-              <div className="space-y-4 flex-grow">
+              <div className="space-y-4 flex-grow text-right">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center dark:text-white">
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center dark:text-white flex-shrink-0">
                     <User size={20} />
                   </div>
                   <div className="flex-grow">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-black text-xl dark:text-white">{order.fullName}</h3>
+                      <h3 className="font-black text-lg md:text-xl dark:text-white">{order.fullName}</h3>
                       <button 
                         onClick={() => setEditingOrder(order)}
-                        className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all"
+                        className="p-3 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all"
                         title="تعديل بيانات الطلب"
                       >
                         <Edit2 size={20} />
@@ -335,28 +328,30 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-                    <Phone size={16} className="text-emerald-500" /> {order.phone}
-                    <a href={`tel:${order.phone}`} className="mr-auto p-2 bg-emerald-100 text-emerald-600 rounded-lg"><Phone size={14}/></a>
-                    <a href={`https://wa.me/212${order.phone.replace(/^0/, '')}`} target="_blank" className="p-2 bg-green-100 text-green-600 rounded-lg"><Smartphone size={14}/></a>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl text-sm">
+                    <Phone size={16} className="text-emerald-500 flex-shrink-0" /> {order.phone}
+                    <div className="mr-auto flex gap-2">
+                      <a href={`tel:${order.phone}`} className="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><Phone size={14}/></a>
+                      <a href={`https://wa.me/212${order.phone.replace(/^0/, '')}`} target="_blank" className="p-2 bg-green-100 text-green-600 rounded-lg"><Smartphone size={14}/></a>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-                    <MapPin size={16} className="text-emerald-500" /> {order.city}
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl text-sm">
+                    <MapPin size={16} className="text-emerald-500 flex-shrink-0" /> {order.city}
                   </div>
                 </div>
 
                 <div className="border-t dark:border-gray-800 pt-4 mt-2">
-                  <div className="text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">محتوى الطلب</div>
-                  <div className="font-bold dark:text-gray-200">إجمالي السعر: <span className="text-emerald-600 dark:text-emerald-400">{order.totalPrice.toLocaleString()} د.م.</span></div>
+                  <div className="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">المبلغ المالي</div>
+                  <div className="font-bold dark:text-gray-200 text-lg">الإجمالي: <span className="text-emerald-600 dark:text-emerald-400">{order.totalPrice.toLocaleString()} د.م.</span></div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 justify-center min-w-[150px]">
+              <div className="flex flex-col gap-3 justify-center min-w-[140px]">
                 <select 
                   value={order.status}
                   onChange={(e) => updateStatus(order.id, e.target.value as any)}
-                  className="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 appearance-none cursor-pointer"
+                  className="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 appearance-none cursor-pointer text-center"
                 >
                   <option value="pending">قيد الانتظار</option>
                   <option value="shipped">تم الشحن</option>
@@ -364,9 +359,9 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                 </select>
                 <button 
                   onClick={() => deleteOrder(order.id)}
-                  className="flex items-center justify-center gap-2 p-4 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl font-black transition-all"
+                  className="flex items-center justify-center gap-2 p-4 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl font-black transition-all text-sm"
                 >
-                  <Trash2 size={18} /> حذف الطلب
+                  <Trash2 size={16} /> حذف الطلب
                 </button>
               </div>
             </div>
@@ -374,17 +369,17 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
         ))
       )}
 
-      {/* Edit Order Modal */}
+      {/* Edit Order Modal - المحسنة للحاسوب والهاتف */}
       {editingOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-            <div className="p-8 border-b dark:border-gray-800 flex justify-between items-center">
-               <h3 className="text-2xl font-black dark:text-white">تعديل بيانات الطلب</h3>
-               <button onClick={() => setEditingOrder(null)} className="text-gray-400 hover:text-gray-600"><X size={32}/></button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300 my-auto">
+            <div className="p-6 md:p-8 border-b dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+               <h3 className="text-xl md:text-2xl font-black dark:text-white">تعديل بيانات الطلب</h3>
+               <button onClick={() => setEditingOrder(null)} className="text-gray-400 hover:text-gray-600 transition-transform hover:rotate-90 p-2"><X size={28}/></button>
             </div>
-            <form onSubmit={handleEditSave} className="p-8 space-y-6">
+            <form onSubmit={handleEditSave} className="p-6 md:p-8 space-y-6 text-right">
                <div className="space-y-2">
-                  <label className="font-black text-sm text-gray-500 dark:text-gray-400">الاسم الكامل للزبون</label>
+                  <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">الاسم الكامل</label>
                   <div className="relative">
                     <User className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
                     <input 
@@ -392,14 +387,14 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                       type="text" 
                       value={editingOrder.fullName} 
                       onChange={e => setEditingOrder({...editingOrder, fullName: e.target.value})} 
-                      className="w-full p-4 pr-12 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" 
+                      className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold shadow-sm" 
                     />
                   </div>
                </div>
                
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">رقم الهاتف</label>
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">رقم الهاتف</label>
                     <div className="relative">
                       <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
                       <input 
@@ -407,19 +402,19 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                         type="tel" 
                         value={editingOrder.phone} 
                         onChange={e => setEditingOrder({...editingOrder, phone: e.target.value})} 
-                        className="w-full p-4 pr-12 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold text-right" 
+                        className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold text-right shadow-sm" 
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">المدينة</label>
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">المدينة</label>
                     <div className="relative">
                       <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 z-10" size={18} />
                       <select 
                         required 
                         value={editingOrder.city} 
                         onChange={e => setEditingOrder({...editingOrder, city: e.target.value})} 
-                        className="w-full p-4 pr-12 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer"
+                        className="w-full p-4 pr-12 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer shadow-sm"
                       >
                         {MOROCCAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                       </select>
@@ -428,23 +423,23 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                   </div>
                </div>
 
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">المبلغ الإجمالي (د.م.)</label>
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">المبلغ (د.م.)</label>
                     <input 
                       required 
                       type="number" 
                       value={editingOrder.totalPrice} 
                       onChange={e => setEditingOrder({...editingOrder, totalPrice: Number(e.target.value)})} 
-                      className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" 
+                      className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold shadow-sm" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">حالة الطلب</label>
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">حالة الطلب</label>
                     <select 
                       value={editingOrder.status} 
                       onChange={e => setEditingOrder({...editingOrder, status: e.target.value as any})} 
-                      className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer"
+                      className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer text-center shadow-sm"
                     >
                       <option value="pending">قيد الانتظار</option>
                       <option value="shipped">تم الشحن</option>
@@ -453,8 +448,8 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                   </div>
                </div>
 
-               <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
-                 <Save size={24} /> حفظ البيانات المعدلة
+               <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 mt-4 active:scale-95 shadow-emerald-200 dark:shadow-none">
+                 <Save size={24} /> حفظ التعديلات
                </button>
             </form>
           </div>
@@ -516,16 +511,16 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-black dark:text-white">قائمة المنتجات ({products.length})</h2>
-        <button onClick={() => { setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '' }); setEditingId(null); setShowAddModal(true); }} className="bg-emerald-600 text-white px-6 py-4 rounded-2xl font-black flex items-center gap-2 shadow-lg shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all">
-          <Plus size={20} /> إضافة منتج جديد
+        <button onClick={() => { setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '' }); setEditingId(null); setShowAddModal(true); }} className="bg-emerald-600 text-white px-6 py-4 rounded-2xl font-black flex items-center gap-2 shadow-lg shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all text-sm md:text-base">
+          <Plus size={20} /> إضافة منتج
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {products.map(product => (
-          <div key={product.id} className="bg-white dark:bg-gray-900 p-6 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800 flex gap-4 items-center">
-            <img src={product.image} className="w-24 h-24 rounded-2xl object-cover shrink-0" alt="" />
-            <div className="flex-grow">
+          <div key={product.id} className="bg-white dark:bg-gray-900 p-5 rounded-[35px] shadow-sm border border-gray-100 dark:border-gray-800 flex gap-4 items-center animate-in fade-in duration-500">
+            <img src={product.image} className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover shrink-0 shadow-inner" alt="" />
+            <div className="flex-grow text-right">
               <h4 className="font-black text-lg dark:text-white line-clamp-1">{product.name}</h4>
               <p className="text-emerald-600 dark:text-emerald-400 font-black">{product.price.toLocaleString()} د.م.</p>
               <div className="flex gap-2 mt-4">
@@ -538,37 +533,37 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
-            <div className="p-8 border-b dark:border-gray-800 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-900 z-10">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-300 my-auto">
+            <div className="p-6 md:p-8 border-b dark:border-gray-800 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-900 z-10">
                <h3 className="text-2xl font-black dark:text-white">{editingId ? 'تعديل المنتج' : 'إضافة منتج جديد'}</h3>
-               <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600"><Plus className="rotate-45" size={32}/></button>
+               <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 p-2"><X size={32}/></button>
             </div>
-            <form onSubmit={saveProduct} className="p-8 space-y-6">
+            <form onSubmit={saveProduct} className="p-6 md:p-8 space-y-6 text-right">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Image Upload Area */}
                   <div className="md:col-span-2 space-y-4">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">صورة المنتج</label>
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">صورة المنتج</label>
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[30px] p-10 flex flex-col items-center justify-center gap-4 hover:border-emerald-500 cursor-pointer transition-all bg-gray-50 dark:bg-gray-800 group overflow-hidden relative"
+                      className="border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[30px] p-8 md:p-12 flex flex-col items-center justify-center gap-4 hover:border-emerald-500 cursor-pointer transition-all bg-gray-50 dark:bg-gray-800 group overflow-hidden relative shadow-inner"
                     >
                       {formData.image ? (
                         <>
                           <img src={formData.image} className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" alt="Preview" />
                           <div className="relative z-10 flex flex-col items-center">
                             <CheckCircle size={48} className="text-emerald-500 mb-2" />
-                            <span className="font-black text-emerald-600">تم اختيار الصورة بنجاح</span>
-                            <span className="text-xs text-gray-400">انقر لتغييرها</span>
+                            <span className="font-black text-emerald-600 text-center">تم اختيار الصورة بنجاح ✅</span>
+                            <span className="text-xs text-gray-400 mt-1">انقر للتغيير</span>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="w-16 h-16 bg-white dark:bg-gray-700 rounded-2xl flex items-center justify-center text-gray-400 group-hover:text-emerald-500 transition-colors">
+                          <div className="w-16 h-16 bg-white dark:bg-gray-700 rounded-3xl flex items-center justify-center text-gray-400 group-hover:text-emerald-500 transition-colors shadow-sm">
                             <Upload size={32} />
                           </div>
                           <div className="text-center">
-                             <div className="font-black text-gray-900 dark:text-white">انقر لتحميل الصورة</div>
+                             <div className="font-black text-gray-900 dark:text-white text-lg">انقر لتحميل الصورة</div>
                              <div className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG (أقصى حجم 5MB)</div>
                           </div>
                         </>
@@ -584,16 +579,16 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                   </div>
 
                   <div className="space-y-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">اسم المنتج</label>
-                    <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">اسم المنتج</label>
+                    <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">السعر (د.م.)</label>
-                    <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">السعر (د.م.)</label>
+                    <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <label className="font-black text-sm text-gray-500 dark:text-gray-400">الفئة</label>
-                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer">
+                    <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">الفئة</label>
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold appearance-none cursor-pointer text-center">
                       <option value="electronics">إلكترونيات</option>
                       <option value="watches">ساعات</option>
                       <option value="glasses">نظارات</option>
@@ -603,11 +598,11 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                   </div>
                </div>
                <div className="space-y-2">
-                  <label className="font-black text-sm text-gray-500 dark:text-gray-400">الوصف الكامل للمنتج</label>
-                  <textarea rows={6} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="اكتب وصفاً تفصيلياً يشرح مميزات المنتج وفوائده للزبائن..."></textarea>
+                  <label className="font-black text-sm text-gray-500 dark:text-gray-400 pr-1">الوصف الكامل</label>
+                  <textarea rows={5} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="اكتب وصفاً جذاباً للمنتج..."></textarea>
                </div>
-               <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
-                 <Save size={24} /> حفظ المنتج والبيانات
+               <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 active:scale-95">
+                 <Save size={24} /> حفظ بيانات المنتج
                </button>
             </form>
           </div>
@@ -623,51 +618,51 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
   const handleSave = () => {
     setSettings(localSettings);
     saveSettings(localSettings);
-    alert('تم حفظ الإعدادات بنجاح');
+    alert('تم حفظ كافة الإعدادات بنجاح ✅');
   };
 
   return (
-    <div className="space-y-8 bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800">
+    <div className="space-y-8 bg-white dark:bg-gray-900 p-6 md:p-12 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800 text-right">
       <div className="flex items-center gap-4 mb-4 border-b dark:border-gray-800 pb-6">
-         <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-500">
+         <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-3xl flex items-center justify-center text-gray-500 shadow-inner">
             <Settings size={32} />
          </div>
          <div>
             <h2 className="text-3xl font-black dark:text-white">إعدادات المتجر</h2>
-            <p className="text-gray-400 font-bold">إدارة البكسل، الروابط، والحماية</p>
+            <p className="text-gray-400 font-bold">تحكم في التتبع، النطاق، والحماية</p>
          </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Facebook size={18} className="text-blue-600"/> Facebook Pixel ID</label>
-            <input type="text" value={localSettings.fbPixelId} onChange={e => setLocalSettings({...localSettings, fbPixelId: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="1234567890" />
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2 pr-1"><Facebook size={18} className="text-blue-600"/> Facebook Pixel ID</label>
+            <input type="text" value={localSettings.fbPixelId} onChange={e => setLocalSettings({...localSettings, fbPixelId: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold shadow-sm" placeholder="مثال: 1234567890" />
           </div>
           <div className="space-y-2">
-            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><FlaskConical size={18} className="text-purple-600"/> Facebook Test Event Code</label>
-            <input type="text" value={localSettings.fbTestEventCode} onChange={e => setLocalSettings({...localSettings, fbTestEventCode: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="TEST12345" />
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2 pr-1"><FlaskConical size={18} className="text-purple-600"/> Facebook Test Code</label>
+            <input type="text" value={localSettings.fbTestEventCode} onChange={e => setLocalSettings({...localSettings, fbTestEventCode: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold shadow-sm" placeholder="TEST12345" />
           </div>
         </div>
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Table size={18} className="text-green-600"/> رابط Google Sheets</label>
-            <input type="text" value={localSettings.googleSheetsUrl} onChange={e => setLocalSettings({...localSettings, googleSheetsUrl: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" placeholder="https://docs.google.com/..." />
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2 pr-1"><Table size={18} className="text-green-600"/> Google Sheets URL</label>
+            <input type="text" value={localSettings.googleSheetsUrl} onChange={e => setLocalSettings({...localSettings, googleSheetsUrl: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold shadow-sm" placeholder="رابط الربط التلقائي..." />
           </div>
           <div className="space-y-2">
-            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Globe size={18} className="text-emerald-600"/> اسم النطاق (Domain)</label>
-            <input type="text" value={localSettings.domainName} onChange={e => setLocalSettings({...localSettings, domainName: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold" />
+            <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2 pr-1"><Globe size={18} className="text-emerald-600"/> اسم النطاق (Domain)</label>
+            <input type="text" value={localSettings.domainName} onChange={e => setLocalSettings({...localSettings, domainName: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white focus:border-emerald-500 outline-none font-bold shadow-sm" />
           </div>
         </div>
       </div>
 
       <div className="space-y-2 pt-4">
-        <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2"><Code size={18} className="text-gray-500"/> أكواد مخصصة (Header Scripts)</label>
-        <textarea rows={4} value={localSettings.customScript} onChange={e => setLocalSettings({...localSettings, customScript: e.target.value})} className="w-full p-4 rounded-xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-mono text-sm focus:border-emerald-500 outline-none" placeholder="<!-- Insert Analytics or Custom CSS here -->"></textarea>
+        <label className="font-black text-gray-700 dark:text-gray-300 flex items-center gap-2 pr-1"><Code size={18} className="text-gray-500"/> أكواد مخصصة (Header Scripts)</label>
+        <textarea rows={4} value={localSettings.customScript} onChange={e => setLocalSettings({...localSettings, customScript: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-mono text-sm focus:border-emerald-500 outline-none shadow-sm" placeholder="أضف أكواد التتبع المخصصة هنا..."></textarea>
       </div>
 
-      <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-xl shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 mt-6">
+      <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-xl shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 mt-6 active:scale-95 shadow-emerald-200 dark:shadow-none">
         <Save size={24} /> حفظ كافة الإعدادات
       </button>
     </div>
