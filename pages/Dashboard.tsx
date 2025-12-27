@@ -36,7 +36,8 @@ import {
   Plus,
   Download,
   Share2,
-  Database
+  Database,
+  KeyRound
 } from 'lucide-react';
 
 // وظيفة ضغط الصور لضمان سلاسة الموقع على الهاتف والحاسوب
@@ -113,7 +114,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
             </div>
             <button type="submit" className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-emerald-700 active:scale-95 transition-all">دخول للإدارة</button>
           </form>
-          <div className="text-center text-[10px] text-gray-400 font-bold">كلمة السر الافتراضية هي: halal2024</div>
+          <div className="text-center text-[10px] text-gray-400 font-bold">استخدم كلمة المرور التي اخترتها أو الافتراضية</div>
         </div>
       </div>
     );
@@ -425,6 +426,8 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
 const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setProducts: any, setOrders: any }> = ({ settings, setSettings, setProducts, setOrders }) => {
   const [local, setLocal] = useState(settings);
+  const [newPassword, setNewPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -474,8 +477,19 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setPr
     }
   };
 
+  const handleSave = () => {
+    let finalSettings = { ...local };
+    if (newPassword.trim()) {
+      finalSettings.adminPasswordHash = btoa(newPassword);
+    }
+    setSettings(finalSettings);
+    saveSettings(finalSettings);
+    alert('✅ تم حفظ كافة الإعدادات بنجاح');
+    setNewPassword('');
+  };
+
   return (
-    <div className="space-y-8 max-w-2xl mx-auto pb-20">
+    <div className="space-y-8 max-w-2xl mx-auto pb-20 text-right">
       {/* قسم المزامنة والنسخ الاحتياطي */}
       <div className="bg-emerald-50 dark:bg-emerald-950/20 p-8 rounded-[50px] border border-emerald-100 dark:border-emerald-900/50 shadow-sm space-y-6 text-center">
         <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto shadow-sm text-emerald-600">
@@ -496,19 +510,47 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setPr
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 p-10 rounded-[50px] border dark:border-gray-800 shadow-xl space-y-8">
-        <h3 className="text-2xl font-black dark:text-white flex items-center gap-3 justify-center">إعدادات المنصات والبيكسل <Settings size={24} className="text-emerald-600"/></h3>
+      <div className="bg-white dark:bg-gray-900 p-10 rounded-[50px] border dark:border-gray-800 shadow-xl space-y-10">
+        
+        {/* قسم الأمان - كلمة السر */}
         <div className="space-y-6">
+          <h3 className="text-xl font-black dark:text-white flex items-center gap-3 justify-start"><KeyRound size={24} className="text-emerald-600"/> حماية لوحة التحكم</h3>
           <div className="space-y-2">
-            <label className="text-xs font-black text-gray-400 pr-2 uppercase">Facebook Pixel ID</label>
-            <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" placeholder="ID البكسل الخاص بفيسبوك" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-black text-gray-400 pr-2 uppercase">Google AdSense ID</label>
-            <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" placeholder="مثال: pub-xxxxxxxxxxxxxxxx" />
+            <label className="text-xs font-black text-gray-400 pr-2">تغيير كلمة المرور (اتركها فارغة إذا لم ترد التغيير)</label>
+            <div className="relative">
+              <input 
+                type={showPass ? "text" : "password"} 
+                value={newPassword} 
+                onChange={e=>setNewPassword(e.target.value)} 
+                className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" 
+                placeholder="أدخل كلمة مرور جديدة" 
+              />
+              <button onClick={() => setShowPass(!showPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            <p className="text-[10px] text-gray-400 font-bold px-2">توحيد كلمة السر: قم بتغيير الكلمة هنا ثم "تصدير البيانات" للهاتف، أو غيرها يدوياً في كلا الجهازين.</p>
           </div>
         </div>
-        <button onClick={() => { setSettings(local); saveSettings(local); alert('✅ تم حفظ كافة الإعدادات بنجاح'); }} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all">حفظ الإعدادات</button>
+
+        <div className="h-px bg-gray-100 dark:bg-gray-800 w-full"></div>
+
+        {/* قسم التتبع والإعلانات */}
+        <div className="space-y-6">
+          <h3 className="text-xl font-black dark:text-white flex items-center gap-3 justify-start"><Settings size={24} className="text-emerald-600"/> إعدادات المنصات</h3>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-gray-400 pr-2 uppercase">Facebook Pixel ID</label>
+              <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" placeholder="ID البكسل الخاص بفيسبوك" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-gray-400 pr-2 uppercase">Google AdSense ID</label>
+              <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" placeholder="مثال: pub-xxxxxxxxxxxxxxxx" />
+            </div>
+          </div>
+        </div>
+
+        <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all active:scale-95">حفظ كافة التغييرات</button>
       </div>
     </div>
   );
