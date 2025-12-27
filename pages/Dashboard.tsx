@@ -8,6 +8,7 @@ import {
   getStoredOrders, 
   getStoredDeletedOrders,
   getStoredProducts,
+  getStoredSettings,
   factoryReset 
 } from '../store';
 import { 
@@ -33,7 +34,10 @@ import {
   Image as ImageIcon,
   CheckCircle,
   ChevronLeft,
-  Plus
+  Plus,
+  Download,
+  Share2,
+  Database
 } from 'lucide-react';
 
 // وظيفة ضغط الصور لضمان سلاسة الموقع على الهاتف والحاسوب
@@ -150,7 +154,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
           <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
           <Route path="/orders" element={<OrdersList orders={orders} setOrders={setOrders} />} />
           <Route path="/products" element={<ProductsManager products={products} setProducts={setProducts} />} />
-          <Route path="/settings" element={<SettingsManager settings={settings} setSettings={setSettings} />} />
+          <Route path="/settings" element={<SettingsManager settings={settings} setSettings={setSettings} setProducts={setProducts} setOrders={setOrders} />} />
         </Routes>
       </div>
     </div>
@@ -271,7 +275,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   };
 
   const handleGalleryChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Cast to any or File[] to ensure the iterate item is recognized as a Blob for readAsDataURL
     const files = Array.from(e.target.files || []) as File[];
     if (files.length > 0) {
       setIsProcessing(true);
@@ -284,7 +287,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
             resolve(compressed);
           };
         });
-        // Fix: Explicitly ensure file is recognized as a Blob/File to avoid 'unknown' error
         reader.readAsDataURL(file);
         newImages.push(await promise);
       }
@@ -420,10 +422,79 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   );
 };
 
-const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = ({ settings, setSettings }) => {
+const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setProducts: any, setOrders: any }> = ({ settings, setSettings, setProducts, setOrders }) => {
   const [local, setLocal] = useState(settings);
+  const importFileRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const data = {
+      products: getStoredProducts(),
+      orders: getStoredOrders(),
+      settings: getStoredSettings(),
+      timestamp: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `brima-store-backup-${new Date().toLocaleDateString()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string);
+          if (data.products && data.settings) {
+            if (confirm('سيتم استبدال المنتجات والطلبات الحالية ببيانات الملف المرفوع. هل تريد الاستمرار؟')) {
+              saveProducts(data.products);
+              saveOrders(data.orders || []);
+              saveSettings(data.settings);
+              setProducts(data.products);
+              setOrders(data.orders || []);
+              setSettings(data.settings);
+              alert('✅ تم استيراد البيانات بنجاح! سيتم تحديث الصفحة.');
+              window.location.reload();
+            }
+          } else {
+            alert('❌ ملف غير صالح');
+          }
+        } catch (err) {
+          alert('❌ حدث خطأ أثناء قراءة الملف');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
+    <div className="space-y-8 max-w-2xl mx-auto pb-20">
+      {/* قسم المزامنة والنسخ الاحتياطي */}
+      <div className="bg-emerald-50 dark:bg-emerald-950/20 p-8 rounded-[50px] border border-emerald-100 dark:border-emerald-900/50 shadow-sm space-y-6 text-center">
+        <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto shadow-sm text-emerald-600">
+          <Database size={32} />
+        </div>
+        <div>
+          <h3 className="text-xl font-black text-emerald-900 dark:text-emerald-100">نقل البيانات بين الأجهزة</h3>
+          <p className="text-xs font-bold text-emerald-700/60 mt-2 leading-relaxed px-4">استخدم هذه الميزة لنقل المنتجات والطلبات من الحاسوب إلى الهاتف يدوياً عبر ملف نسخة احتياطية.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button onClick={handleExport} className="bg-emerald-600 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-all">
+            <Download size={18} /> تصدير ملف البيانات
+          </button>
+          <button onClick={() => importFileRef.current?.click()} className="bg-white dark:bg-gray-800 text-emerald-600 border-2 border-emerald-100 dark:border-emerald-900 py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-sm hover:bg-emerald-50 transition-all">
+            <Upload size={18} /> استيراد من ملف
+          </button>
+          <input type="file" ref={importFileRef} className="hidden" accept=".json" onChange={handleImport} />
+        </div>
+      </div>
+
       <div className="bg-white dark:bg-gray-900 p-10 rounded-[50px] border dark:border-gray-800 shadow-xl space-y-8">
         <h3 className="text-2xl font-black dark:text-white flex items-center gap-3 justify-center">إعدادات المنصات والبيكسل <Settings size={24} className="text-emerald-600"/></h3>
         <div className="space-y-6">
