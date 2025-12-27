@@ -32,7 +32,8 @@ import {
   Upload,
   Image as ImageIcon,
   CheckCircle,
-  ChevronLeft
+  ChevronLeft,
+  Plus
 } from 'lucide-react';
 
 // وظيفة ضغط الصور لضمان سلاسة الموقع على الهاتف والحاسوب
@@ -79,7 +80,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // التحقق من كلمة المرور (الافتراضية: halal2024)
     if (btoa(password) === settings.adminPasswordHash) setIsAuthenticated(true);
     else alert('كلمة المرور غير صحيحة');
   };
@@ -125,7 +125,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 text-right font-cairo">
-      {/* Header الموحد */}
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-black dark:text-white">لوحة التحكم</h1>
         <div className="flex items-center justify-center gap-2 text-emerald-600 text-[10px] font-black mt-2 uppercase">
@@ -134,7 +133,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
         </div>
       </div>
 
-      {/* شريط التنقل الموحد للحاسوب والهاتف */}
       <div className="bg-white dark:bg-gray-900 p-2 rounded-[25px] border border-gray-100 dark:border-gray-800 shadow-xl flex items-center justify-between mb-10 sticky top-4 z-[100] overflow-x-auto no-scrollbar mx-auto max-w-2xl">
         {navLinks.map(link => (
           <Link 
@@ -147,7 +145,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
         ))}
       </div>
 
-      {/* المحتوى */}
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Routes>
           <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
@@ -231,21 +228,24 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
 const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ products, setProducts }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<Partial<Product>>({ name: '', price: 0, category: 'electronics', image: '', description: '' });
+  const [formData, setFormData] = useState<Partial<Product>>({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.image) return alert('يرجى اختيار صورة للمنتج');
+    if (!formData.image) return alert('يرجى اختيار صورة رئيسية للمنتج');
     
     setIsProcessing(true);
     let updated: Product[];
     
+    const finalData = { ...formData, images: formData.images || [] } as Product;
+    
     if (editingProduct) {
-      updated = products.map(p => p.id === editingProduct.id ? { ...formData, id: p.id } as Product : p);
+      updated = products.map(p => p.id === editingProduct.id ? { ...finalData, id: p.id } : p);
     } else {
-      const newProd = { ...formData, id: Math.random().toString(36).substr(2, 9) } as Product;
+      const newProd = { ...finalData, id: Math.random().toString(36).substr(2, 9) };
       updated = [...products, newProd];
     }
     
@@ -270,9 +270,39 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     }
   };
 
+  const handleGalleryChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Cast to any or File[] to ensure the iterate item is recognized as a Blob for readAsDataURL
+    const files = Array.from(e.target.files || []) as File[];
+    if (files.length > 0) {
+      setIsProcessing(true);
+      const newImages: string[] = [];
+      for (const file of files) {
+        const reader = new FileReader();
+        const promise = new Promise<string>((resolve) => {
+          reader.onloadend = async () => {
+            const compressed = await compressImage(reader.result as string);
+            resolve(compressed);
+          };
+        });
+        // Fix: Explicitly ensure file is recognized as a Blob/File to avoid 'unknown' error
+        reader.readAsDataURL(file);
+        newImages.push(await promise);
+      }
+      setFormData(prev => ({ ...prev, images: [...(prev.images || []), ...newImages] }));
+      setIsProcessing(false);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images?.filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <div className="space-y-8">
-      <button onClick={() => { setEditingProduct(null); setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '' }); setShowModal(true); }} className="w-full bg-emerald-600 text-white p-8 rounded-[35px] font-black flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-700 transition-all text-xl">
+      <button onClick={() => { setEditingProduct(null); setFormData({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' }); setShowModal(true); }} className="w-full bg-emerald-600 text-white p-8 rounded-[35px] font-black flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-700 transition-all text-xl">
         <PlusCircle size={28} /> إضافة منتج جديد
       </button>
 
@@ -285,6 +315,7 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
             <div className="flex-grow w-full mb-6">
               <h4 className="font-black text-base dark:text-white line-clamp-1 mb-1">{p.name}</h4>
               <div className="text-emerald-600 font-black text-2xl">{p.price} <span className="text-xs">د.م.</span></div>
+              <div className="text-[10px] text-gray-400 font-bold mt-1">المعرض: {p.images?.length || 0} صور إضافية</div>
             </div>
             <div className="flex w-full gap-2">
               <button onClick={() => { setEditingProduct(p); setFormData(p); setShowModal(true); }} className="flex-1 py-4 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-emerald-600 hover:text-white transition-all"><Edit2 size={16}/> تعديل</button>
@@ -303,23 +334,52 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
             </div>
             
             <form onSubmit={handleSave} className="space-y-8 text-right">
-              {/* اختيار الصور */}
-              <div 
-                onClick={() => fileInputRef.current?.click()} 
-                className="aspect-video border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[40px] flex flex-col items-center justify-center cursor-pointer overflow-hidden bg-gray-50 dark:bg-gray-800 relative hover:border-emerald-500 transition-all shadow-inner"
-              >
-                {formData.image ? (
-                  <img src={formData.image} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-center font-black text-gray-400 flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 bg-white dark:bg-gray-700 rounded-[25px] flex items-center justify-center shadow-lg">
-                      <Upload size={40} className="text-emerald-500"/>
+              {/* الصورة الرئيسية */}
+              <div className="space-y-4">
+                <label className="text-sm font-black text-gray-400 pr-2">الصورة الرئيسية (ستظهر في الواجهة)</label>
+                <div 
+                  onClick={() => fileInputRef.current?.click()} 
+                  className="aspect-video border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[40px] flex flex-col items-center justify-center cursor-pointer overflow-hidden bg-gray-50 dark:bg-gray-800 relative hover:border-emerald-500 transition-all shadow-inner"
+                >
+                  {formData.image ? (
+                    <img src={formData.image} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center font-black text-gray-400 flex flex-col items-center gap-4">
+                      <div className="w-20 h-20 bg-white dark:bg-gray-700 rounded-[25px] flex items-center justify-center shadow-lg">
+                        <Upload size={40} className="text-emerald-500"/>
+                      </div>
+                      <span className="text-lg">اضغط هنا لتحميل صورة المنتج</span>
                     </div>
-                    <span className="text-lg">اضغط هنا لتحميل صورة المنتج</span>
-                  </div>
-                )}
-                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
-                {isProcessing && <div className="absolute inset-0 bg-emerald-600/20 backdrop-blur-sm flex items-center justify-center font-black text-emerald-900 animate-pulse">جاري المعالجة...</div>}
+                  )}
+                  <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+                </div>
+              </div>
+
+              {/* معرض الصور الإضافية */}
+              <div className="space-y-4">
+                <label className="text-sm font-black text-gray-400 pr-2">معرض الصور الإضافية (سيظهر داخل صفحة المنتج)</label>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {formData.images?.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button 
+                        type="button"
+                        onClick={() => removeGalleryImage(idx)}
+                        className="absolute top-1 left-1 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <button 
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="aspect-square border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl flex items-center justify-center text-gray-400 hover:text-emerald-500 hover:border-emerald-500 transition-all"
+                  >
+                    <Plus size={32} />
+                  </button>
+                  <input type="file" ref={galleryInputRef} className="hidden" onChange={handleGalleryChange} accept="image/*" multiple />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -349,7 +409,8 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
               </div>
 
               <button type="submit" disabled={isProcessing} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-xl shadow-2xl hover:bg-emerald-700 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-3">
-                <CheckCircle size={24} /> {editingProduct ? 'حفظ التعديلات' : 'نشر المنتج في المتجر'}
+                {isProcessing ? <RefreshCw className="animate-spin" size={24}/> : <CheckCircle size={24} />}
+                {editingProduct ? 'حفظ التعديلات' : 'نشر المنتج في المتجر'}
               </button>
             </form>
           </div>
