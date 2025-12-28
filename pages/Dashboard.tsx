@@ -38,7 +38,8 @@ import {
   Image as ImageIcon,
   Users,
   TrendingUp,
-  ArrowUpRight
+  ArrowUpRight,
+  Activity
 } from 'lucide-react';
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -147,7 +148,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Routes>
-          <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
+          <Route path="/" element={<StatsOverview orders={orders} products={products} settings={settings} />} />
           <Route path="/orders" element={<OrdersList orders={orders} setOrders={setOrders} />} />
           <Route path="/products" element={<ProductsManager products={products} setProducts={setProducts} />} />
           <Route path="/settings" element={<SettingsManager settings={settings} setSettings={setSettings} />} />
@@ -222,17 +223,47 @@ const VisitorChart: React.FC<{ data: DailyVisits }> = ({ data }) => {
   );
 };
 
-const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ orders, products }) => {
+const StatsOverview: React.FC<{ orders: Order[], products: Product[], settings: AppSettings }> = ({ orders, products, settings }) => {
   const [visits, setVisits] = useState<DailyVisits>(getStoredVisits());
   
   const todayDate = new Date().toISOString().split('T')[0];
   const todayVisits = visits[todayDate] || 0;
   
-  // Explicitly type accumulator and current value in reduce to fix potential unknown type inference issues.
   const totalWeekVisits = Object.values(visits).reduce((a: number, b: number) => a + b, 0);
 
   return (
     <div className="space-y-8">
+      {/* Facebook Tracking Status - Highly Visible on Mobile */}
+      <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2">
+        <div className="bg-white dark:bg-gray-900 border border-emerald-100 dark:border-emerald-900/50 p-4 rounded-2xl min-w-[200px] flex-1 shadow-sm flex items-center gap-3">
+           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+             <Activity size={20} className="animate-pulse" />
+           </div>
+           <div className="text-right">
+             <div className="text-[10px] font-black text-gray-400 uppercase">FB Pixel ID</div>
+             <div className="text-xs font-black dark:text-white truncate max-w-[120px]">{settings.fbPixelId || 'غير مفعل'}</div>
+             <div className="flex items-center gap-1 mt-0.5">
+                <div className={`w-1.5 h-1.5 rounded-full ${settings.fbPixelId ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-[8px] font-bold text-gray-400">{settings.fbPixelId ? 'متصل' : 'مفصول'}</span>
+             </div>
+           </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-900 border border-emerald-100 dark:border-emerald-900/50 p-4 rounded-2xl min-w-[200px] flex-1 shadow-sm flex items-center gap-3">
+           <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+             <Code size={20} />
+           </div>
+           <div className="text-right">
+             <div className="text-[10px] font-black text-gray-400 uppercase">Test Event Code</div>
+             <div className="text-xs font-black dark:text-white truncate max-w-[120px]">{settings.fbTestEventCode || '---'}</div>
+             <div className="flex items-center gap-1 mt-0.5">
+                <div className={`w-1.5 h-1.5 rounded-full ${settings.fbTestEventCode ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                <span className="text-[8px] font-bold text-gray-400">نمط الاختبار</span>
+             </div>
+           </div>
+        </div>
+      </div>
+
       {/* Primary Analytics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
@@ -260,7 +291,6 @@ const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ ord
           </div>
           <div className="text-gray-400 text-[10px] font-black uppercase mb-2 tracking-widest text-right">إجمالي الدخل</div>
           <div className="text-3xl font-black dark:text-white text-right">
-            {/* Explicitly type accumulator and current value in reduce to fix potential unknown type inference issues on line 231. */}
             {orders.reduce((s: number, o: Order) => s + o.totalPrice, 0).toLocaleString()} <span className="text-sm">د.م.</span>
           </div>
         </div>
