@@ -65,8 +65,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
     phone: ''
   });
 
-  const shareUrl = window.location.origin;
-  const productUrl = `${shareUrl}/#/product/${id}`;
+  // استخدام الرابط الكامل الحالي لضمان الوصول للمنتج مباشرة عند المشاركة
+  const productUrl = window.location.href;
 
   useEffect(() => {
     if (product) {
@@ -83,10 +83,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
         currency: 'MAD'
       });
     }
-  }, [product]);
+  }, [product, id]);
 
   if (!product) {
-    return <div className="py-24 text-center font-black text-2xl text-gray-400 dark:text-gray-600">المنتج غير متاح حالياً</div>;
+    return <div className="py-24 text-center font-black text-2xl text-gray-400 dark:text-gray-600 transition-colors">المنتج غير متاح حالياً</div>;
   }
 
   const handleCopyLink = () => {
@@ -100,7 +100,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
     navigator.clipboard.writeText(productUrl).then(() => {
       setInstaCopied(true);
       setTimeout(() => setInstaCopied(false), 3000);
-      // توجيه المستخدم لفتح انستغرام
       window.open('https://www.instagram.com/', '_blank');
     });
   };
@@ -205,11 +204,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
             </div>
           </div>
 
-          {/* Social Share Section */}
+          {/* Social Share Section - تم تحديث جميع الروابط هنا لتستخدم productUrl الدقيق */}
           <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-700">
              <span className="block text-sm font-black text-gray-400 mb-4 text-center md:text-right pr-2">شارك هذا المنتج مع أصدقائك:</span>
              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#25D366] text-white rounded-2xl flex items-center justify-center hover:scale-110 shadow-lg transition-transform" title="واتساب"><MessageCircle size={24}/></a>
+                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' - تصفحه هنا: ' + productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#25D366] text-white rounded-2xl flex items-center justify-center hover:scale-110 shadow-lg transition-transform" title="واتساب"><MessageCircle size={24}/></a>
                 <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#1877F2] text-white rounded-2xl flex items-center justify-center hover:scale-110 shadow-lg transition-transform" title="فيسبوك"><Facebook size={24}/></a>
                 <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center hover:scale-110 shadow-lg transition-transform" title="تويتر X"><Twitter size={24}/></a>
                 <button 
