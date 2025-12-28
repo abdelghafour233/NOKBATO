@@ -50,8 +50,7 @@ export const getStoredSettings = (): AppSettings => {
     domainName: 'storebrima.com',
     nameServers: '',
     adminPasswordHash: 'aGFsYWwyMDI0',
-    customScript: '',
-    cloudSyncId: ''
+    customScript: ''
   };
 };
 
@@ -59,54 +58,6 @@ export const saveProducts = (products: Product[]) => localStorage.setItem('produ
 export const saveOrders = (orders: Order[]) => localStorage.setItem('orders', JSON.stringify(orders));
 export const saveDeletedOrders = (orders: Order[]) => localStorage.setItem('deleted_orders', JSON.stringify(orders));
 export const saveSettings = (settings: AppSettings) => localStorage.setItem('settings', JSON.stringify(settings));
-
-// خدمة السحابة البسيطة (تستخدم API عام للتخزين المؤقت)
-const CLOUD_PROVIDER_URL = "https://api.restful-api.dev/objects";
-
-export const pushToCloud = async (syncId: string) => {
-  const data = {
-    products: getStoredProducts(),
-    orders: getStoredOrders(),
-    settings: getStoredSettings(),
-    deletedOrders: getStoredDeletedOrders()
-  };
-
-  try {
-    const response = await fetch(CLOUD_PROVIDER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: `brima_sync_${syncId}`,
-        data: data
-      })
-    });
-    return response.ok;
-  } catch (e) {
-    console.error("Cloud Sync Error:", e);
-    return false;
-  }
-};
-
-export const fetchFromCloud = async (syncId: string) => {
-  try {
-    const response = await fetch(CLOUD_PROVIDER_URL);
-    const allObjects = await response.json();
-    const myData = allObjects.find((obj: any) => obj.name === `brima_sync_${syncId}`);
-    
-    if (myData && myData.data) {
-      const payload = myData.data;
-      saveProducts(payload.products);
-      saveOrders(payload.orders);
-      saveSettings(payload.settings);
-      saveDeletedOrders(payload.deletedOrders || []);
-      return true;
-    }
-    return false;
-  } catch (e) {
-    console.error("Cloud Fetch Error:", e);
-    return false;
-  }
-};
 
 export const factoryReset = () => {
   if (confirm('هل أنت متأكد؟ سيتم حذف كل شيء نهائياً.')) {

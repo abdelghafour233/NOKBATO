@@ -9,39 +9,24 @@ import {
   getStoredDeletedOrders,
   getStoredProducts,
   getStoredSettings,
-  pushToCloud,
-  fetchFromCloud
+  factoryReset
 } from '../store';
 import { 
   Settings, 
   Package, 
   ShoppingBag, 
   Trash2, 
-  Save, 
   Lock,
   Edit2,
   Phone, 
   MapPin, 
   BarChart,
-  Radio,
   X,
-  RefreshCw,
-  AlertTriangle,
-  RotateCcw,
   PlusCircle,
   Eye,
   EyeOff,
-  Upload,
-  Image as ImageIcon,
   CheckCircle,
-  ChevronLeft,
-  Plus,
-  Download,
-  Share2,
-  Database,
   KeyRound,
-  CloudLightning,
-  CloudSync,
   Wifi
 } from 'lucide-react';
 
@@ -135,10 +120,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
     <div className="max-w-6xl mx-auto px-4 py-8 text-right font-cairo">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-black dark:text-white">لوحة التحكم</h1>
-        <div className="flex items-center justify-center gap-2 text-emerald-600 text-[10px] font-black mt-2 uppercase">
-          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-          نظام المزامنة السحابية نشط
-        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-900 p-2 rounded-[25px] border border-gray-100 dark:border-gray-800 shadow-xl flex items-center justify-between mb-10 sticky top-4 z-[100] overflow-x-auto no-scrollbar mx-auto max-w-2xl">
@@ -158,7 +139,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
           <Route path="/" element={<StatsOverview orders={orders} products={products} />} />
           <Route path="/orders" element={<OrdersList orders={orders} setOrders={setOrders} />} />
           <Route path="/products" element={<ProductsManager products={products} setProducts={setProducts} />} />
-          <Route path="/settings" element={<SettingsManager settings={settings} setSettings={setSettings} setProducts={setProducts} setOrders={setOrders} />} />
+          <Route path="/settings" element={<SettingsManager settings={settings} setSettings={setSettings} />} />
         </Routes>
       </div>
     </div>
@@ -238,7 +219,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   const [formData, setFormData] = useState<Partial<Product>>({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,45 +299,10 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   );
 };
 
-const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setProducts: any, setOrders: any }> = ({ settings, setSettings, setProducts, setOrders }) => {
+const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = ({ settings, setSettings }) => {
   const [local, setLocal] = useState(settings);
   const [newPassword, setNewPassword] = useState('');
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [showPass, setShowPass] = useState(false);
-
-  const generateSyncId = () => {
-    const id = `BRIMA-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    setLocal(prev => ({ ...prev, cloudSyncId: id }));
-  };
-
-  const handleCloudPush = async () => {
-    if (!local.cloudSyncId) return alert('يرجى توليد رمز مزامنة أولاً');
-    setSyncStatus('loading');
-    const success = await pushToCloud(local.cloudSyncId);
-    if (success) {
-      setSettings(local);
-      saveSettings(local);
-      setSyncStatus('success');
-      setTimeout(() => setSyncStatus('idle'), 3000);
-    } else {
-      setSyncStatus('error');
-    }
-  };
-
-  const handleCloudPull = async () => {
-    if (!local.cloudSyncId) return alert('أدخل رمز المزامنة الخاص بك');
-    if (!confirm('سيتم استبدال كافة البيانات الحالية ببيانات السحابة. هل أنت متأكد؟')) return;
-    setSyncStatus('loading');
-    const success = await fetchFromCloud(local.cloudSyncId);
-    if (success) {
-      setSyncStatus('success');
-      alert('✅ تم سحب البيانات بنجاح! سيتم تحديث الصفحة.');
-      window.location.reload();
-    } else {
-      setSyncStatus('error');
-      alert('❌ فشل في جلب البيانات. تأكد من الرمز.');
-    }
-  };
 
   const handleSave = () => {
     let finalSettings = { ...local };
@@ -371,58 +316,6 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setPr
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto pb-20 text-right">
-      {/* قسم التوحيد السحابي الجديد */}
-      <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
-        <div className="relative z-10 space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center radar-pulse">
-               <CloudSync size={32} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black">توحيد الهاتف والحاسوب</h3>
-              <p className="text-emerald-100 text-xs font-bold">اربط أجهزتك بضغطة زر دون الحاجة لسيرفر خاص</p>
-            </div>
-          </div>
-
-          <div className="bg-black/20 backdrop-blur-md p-6 rounded-3xl border border-white/10 space-y-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-emerald-200 opacity-70">رمز المزامنة الفريد (Store ID)</label>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={local.cloudSyncId} 
-                  onChange={e => setLocal({...local, cloudSyncId: e.target.value.toUpperCase()})}
-                  className="flex-grow bg-white/10 border border-white/20 rounded-xl p-4 font-black text-center tracking-widest text-xl outline-none focus:bg-white/20 transition-all"
-                  placeholder="BRIMA-XXXXXX"
-                />
-                <button onClick={generateSyncId} className="bg-white text-emerald-700 p-4 rounded-xl font-black hover:scale-105 active:scale-95 transition-all"><RotateCcw size={20}/></button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button 
-                onClick={handleCloudPush} 
-                disabled={syncStatus === 'loading'}
-                className="bg-emerald-500 hover:bg-emerald-400 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg transition-all"
-              >
-                {syncStatus === 'loading' ? <RefreshCw className="animate-spin" /> : <Upload size={18} />}
-                رفع للسحابة
-              </button>
-              <button 
-                onClick={handleCloudPull}
-                disabled={syncStatus === 'loading'}
-                className="bg-white text-emerald-700 py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg transition-all"
-              >
-                {syncStatus === 'loading' ? <RefreshCw className="animate-spin" /> : <Download size={18} />}
-                سحب للهاتف
-              </button>
-            </div>
-            <p className="text-[9px] text-center text-emerald-200/80 font-bold">💡 ارفع البيانات من الحاسوب، ثم أدخل نفس الرمز في الهاتف واضغط "سحب".</p>
-          </div>
-        </div>
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
-      </div>
-
       <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border dark:border-gray-800 shadow-xl space-y-10">
         <div className="space-y-6">
           <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><KeyRound size={24} className="text-emerald-600"/> الأمان وكلمة المرور</h3>
@@ -446,6 +339,10 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setPr
         </div>
 
         <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all">حفظ الإعدادات</button>
+      </div>
+      
+      <div className="text-center pt-8">
+        <button onClick={() => factoryReset()} className="text-red-500 text-sm font-black underline">إعادة ضبط المصنع (حذف كل البيانات)</button>
       </div>
     </div>
   );

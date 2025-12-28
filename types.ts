@@ -32,7 +32,6 @@ export interface AppSettings {
   nameServers: string;
   adminPasswordHash: string;
   customScript: string; 
-  cloudSyncId: string; // معرف المزامنة السحابية
 }
 
 export interface CartItem extends Product {
