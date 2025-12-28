@@ -1,3 +1,4 @@
+
 import { Product, Order, AppSettings } from './types';
 
 export const INITIAL_PRODUCTS: Product[] = [
@@ -41,7 +42,7 @@ export const getStoredDeletedOrders = (): Order[] => {
 export const getStoredSettings = (): AppSettings => {
   const stored = localStorage.getItem('settings');
   return stored ? JSON.parse(stored) : {
-    fbPixelId: '',
+    fbPixelId: '2298107977371972',
     fbTestEventCode: '', 
     googleAnalyticsId: '',
     googleAdSenseId: '',
