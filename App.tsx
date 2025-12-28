@@ -59,7 +59,14 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(getStoredSettings());
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  
+  // تعديل: النظام الداكن هو الافتراضي (true) إذا لم يكن هناك إعداد محفوظ مسبقاً
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === null) return true; // الافتراضي هو داكن
+    return savedTheme === 'dark';
+  });
+
   const location = useLocation();
 
   useEffect(() => {
@@ -68,8 +75,11 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (darkMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     localStorage.setItem('theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
@@ -92,7 +102,7 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col font-cairo bg-[#fcfcfc] dark:bg-gray-950">
+    <div className="min-h-screen flex flex-col font-cairo bg-[#fcfcfc] dark:bg-gray-950 transition-colors duration-500">
       <SEOManager settings={settings} />
       
       {/* Top Floating Nav */}
