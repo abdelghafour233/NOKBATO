@@ -1,31 +1,10 @@
 import { Product, Order, AppSettings, DailyVisits } from './types';
 
-export const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'هاتف ذكي الترا برو',
-    price: 8500,
-    category: 'electronics',
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800',
-    description: 'أحدث هاتف ذكي بمواصفات عالمية وكاميرا احترافية.'
-  },
-  {
-    id: '5',
-    name: 'ساعة رولكس كلاسيك',
-    price: 45000,
-    category: 'watches',
-    image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&q=80&w=800',
-    description: 'فخامة لا مثيل لها مع تصميم كلاسيكي جذاب يناسب جميع المناسبات.'
-  }
-];
+export const INITIAL_PRODUCTS: Product[] = [];
 
 export const getStoredProducts = (): Product[] => {
   const stored = localStorage.getItem('products');
-  if (!stored) {
-    localStorage.setItem('products', JSON.stringify(INITIAL_PRODUCTS));
-    return INITIAL_PRODUCTS;
-  }
-  return JSON.parse(stored);
+  return stored ? JSON.parse(stored) : INITIAL_PRODUCTS;
 };
 
 export const getStoredOrders = (): Order[] => {
@@ -53,10 +32,10 @@ export const trackVisit = () => {
 export const getStoredSettings = (): AppSettings => {
   const stored = localStorage.getItem('settings');
   return stored ? JSON.parse(stored) : {
-    fbPixelId: '2298107977371972',
-    fbTestEventCode: 'TEST48130', 
+    fbPixelId: '',
+    fbTestEventCode: '', 
     googleAnalyticsId: '',
-    googleAdSenseId: '',
+    googleAdSenseId: '', 
     tiktokPixelId: '',
     googleSheetsUrl: '',
     domainName: 'storebrima.com',
