@@ -12,6 +12,13 @@ import CartPage from './pages/Cart.tsx';
 import CheckoutPage from './pages/Checkout.tsx';
 import DashboardPage from './pages/Dashboard.tsx';
 
+// Global helper to track FB events
+export const trackFBEvent = (eventName: string, params?: object) => {
+  if (typeof window !== 'undefined' && (window as any).fbq) {
+    (window as any).fbq('track', eventName, params);
+  }
+};
+
 const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
   const location = useLocation();
 
@@ -107,6 +114,14 @@ const App: React.FC = () => {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
+    // Track AddToCart
+    trackFBEvent('AddToCart', {
+      content_name: product.name,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: product.price,
+      currency: 'MAD'
+    });
   };
 
   const removeFromCart = (id: string) => {
@@ -176,7 +191,6 @@ const App: React.FC = () => {
                   {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
 
-                {/* Dashboard Link - Now visible on mobile header too */}
                 <Link to="/dashboard" className="text-gray-400 hover:text-emerald-600 p-2 transition-all" title="لوحة التحكم">
                   <LayoutDashboard size={22} />
                 </Link>

@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Product, Order } from '../types';
 import { saveOrders, getStoredOrders } from '../store';
+import { trackFBEvent } from '../App.tsx';
 import { 
   ShoppingCart, 
   Heart, 
@@ -70,6 +70,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
       setActiveImage(product.image);
       document.title = `${product.name} | ستور بريمة`;
       window.scrollTo(0, 0);
+
+      // Facebook Pixel: ViewContent
+      trackFBEvent('ViewContent', {
+        content_name: product.name,
+        content_category: product.category,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.price,
+        currency: 'MAD'
+      });
     }
   }, [product]);
 
@@ -105,6 +115,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
     const updatedOrders = [...currentOrders, newOrder];
     saveOrders(updatedOrders);
     setOrders(updatedOrders);
+
+    // Facebook Pixel: Purchase
+    trackFBEvent('Purchase', {
+      value: product.price,
+      currency: 'MAD',
+      content_ids: [product.id],
+      content_type: 'product',
+      content_name: product.name
+    });
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);

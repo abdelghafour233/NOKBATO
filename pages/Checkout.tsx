@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartItem, Order } from '../types';
 import { saveOrders, getStoredOrders } from '../store';
+import { trackFBEvent } from '../App.tsx';
 import { CheckCircle, Truck, MapPin, User, Phone, ArrowRight, ChevronDown } from 'lucide-react';
 
 interface CheckoutPageProps {
@@ -30,6 +30,19 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders 
 
   const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+  useEffect(() => {
+    // Facebook Pixel: InitiateCheckout
+    if (cart.length > 0) {
+      trackFBEvent('InitiateCheckout', {
+        content_ids: cart.map(i => i.id),
+        content_type: 'product',
+        value: total,
+        currency: 'MAD',
+        num_items: cart.length
+      });
+    }
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || !formData.city || !formData.phone) return;
@@ -49,6 +62,15 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ cart, clearCart, setOrders 
     const updatedOrders = [...currentOrders, newOrder];
     saveOrders(updatedOrders);
     setOrders(updatedOrders);
+
+    // Facebook Pixel: Purchase
+    trackFBEvent('Purchase', {
+      value: total,
+      currency: 'MAD',
+      content_ids: cart.map(i => i.id),
+      content_type: 'product',
+      num_items: cart.length
+    });
 
     // محاكاة الإرسال
     setTimeout(() => {

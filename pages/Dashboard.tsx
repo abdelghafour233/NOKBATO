@@ -27,7 +27,10 @@ import {
   EyeOff,
   CheckCircle,
   KeyRound,
-  Wifi
+  Wifi,
+  Megaphone,
+  Globe,
+  Code
 } from 'lucide-react';
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -315,7 +318,52 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
   };
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto pb-20 text-right">
+    <div className="space-y-8 max-w-3xl mx-auto pb-20 text-right">
+      
+      {/* Facebook Marketing Section */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
+        <div className="relative z-10 space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+               <Megaphone size={32} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black">إعدادات فيسبوك بيكسل</h3>
+              <p className="text-blue-100 text-xs font-bold">تتبع زوار متجرك وحسن أداء حملاتك الإعلانية</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-blue-200">Pixel ID</label>
+              <input 
+                type="text" 
+                value={local.fbPixelId} 
+                onChange={e => setLocal({...local, fbPixelId: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl p-4 font-black outline-none focus:bg-white/20 transition-all placeholder:text-blue-300/50"
+                placeholder="مثال: 1234567890"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-blue-200">Test Event Code</label>
+              <input 
+                type="text" 
+                value={local.fbTestEventCode} 
+                onChange={e => setLocal({...local, fbTestEventCode: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl p-4 font-black outline-none focus:bg-white/20 transition-all placeholder:text-blue-300/50"
+                placeholder="TEST12345"
+              />
+            </div>
+          </div>
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+             <p className="text-[10px] font-medium leading-relaxed text-blue-50 opacity-80">
+               * النظام يدعم تتبع الأحداث القياسية (PageView, ViewContent, AddToCart, Purchase) تلقائياً بمجرد إدخال الـ ID.
+             </p>
+          </div>
+        </div>
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+      </div>
+
       <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border dark:border-gray-800 shadow-xl space-y-10">
         <div className="space-y-6">
           <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><KeyRound size={24} className="text-emerald-600"/> الأمان وكلمة المرور</h3>
@@ -331,10 +379,16 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
         </div>
 
         <div className="space-y-6">
-          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><Wifi size={24} className="text-emerald-600"/> التتبع (Pixels)</h3>
+          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><Globe size={24} className="text-emerald-600"/> الويب والتتبع</h3>
           <div className="space-y-4">
-             <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="Facebook Pixel ID" />
-             <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="Google AdSense ID" />
+             <div className="space-y-2">
+               <label className="text-xs font-black text-gray-400">اسم النطاق (Domain)</label>
+               <input type="text" value={local.domainName} onChange={e=>setLocal({...local, domainName:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="storebrima.com" />
+             </div>
+             <div className="space-y-2">
+               <label className="text-xs font-black text-gray-400">Google AdSense ID</label>
+               <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="ca-pub-xxxxxxxxxxxxxxxx" />
+             </div>
           </div>
         </div>
 
