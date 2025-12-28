@@ -8,7 +8,9 @@ import {
   getStoredOrders, 
   getStoredDeletedOrders,
   getStoredProducts,
-  getStoredSettings 
+  getStoredSettings,
+  pushToCloud,
+  fetchFromCloud
 } from '../store';
 import { 
   Settings, 
@@ -37,10 +39,12 @@ import {
   Download,
   Share2,
   Database,
-  KeyRound
+  KeyRound,
+  CloudLightning,
+  CloudSync,
+  Wifi
 } from 'lucide-react';
 
-// وظيفة ضغط الصور لضمان سلاسة الموقع على الهاتف والحاسوب
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -133,7 +137,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
         <h1 className="text-3xl font-black dark:text-white">لوحة التحكم</h1>
         <div className="flex items-center justify-center gap-2 text-emerald-600 text-[10px] font-black mt-2 uppercase">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-          النظام متصل ونشط الآن
+          نظام المزامنة السحابية نشط
         </div>
       </div>
 
@@ -218,13 +222,12 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
                <div className="text-[10px] text-gray-400 font-bold px-2">{new Date(order.date).toLocaleString('ar-MA')}</div>
             </div>
             <div className="flex gap-2">
-              <a href={`tel:${order.phone}`} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all"><Phone size={16}/> اتصال بالعميل</a>
+              <a href={`tel:${order.phone}`} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all"><Phone size={16}/> اتصال</a>
               {view === 'active' && <button onClick={() => moveToTrash(order.id)} className="p-4 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={18}/></button>}
             </div>
           </div>
         ))}
       </div>
-      {data.length === 0 && <div className="text-center py-24 bg-gray-50 dark:bg-gray-900/50 rounded-[50px] border-2 border-dashed border-gray-200 dark:border-gray-800 font-black text-gray-400">لا توجد طلبات لعرضها</div>}
     </div>
   );
 };
@@ -239,20 +242,15 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.image) return alert('يرجى اختيار صورة رئيسية للمنتج');
-    
+    if (!formData.image) return alert('يرجى اختيار صورة رئيسية');
     setIsProcessing(true);
     let updated: Product[];
-    
     const finalData = { ...formData, images: formData.images || [] } as Product;
-    
     if (editingProduct) {
       updated = products.map(p => p.id === editingProduct.id ? { ...finalData, id: p.id } : p);
     } else {
-      const newProd = { ...finalData, id: Math.random().toString(36).substr(2, 9) };
-      updated = [...products, newProd];
+      updated = [...products, { ...finalData, id: Math.random().toString(36).substr(2, 9) }];
     }
-    
     setProducts(updated);
     saveProducts(updated);
     setShowModal(false);
@@ -274,38 +272,10 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     }
   };
 
-  const handleGalleryChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []) as File[];
-    if (files.length > 0) {
-      setIsProcessing(true);
-      const newImages: string[] = [];
-      for (const file of files) {
-        const reader = new FileReader();
-        const promise = new Promise<string>((resolve) => {
-          reader.onloadend = async () => {
-            const compressed = await compressImage(reader.result as string);
-            resolve(compressed);
-          };
-        });
-        reader.readAsDataURL(file);
-        newImages.push(await promise);
-      }
-      setFormData(prev => ({ ...prev, images: [...(prev.images || []), ...newImages] }));
-      setIsProcessing(false);
-    }
-  };
-
-  const removeGalleryImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images?.filter((_, i) => i !== index)
-    }));
-  };
-
   return (
     <div className="space-y-8">
       <button onClick={() => { setEditingProduct(null); setFormData({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' }); setShowModal(true); }} className="w-full bg-emerald-600 text-white p-8 rounded-[35px] font-black flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-700 transition-all text-xl">
-        <PlusCircle size={28} /> إضافة منتج جديد
+        <PlusCircle size={28} /> إضافة منتج
       </button>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -317,11 +287,10 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
             <div className="flex-grow w-full mb-6">
               <h4 className="font-black text-base dark:text-white line-clamp-1 mb-1">{p.name}</h4>
               <div className="text-emerald-600 font-black text-2xl">{p.price} <span className="text-xs">د.م.</span></div>
-              <div className="text-[10px] text-gray-400 font-bold mt-1">المعرض: {p.images?.length || 0} صور إضافية</div>
             </div>
             <div className="flex w-full gap-2">
-              <button onClick={() => { setEditingProduct(p); setFormData(p); setShowModal(true); }} className="flex-1 py-4 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-emerald-600 hover:text-white transition-all"><Edit2 size={16}/> تعديل</button>
-              <button onClick={() => { if(confirm('هل أنت متأكد من حذف المنتج؟')) { const u = products.filter(x=>x.id!==p.id); setProducts(u); saveProducts(u); } }} className="p-4 bg-red-50 dark:bg-red-950/30 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
+              <button onClick={() => { setEditingProduct(p); setFormData(p); setShowModal(true); }} className="flex-1 py-4 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all"><Edit2 size={16}/> تعديل</button>
+              <button onClick={() => { if(confirm('حذف المنتج؟')) { const u = products.filter(x=>x.id!==p.id); setProducts(u); saveProducts(u); } }} className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
             </div>
           </div>
         ))}
@@ -329,94 +298,20 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
       {showModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[50px] shadow-2xl p-8 md:p-12 relative max-h-[95vh] overflow-y-auto no-scrollbar">
-            <div className="flex justify-between items-center mb-10">
-              <h3 className="text-2xl font-black dark:text-white">{editingProduct ? 'تحديث المنتج' : 'إضافة منتج'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500 transition-colors"><X size={32}/></button>
-            </div>
-            
-            <form onSubmit={handleSave} className="space-y-8 text-right">
-              {/* الصورة الرئيسية */}
-              <div className="space-y-4">
-                <label className="text-sm font-black text-gray-400 pr-2">الصورة الرئيسية (ستظهر في الواجهة)</label>
-                <div 
-                  onClick={() => fileInputRef.current?.click()} 
-                  className="aspect-video border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[40px] flex flex-col items-center justify-center cursor-pointer overflow-hidden bg-gray-50 dark:bg-gray-800 relative hover:border-emerald-500 transition-all shadow-inner"
-                >
-                  {formData.image ? (
-                    <img src={formData.image} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center font-black text-gray-400 flex flex-col items-center gap-4">
-                      <div className="w-20 h-20 bg-white dark:bg-gray-700 rounded-[25px] flex items-center justify-center shadow-lg">
-                        <Upload size={40} className="text-emerald-500"/>
-                      </div>
-                      <span className="text-lg">اضغط هنا لتحميل صورة المنتج</span>
-                    </div>
-                  )}
+          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[50px] shadow-2xl p-8 relative max-h-[90vh] overflow-y-auto">
+             <div className="flex justify-between items-center mb-8">
+               <h3 className="text-2xl font-black dark:text-white">{editingProduct ? 'تعديل' : 'إضافة'}</h3>
+               <button onClick={() => setShowModal(false)}><X size={32} className="text-gray-400"/></button>
+             </div>
+             <form onSubmit={handleSave} className="space-y-6 text-right">
+                <div onClick={() => fileInputRef.current?.click()} className="aspect-video border-4 border-dashed rounded-[30px] flex items-center justify-center cursor-pointer bg-gray-50 dark:bg-gray-800 overflow-hidden">
+                  {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="text-gray-400 font-black">اختر صورة رئيسية</div>}
                   <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
                 </div>
-              </div>
-
-              {/* معرض الصور الإضافية */}
-              <div className="space-y-4">
-                <label className="text-sm font-black text-gray-400 pr-2">معرض الصور الإضافية (سيظهر داخل صفحة المنتج)</label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {formData.images?.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm">
-                      <img src={img} className="w-full h-full object-cover" />
-                      <button 
-                        type="button"
-                        onClick={() => removeGalleryImage(idx)}
-                        className="absolute top-1 left-1 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  <button 
-                    type="button"
-                    onClick={() => galleryInputRef.current?.click()}
-                    className="aspect-square border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl flex items-center justify-center text-gray-400 hover:text-emerald-500 hover:border-emerald-500 transition-all"
-                  >
-                    <Plus size={32} />
-                  </button>
-                  <input type="file" ref={galleryInputRef} className="hidden" onChange={handleGalleryChange} accept="image/*" multiple />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-black text-gray-400 pr-2">اسم المنتج</label>
-                  <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all" />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-black text-gray-400 pr-2">السعر بالدرهم</label>
-                  <input required type="number" value={formData.price} onChange={e=>setFormData({...formData, price:Number(e.target.value)})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all" />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-black text-gray-400 pr-2">التصنيف</label>
-                  <select value={formData.category} onChange={e=>setFormData({...formData, category:e.target.value as any})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer">
-                    <option value="electronics">إلكترونيات</option>
-                    <option value="watches">ساعات</option>
-                    <option value="glasses">نظارات</option>
-                    <option value="cars">السيارات</option>
-                    <option value="home">مستلزمات المنزل</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-black text-gray-400 pr-2">وصف قصير</label>
-                  <textarea rows={1} value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all resize-none"></textarea>
-                </div>
-              </div>
-
-              <button type="submit" disabled={isProcessing} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-xl shadow-2xl hover:bg-emerald-700 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-3">
-                {isProcessing ? <RefreshCw className="animate-spin" size={24}/> : <CheckCircle size={24} />}
-                {editingProduct ? 'حفظ التعديلات' : 'نشر المنتج في المتجر'}
-              </button>
-            </form>
+                <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500" placeholder="اسم المنتج" />
+                <input required type="number" value={formData.price} onChange={e=>setFormData({...formData, price:Number(e.target.value)})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500" placeholder="السعر" />
+                <button type="submit" disabled={isProcessing} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-xl shadow-lg">{isProcessing ? 'جاري...' : 'حفظ المنتج'}</button>
+             </form>
           </div>
         </div>
       )}
@@ -427,53 +322,40 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setProducts: any, setOrders: any }> = ({ settings, setSettings, setProducts, setOrders }) => {
   const [local, setLocal] = useState(settings);
   const [newPassword, setNewPassword] = useState('');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [showPass, setShowPass] = useState(false);
-  const importFileRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = () => {
-    const data = {
-      products: getStoredProducts(),
-      orders: getStoredOrders(),
-      settings: getStoredSettings(),
-      timestamp: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `brima-store-backup-${new Date().toLocaleDateString()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const generateSyncId = () => {
+    const id = `BRIMA-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    setLocal(prev => ({ ...prev, cloudSyncId: id }));
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string);
-          if (data.products && data.settings) {
-            if (confirm('سيتم استبدال المنتجات والطلبات الحالية ببيانات الملف المرفوع. هل تريد الاستمرار؟')) {
-              saveProducts(data.products);
-              saveOrders(data.orders || []);
-              saveSettings(data.settings);
-              setProducts(data.products);
-              setOrders(data.orders || []);
-              setSettings(data.settings);
-              alert('✅ تم استيراد البيانات بنجاح! سيتم تحديث الصفحة.');
-              window.location.reload();
-            }
-          } else {
-            alert('❌ ملف غير صالح');
-          }
-        } catch (err) {
-          alert('❌ حدث خطأ أثناء قراءة الملف');
-        }
-      };
-      reader.readAsText(file);
+  const handleCloudPush = async () => {
+    if (!local.cloudSyncId) return alert('يرجى توليد رمز مزامنة أولاً');
+    setSyncStatus('loading');
+    const success = await pushToCloud(local.cloudSyncId);
+    if (success) {
+      setSettings(local);
+      saveSettings(local);
+      setSyncStatus('success');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } else {
+      setSyncStatus('error');
+    }
+  };
+
+  const handleCloudPull = async () => {
+    if (!local.cloudSyncId) return alert('أدخل رمز المزامنة الخاص بك');
+    if (!confirm('سيتم استبدال كافة البيانات الحالية ببيانات السحابة. هل أنت متأكد؟')) return;
+    setSyncStatus('loading');
+    const success = await fetchFromCloud(local.cloudSyncId);
+    if (success) {
+      setSyncStatus('success');
+      alert('✅ تم سحب البيانات بنجاح! سيتم تحديث الصفحة.');
+      window.location.reload();
+    } else {
+      setSyncStatus('error');
+      alert('❌ فشل في جلب البيانات. تأكد من الرمز.');
     }
   };
 
@@ -484,73 +366,86 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any, setPr
     }
     setSettings(finalSettings);
     saveSettings(finalSettings);
-    alert('✅ تم حفظ كافة الإعدادات بنجاح');
-    setNewPassword('');
+    alert('✅ تم الحفظ بنجاح');
   };
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto pb-20 text-right">
-      {/* قسم المزامنة والنسخ الاحتياطي */}
-      <div className="bg-emerald-50 dark:bg-emerald-950/20 p-8 rounded-[50px] border border-emerald-100 dark:border-emerald-900/50 shadow-sm space-y-6 text-center">
-        <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto shadow-sm text-emerald-600">
-          <Database size={32} />
+      {/* قسم التوحيد السحابي الجديد */}
+      <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
+        <div className="relative z-10 space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center radar-pulse">
+               <CloudSync size={32} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black">توحيد الهاتف والحاسوب</h3>
+              <p className="text-emerald-100 text-xs font-bold">اربط أجهزتك بضغطة زر دون الحاجة لسيرفر خاص</p>
+            </div>
+          </div>
+
+          <div className="bg-black/20 backdrop-blur-md p-6 rounded-3xl border border-white/10 space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-emerald-200 opacity-70">رمز المزامنة الفريد (Store ID)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={local.cloudSyncId} 
+                  onChange={e => setLocal({...local, cloudSyncId: e.target.value.toUpperCase()})}
+                  className="flex-grow bg-white/10 border border-white/20 rounded-xl p-4 font-black text-center tracking-widest text-xl outline-none focus:bg-white/20 transition-all"
+                  placeholder="BRIMA-XXXXXX"
+                />
+                <button onClick={generateSyncId} className="bg-white text-emerald-700 p-4 rounded-xl font-black hover:scale-105 active:scale-95 transition-all"><RotateCcw size={20}/></button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button 
+                onClick={handleCloudPush} 
+                disabled={syncStatus === 'loading'}
+                className="bg-emerald-500 hover:bg-emerald-400 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg transition-all"
+              >
+                {syncStatus === 'loading' ? <RefreshCw className="animate-spin" /> : <Upload size={18} />}
+                رفع للسحابة
+              </button>
+              <button 
+                onClick={handleCloudPull}
+                disabled={syncStatus === 'loading'}
+                className="bg-white text-emerald-700 py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg transition-all"
+              >
+                {syncStatus === 'loading' ? <RefreshCw className="animate-spin" /> : <Download size={18} />}
+                سحب للهاتف
+              </button>
+            </div>
+            <p className="text-[9px] text-center text-emerald-200/80 font-bold">💡 ارفع البيانات من الحاسوب، ثم أدخل نفس الرمز في الهاتف واضغط "سحب".</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-xl font-black text-emerald-900 dark:text-emerald-100">نقل البيانات بين الأجهزة</h3>
-          <p className="text-xs font-bold text-emerald-700/60 mt-2 leading-relaxed px-4">استخدم هذه الميزة لنقل المنتجات والطلبات من الحاسوب إلى الهاتف يدوياً عبر ملف نسخة احتياطية.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button onClick={handleExport} className="bg-emerald-600 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-all">
-            <Download size={18} /> تصدير ملف البيانات
-          </button>
-          <button onClick={() => importFileRef.current?.click()} className="bg-white dark:bg-gray-800 text-emerald-600 border-2 border-emerald-100 dark:border-emerald-900 py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-sm hover:bg-emerald-50 transition-all">
-            <Upload size={18} /> استيراد من ملف
-          </button>
-          <input type="file" ref={importFileRef} className="hidden" accept=".json" onChange={handleImport} />
-        </div>
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 p-10 rounded-[50px] border dark:border-gray-800 shadow-xl space-y-10">
-        
-        {/* قسم الأمان - كلمة السر */}
+      <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border dark:border-gray-800 shadow-xl space-y-10">
         <div className="space-y-6">
-          <h3 className="text-xl font-black dark:text-white flex items-center gap-3 justify-start"><KeyRound size={24} className="text-emerald-600"/> حماية لوحة التحكم</h3>
+          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><KeyRound size={24} className="text-emerald-600"/> الأمان وكلمة المرور</h3>
           <div className="space-y-2">
-            <label className="text-xs font-black text-gray-400 pr-2">تغيير كلمة المرور (اتركها فارغة إذا لم ترد التغيير)</label>
+            <label className="text-xs font-black text-gray-400">تغيير كلمة المرور</label>
             <div className="relative">
-              <input 
-                type={showPass ? "text" : "password"} 
-                value={newPassword} 
-                onChange={e=>setNewPassword(e.target.value)} 
-                className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" 
-                placeholder="أدخل كلمة مرور جديدة" 
-              />
+              <input type={showPass ? "text" : "password"} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="اتركها فارغة لعدم التغيير" />
               <button onClick={() => setShowPass(!showPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                 {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            <p className="text-[10px] text-gray-400 font-bold px-2">توحيد كلمة السر: قم بتغيير الكلمة هنا ثم "تصدير البيانات" للهاتف، أو غيرها يدوياً في كلا الجهازين.</p>
           </div>
         </div>
 
-        <div className="h-px bg-gray-100 dark:bg-gray-800 w-full"></div>
-
-        {/* قسم التتبع والإعلانات */}
         <div className="space-y-6">
-          <h3 className="text-xl font-black dark:text-white flex items-center gap-3 justify-start"><Settings size={24} className="text-emerald-600"/> إعدادات المنصات</h3>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-black text-gray-400 pr-2 uppercase">Facebook Pixel ID</label>
-              <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" placeholder="ID البكسل الخاص بفيسبوك" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-black text-gray-400 pr-2 uppercase">Google AdSense ID</label>
-              <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:border-gray-800 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 transition-all" placeholder="مثال: pub-xxxxxxxxxxxxxxxx" />
-            </div>
+          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><Wifi size={24} className="text-emerald-600"/> التتبع (Pixels)</h3>
+          <div className="space-y-4">
+             <input type="text" value={local.fbPixelId} onChange={e=>setLocal({...local, fbPixelId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="Facebook Pixel ID" />
+             <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="Google AdSense ID" />
           </div>
         </div>
 
-        <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all active:scale-95">حفظ كافة التغييرات</button>
+        <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all">حفظ الإعدادات</button>
       </div>
     </div>
   );

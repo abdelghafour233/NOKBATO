@@ -1,4 +1,3 @@
-
 export type Category = 'electronics' | 'home' | 'cars' | 'watches' | 'glasses';
 
 export interface Product {
@@ -26,13 +25,14 @@ export interface AppSettings {
   fbPixelId: string;
   fbTestEventCode: string; 
   googleAnalyticsId: string;
-  googleAdSenseId: string; // الحقل الجديد لأدسنس
+  googleAdSenseId: string; 
   tiktokPixelId: string;
   googleSheetsUrl: string;
   domainName: string;
   nameServers: string;
   adminPasswordHash: string;
   customScript: string; 
+  cloudSyncId: string; // معرف المزامنة السحابية
 }
 
 export interface CartItem extends Product {
