@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Product, Order, AppSettings } from '../types';
+import { Product, Order, AppSettings, Category } from '../types';
 import { 
   saveProducts, 
   saveOrders, 
@@ -30,7 +30,10 @@ import {
   Wifi,
   Megaphone,
   Globe,
-  Code
+  Code,
+  Tag,
+  FileText,
+  DollarSign
 } from 'lucide-react';
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -219,16 +222,37 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
 const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ products, setProducts }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<Partial<Product>>({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' });
+  const [formData, setFormData] = useState<Partial<Product>>({ 
+    name: '', 
+    price: 0, 
+    category: 'electronics', 
+    image: '', 
+    images: [], 
+    description: '' 
+  });
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const CATEGORIES: {id: Category, label: string}[] = [
+    {id: 'electronics', label: 'إلكترونيات'},
+    {id: 'watches', label: 'ساعات فاخرة'},
+    {id: 'glasses', label: 'نظارات عصرية'},
+    {id: 'home', label: 'مستلزمات منزلية'},
+    {id: 'cars', label: 'سيارات واكسسوارات'}
+  ];
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.image) return alert('يرجى اختيار صورة رئيسية');
     setIsProcessing(true);
     let updated: Product[];
-    const finalData = { ...formData, images: formData.images || [] } as Product;
+    const finalData = { 
+      ...formData, 
+      images: formData.images || [],
+      description: formData.description || '',
+      category: formData.category || 'electronics'
+    } as Product;
+
     if (editingProduct) {
       updated = products.map(p => p.id === editingProduct.id ? { ...finalData, id: p.id } : p);
     } else {
@@ -258,7 +282,7 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   return (
     <div className="space-y-8">
       <button onClick={() => { setEditingProduct(null); setFormData({ name: '', price: 0, category: 'electronics', image: '', images: [], description: '' }); setShowModal(true); }} className="w-full bg-emerald-600 text-white p-8 rounded-[35px] font-black flex items-center justify-center gap-3 shadow-xl hover:bg-emerald-700 transition-all text-xl">
-        <PlusCircle size={28} /> إضافة منتج
+        <PlusCircle size={28} /> إضافة منتج جديد
       </button>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -269,11 +293,14 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
             </div>
             <div className="flex-grow w-full mb-6">
               <h4 className="font-black text-base dark:text-white line-clamp-1 mb-1">{p.name}</h4>
-              <div className="text-emerald-600 font-black text-2xl">{p.price} <span className="text-xs">د.م.</span></div>
+              <div className="text-emerald-600 font-black text-2xl">{p.price.toLocaleString()} <span className="text-xs">د.م.</span></div>
+              <div className="text-[10px] text-gray-400 font-bold bg-gray-50 dark:bg-gray-800 inline-block px-3 py-1 rounded-full mt-2">
+                {CATEGORIES.find(c => c.id === p.category)?.label || p.category}
+              </div>
             </div>
             <div className="flex w-full gap-2">
               <button onClick={() => { setEditingProduct(p); setFormData(p); setShowModal(true); }} className="flex-1 py-4 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all"><Edit2 size={16}/> تعديل</button>
-              <button onClick={() => { if(confirm('حذف المنتج؟')) { const u = products.filter(x=>x.id!==p.id); setProducts(u); saveProducts(u); } }} className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
+              <button onClick={() => { if(confirm('حذف المنتج نهائياً؟')) { const u = products.filter(x=>x.id!==p.id); setProducts(u); saveProducts(u); } }} className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
             </div>
           </div>
         ))}
@@ -281,19 +308,81 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
       {showModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[50px] shadow-2xl p-8 relative max-h-[90vh] overflow-y-auto">
-             <div className="flex justify-between items-center mb-8">
-               <h3 className="text-2xl font-black dark:text-white">{editingProduct ? 'تعديل' : 'إضافة'}</h3>
+          <div className="bg-white dark:bg-gray-900 w-full max-w-3xl rounded-[50px] shadow-2xl p-8 relative max-h-[95vh] overflow-y-auto">
+             <div className="flex justify-between items-center mb-8 sticky top-0 bg-white dark:bg-gray-900 z-10 py-2 border-b dark:border-gray-800">
+               <h3 className="text-2xl font-black dark:text-white">{editingProduct ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'}</h3>
                <button onClick={() => setShowModal(false)}><X size={32} className="text-gray-400"/></button>
              </div>
-             <form onSubmit={handleSave} className="space-y-6 text-right">
-                <div onClick={() => fileInputRef.current?.click()} className="aspect-video border-4 border-dashed rounded-[30px] flex items-center justify-center cursor-pointer bg-gray-50 dark:bg-gray-800 overflow-hidden">
-                  {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="text-gray-400 font-black">اختر صورة رئيسية</div>}
-                  <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+
+             <form onSubmit={handleSave} className="space-y-8 text-right">
+                {/* Image Section */}
+                <div className="space-y-3">
+                  <label className="text-sm font-black text-gray-400 pr-2">صورة المنتج الرئيسية</label>
+                  <div onClick={() => fileInputRef.current?.click()} className="aspect-video md:aspect-[21/9] border-4 border-dashed rounded-[35px] flex items-center justify-center cursor-pointer bg-gray-50 dark:bg-gray-800 overflow-hidden relative group transition-all">
+                    {formData.image ? (
+                      <>
+                        <img src={formData.image} className="w-full h-full object-contain" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-black transition-opacity">تغيير الصورة</div>
+                      </>
+                    ) : (
+                      <div className="text-center">
+                        <PlusCircle size={40} className="mx-auto text-gray-300 mb-2"/>
+                        <div className="text-gray-400 font-black">اضغط لرفع صورة</div>
+                      </div>
+                    )}
+                    <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+                  </div>
                 </div>
-                <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500" placeholder="اسم المنتج" />
-                <input required type="number" value={formData.price} onChange={e=>setFormData({...formData, price:Number(e.target.value)})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500" placeholder="السعر" />
-                <button type="submit" disabled={isProcessing} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-xl shadow-lg">{isProcessing ? 'جاري...' : 'حفظ المنتج'}</button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><Tag size={14}/> اسم المنتج</label>
+                    <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700" placeholder="أدخل اسم المنتج هنا..." />
+                  </div>
+
+                  {/* Price */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><DollarSign size={14}/> السعر (د.م.)</label>
+                    <input required type="number" value={formData.price} onChange={e=>setFormData({...formData, price:Number(e.target.value)})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700" placeholder="0.00" />
+                  </div>
+                </div>
+
+                {/* Category Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><Package size={14}/> فئة المنتج</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {CATEGORIES.map(cat => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setFormData({...formData, category: cat.id})}
+                        className={`p-4 rounded-2xl font-black text-xs border-2 transition-all ${formData.category === cat.id ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-400 dark:text-gray-500 hover:border-gray-200'}`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><FileText size={14}/> وصف المنتج</label>
+                  <textarea 
+                    value={formData.description} 
+                    onChange={e=>setFormData({...formData, description:e.target.value})} 
+                    className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700 min-h-[150px]" 
+                    placeholder="اكتب وصفاً جذاباً لمنتجك هنا لتشجيع العملاء على الشراء..."
+                  />
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isProcessing} 
+                  className={`w-full py-6 rounded-3xl text-white font-black text-xl shadow-xl transition-all ${isProcessing ? 'bg-gray-400 animate-pulse' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'}`}
+                >
+                  {isProcessing ? 'جاري الحفظ...' : (editingProduct ? 'تحديث بيانات المنتج' : 'حفظ ونشر المنتج')}
+                </button>
              </form>
           </div>
         </div>
@@ -314,7 +403,7 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
     }
     setSettings(finalSettings);
     saveSettings(finalSettings);
-    alert('✅ تم الحفظ بنجاح');
+    alert('✅ تم حفظ الإعدادات بنجاح');
   };
 
   return (
