@@ -43,7 +43,8 @@ import {
   Check,
   Megaphone,
   TableProperties,
-  MousePointer2
+  MousePointer2,
+  Plus
 } from 'lucide-react';
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -89,7 +90,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default password is "halal2024" which hashes to "aGFsYWwyMDI0"
     if (btoa(password) === settings.adminPasswordHash) setIsAuthenticated(true);
     else alert('كلمة المرور غير صحيحة');
   };
@@ -282,25 +282,73 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
 const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ products, setProducts }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<Partial<Product>>({ name: '', price: 0, category: 'electronics', image: '', description: '' });
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState<Partial<Product>>({ 
+    name: '', 
+    price: 0, 
+    category: 'electronics', 
+    image: '', 
+    description: '',
+    images: [] // معرض الصور
+  });
+  
+  const mainFileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.image) return alert('يرجى اختيار صورة');
+    if (!formData.image) return alert('يرجى اختيار صورة رئيسية');
+    
     let updated;
     if (editingProduct) {
       updated = products.map(p => p.id === editingProduct.id ? { ...formData as Product, id: p.id } : p);
     } else {
       updated = [...products, { ...formData as Product, id: 'p-' + Date.now() }];
     }
-    setProducts(updated); saveProducts(updated);
-    setShowModal(false); setEditingProduct(null);
+    setProducts(updated);
+    saveProducts(updated);
+    setShowModal(false);
+    setEditingProduct(null);
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages: string[] = [...(formData.images || [])];
+      for (let i = 0; i < files.length; i++) {
+        const reader = new FileReader();
+        const file = files[i];
+        const promise = new Promise<string>((resolve) => {
+          reader.onloadend = async () => resolve(await compressImage(reader.result as string));
+        });
+        reader.readAsDataURL(file);
+        const compressed = await promise;
+        newImages.push(compressed);
+      }
+      setFormData({ ...formData, images: newImages });
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    const newImages = [...(formData.images || [])];
+    newImages.splice(index, 1);
+    setFormData({ ...formData, images: newImages });
+  };
+
+  const deleteProduct = (id: string) => {
+    if (confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) {
+      const updated = products.filter(p => p.id !== id);
+      setProducts(updated);
+      saveProducts(updated);
+    }
   };
 
   return (
     <div className="space-y-10 animate-in fade-up">
-      <button onClick={() => { setEditingProduct(null); setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '' }); setShowModal(true); }} className="w-full bg-emerald-600 text-white py-10 rounded-[45px] font-black text-2xl flex items-center justify-center gap-4 shadow-2xl shadow-emerald-200 dark:shadow-none hover:scale-[1.01] transition-all">
+      <button onClick={() => { 
+        setEditingProduct(null); 
+        setFormData({ name: '', price: 0, category: 'electronics', image: '', description: '', images: [] }); 
+        setShowModal(true); 
+      }} className="w-full bg-emerald-600 text-white py-10 rounded-[45px] font-black text-2xl flex items-center justify-center gap-4 shadow-2xl shadow-emerald-200 dark:shadow-none hover:scale-[1.01] transition-all">
         <PlusCircle size={32}/> إضافة منتج جديد
       </button>
 
@@ -314,7 +362,7 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
             <div className="text-emerald-600 font-black text-2xl mb-6">{p.price} <span className="text-xs">د.م</span></div>
             <div className="flex w-full gap-2">
               <button onClick={() => { setEditingProduct(p); setFormData(p); setShowModal(true); }} className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 rounded-2xl font-black text-xs hover:bg-emerald-600 hover:text-white transition-all">تعديل</button>
-              <button onClick={() => { if(confirm('حذف المنتج نهائياً؟')) { const u = products.filter(x=>x.id!==p.id); setProducts(u); saveProducts(u); } }} className="p-4 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
+              <button onClick={() => deleteProduct(p.id)} className="p-4 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
             </div>
           </div>
         ))}
@@ -322,12 +370,13 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
       {showModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-950 w-full max-w-2xl rounded-[60px] p-10 max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl">
+          <div className="bg-white dark:bg-gray-950 w-full max-w-3xl rounded-[60px] p-10 max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl">
              <div className="flex justify-between items-center mb-10">
                <h3 className="text-3xl font-black dark:text-white">{editingProduct ? 'تعديل المنتج' : 'إضافة منتج جديد'}</h3>
                <button onClick={() => setShowModal(false)} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full"><X size={32}/></button>
              </div>
-             <form onSubmit={handleSave} className="space-y-6">
+             
+             <form onSubmit={handleSave} className="space-y-10">
                 <div className="grid md:grid-cols-2 gap-6">
                    <div className="space-y-2">
                       <label className="text-sm font-black text-gray-400 pr-2">اسم المنتج</label>
@@ -346,6 +395,7 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                       <option value="watches">ساعات</option>
                       <option value="cars">سيارات</option>
                       <option value="home">منزل</option>
+                      <option value="glasses">نظارات</option>
                    </select>
                 </div>
 
@@ -354,9 +404,10 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                    <textarea value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold h-32 focus:border-emerald-500 outline-none" placeholder="..." />
                 </div>
                 
-                <div className="space-y-2">
-                   <label className="text-sm font-black text-gray-400 pr-2">صورة المنتج</label>
-                   <div onClick={() => fileInputRef.current?.click()} className="p-10 border-4 border-dashed rounded-3xl text-center cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/20 border-gray-100 dark:border-gray-800 transition-all">
+                {/* الصورة الرئيسية */}
+                <div className="space-y-4">
+                   <label className="text-sm font-black text-gray-400 pr-2">الصورة الرئيسية (Thumbnail)</label>
+                   <div onClick={() => mainFileInputRef.current?.click()} className="p-10 border-4 border-dashed rounded-3xl text-center cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/20 border-gray-100 dark:border-gray-800 transition-all">
                     {formData.image ? (
                       <div className="relative inline-block">
                         <img src={formData.image} className="h-40 rounded-2xl mx-auto shadow-xl" />
@@ -365,10 +416,10 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                     ) : (
                       <div className="space-y-4">
                         <ImageIcon size={64} className="mx-auto text-gray-200" />
-                        <div className="text-gray-400 font-black">اضغط لرفع صورة المنتج</div>
+                        <div className="text-gray-400 font-black">اضغط لرفع الصورة الأساسية</div>
                       </div>
                     )}
-                    <input type="file" ref={fileInputRef} className="hidden" onChange={async e => {
+                    <input type="file" ref={mainFileInputRef} className="hidden" onChange={async e => {
                       const f = e.target.files?.[0];
                       if (f) {
                         const reader = new FileReader();
@@ -377,6 +428,34 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                       }
                     }} />
                    </div>
+                </div>
+
+                {/* معرض الصور الإضافية */}
+                <div className="space-y-4">
+                   <label className="text-sm font-black text-gray-400 pr-2">معرض الصور الإضافي (Gallery)</label>
+                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                      {formData.images?.map((img, idx) => (
+                        <div key={idx} className="relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden group border border-gray-200 dark:border-gray-700">
+                          <img src={img} className="w-full h-full object-cover" />
+                          <button 
+                            type="button" 
+                            onClick={() => removeGalleryImage(idx)} 
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={14}/>
+                          </button>
+                        </div>
+                      ))}
+                      <button 
+                        type="button" 
+                        onClick={() => galleryFileInputRef.current?.click()} 
+                        className="aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-emerald-500 hover:text-emerald-500 transition-all"
+                      >
+                        <Plus size={32} />
+                        <span className="text-[10px] font-black">أضف صورة</span>
+                      </button>
+                   </div>
+                   <input type="file" multiple ref={galleryFileInputRef} className="hidden" onChange={handleGalleryUpload} />
                 </div>
                 
                 <button type="submit" className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl shadow-xl hover:bg-emerald-700 active:scale-95 transition-all">حفظ المنتج</button>
@@ -417,7 +496,7 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
             <div className="space-y-6">
               <h3 className="text-2xl font-black flex items-center gap-3"><Megaphone className="text-emerald-600"/> أكواد البيكسل و التتبع</h3>
               <div className="grid md:grid-cols-2 gap-6">
-                <InputGroup label="Facebook Pixel ID" value={local.fbPixelId} onChange={v=>setLocal({...local, fbPixelId:v})} placeholder="1234567890..." icon={<FacebookIcon/>} />
+                <InputGroup label="Facebook Pixel ID" value={local.fbPixelId} onChange={v=>setLocal({...local, fbPixelId:v})} placeholder="1234567890..." />
                 <InputGroup label="Test Event Code" value={local.fbTestEventCode} onChange={v=>setLocal({...local, fbTestEventCode:v})} placeholder="TEST12345..." />
                 <InputGroup label="TikTok Pixel ID" value={local.tiktokPixelId} onChange={v=>setLocal({...local, tiktokPixelId:v})} placeholder="CT8..." />
                 <InputGroup label="Google Analytics ID" value={local.googleAnalyticsId} onChange={v=>setLocal({...local, googleAnalyticsId:v})} placeholder="G-XXXXXXXX..." />
@@ -442,10 +521,6 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
               <p className="text-sm text-gray-400 font-bold">ضع رابط الـ Webhook الخاص بك لإرسال الطلبات تلقائياً إلى ملف Excel.</p>
               <input type="text" value={local.googleSheetsUrl} onChange={e=>setLocal({...local, googleSheetsUrl:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" placeholder="https://script.google.com/macros/s/..." />
             </div>
-            <div className="space-y-4 pt-6">
-              <h4 className="text-xl font-black flex items-center gap-3"><Code className="text-emerald-600"/> كود مخصص (Custom Scripts)</h4>
-              <textarea value={local.customScript} onChange={e=>setLocal({...local, customScript:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-mono text-sm h-32 focus:border-emerald-500 outline-none" placeholder="<script>...</script>" />
-            </div>
           </div>
         )}
 
@@ -455,7 +530,6 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
             <div className="p-8 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-gray-100 dark:border-gray-700">
                <label className="block text-sm font-black text-gray-400 mb-4 pr-2">تغيير كلمة مرور الإدارة</label>
                <input type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-900 bg-white dark:bg-gray-800 font-black tracking-widest text-center" placeholder="أدخل كلمة مرور جديدة" />
-               <p className="text-xs text-gray-400 mt-4 font-bold">ملاحظة: إذا تركت الحقل فارغاً، ستبقى كلمة المرور الحالية كما هي.</p>
             </div>
           </div>
         )}
@@ -468,23 +542,17 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
   );
 };
 
-const InputGroup = ({ label, value, onChange, placeholder, icon }: any) => (
+const InputGroup = ({ label, value, onChange, placeholder }: any) => (
   <div className="space-y-2">
     <label className="text-sm font-black text-gray-400 pr-2">{label}</label>
-    <div className="relative">
-      <input 
-        type="text" 
-        value={value} 
-        onChange={e=>onChange(e.target.value)} 
-        className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" 
-        placeholder={placeholder} 
-      />
-    </div>
+    <input 
+      type="text" 
+      value={value} 
+      onChange={e=>onChange(e.target.value)} 
+      className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" 
+      placeholder={placeholder} 
+    />
   </div>
-);
-
-const FacebookIcon = () => (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
 );
 
 export default DashboardPage;
