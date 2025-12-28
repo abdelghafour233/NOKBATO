@@ -1,10 +1,23 @@
 import { Product, Order, AppSettings, DailyVisits } from './types';
 
-export const INITIAL_PRODUCTS: Product[] = [];
+export const INITIAL_PRODUCTS: Product[] = [
+  {
+    id: 'manual-siphon-pump-pro',
+    name: 'المضخة اليدوية الاحترافية لنقل السوائل (بنزين، زيت، ماء)',
+    price: 119,
+    category: 'cars',
+    image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&q=80&w=800', // ملاحظة: يمكنك تغيير هذه الصورة من لوحة التحكم بصورتك الخاصة
+    description: 'مضخة يدوية أصلية وعالية الجودة مصممة لنقل السوائل بسرعة وأمان. تتميز بمضخة قوية (الكرة السوداء) وخرطوم شفاف متين، مع مفاتيح تثبيت (Clamps) صفراء لضمان إغلاق محكم ومنع أي تسريب. مثالية للاستخدام في السيارات، القوارب، والمنزل.'
+  }
+];
 
 export const getStoredProducts = (): Product[] => {
   const stored = localStorage.getItem('products');
-  return stored ? JSON.parse(stored) : INITIAL_PRODUCTS;
+  if (!stored || JSON.parse(stored).length === 0) {
+    localStorage.setItem('products', JSON.stringify(INITIAL_PRODUCTS));
+    return INITIAL_PRODUCTS;
+  }
+  return JSON.parse(stored);
 };
 
 export const getStoredOrders = (): Order[] => {
