@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Product, Order, AppSettings, Category, DailyVisits } from '../types';
@@ -43,7 +42,6 @@ import {
   Check,
   Megaphone,
   TableProperties,
-  MousePointer2,
   Plus
 } from 'lucide-react';
 
@@ -160,7 +158,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   );
 };
 
-// --- Stats Component ---
 const StatsOverview: React.FC<{ orders: Order[], products: Product[], settings: AppSettings }> = ({ orders, products, settings }) => {
   const visits = getStoredVisits();
   const todayDate = new Date().toISOString().split('T')[0];
@@ -217,7 +214,6 @@ const TrackingStatus = ({ label, id, active }: any) => (
   </div>
 );
 
-// --- Orders List Component ---
 const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, setOrders }) => {
   const [view, setView] = useState<'active' | 'trash'>('active');
   const [deletedOrders, setDeletedOrders] = useState<Order[]>(getStoredDeletedOrders());
@@ -278,7 +274,6 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
   );
 };
 
-// --- Products Manager Component ---
 const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ products, setProducts }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -288,7 +283,7 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     category: 'electronics', 
     image: '', 
     description: '',
-    images: [] // معرض الصور
+    images: []
   });
   
   const mainFileInputRef = useRef<HTMLInputElement>(null);
@@ -315,8 +310,8 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     if (files) {
       const newImages: string[] = [...(formData.images || [])];
       for (let i = 0; i < files.length; i++) {
-        const reader = new FileReader();
         const file = files[i];
+        const reader = new FileReader();
         const promise = new Promise<string>((resolve) => {
           reader.onloadend = async () => resolve(await compressImage(reader.result as string));
         });
@@ -404,7 +399,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                    <textarea value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold h-32 focus:border-emerald-500 outline-none" placeholder="..." />
                 </div>
                 
-                {/* الصورة الرئيسية */}
                 <div className="space-y-4">
                    <label className="text-sm font-black text-gray-400 pr-2">الصورة الرئيسية (Thumbnail)</label>
                    <div onClick={() => mainFileInputRef.current?.click()} className="p-10 border-4 border-dashed rounded-3xl text-center cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/20 border-gray-100 dark:border-gray-800 transition-all">
@@ -430,7 +424,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                    </div>
                 </div>
 
-                {/* معرض الصور الإضافية */}
                 <div className="space-y-4">
                    <label className="text-sm font-black text-gray-400 pr-2">معرض الصور الإضافي (Gallery)</label>
                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
@@ -467,45 +460,49 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   );
 };
 
-// --- Settings Manager Component ---
 const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = ({ settings, setSettings }) => {
-  const [local, setLocal] = useState(settings);
+  const [local, setLocal] = useState<AppSettings>(settings);
   const [newPass, setNewPass] = useState('');
   const [activeTab, setActiveTab] = useState<'tracking' | 'domain' | 'security'>('tracking');
 
-  const handleSave = () => {
-    let final = { ...local };
-    if (newPass.trim()) final.adminPasswordHash = btoa(newPass);
-    setSettings(final); saveSettings(final);
+  useEffect(() => {
+    setLocal(settings);
+  }, [settings]);
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const final: AppSettings = { ...local };
+    if (newPass.trim()) {
+      final.adminPasswordHash = btoa(newPass);
+    }
+    setSettings(final);
+    saveSettings(final);
     alert('✅ تم حفظ كافة الإعدادات بنجاح');
+  };
+
+  const updateField = (key: keyof AppSettings, value: string) => {
+    setLocal(prev => ({ ...prev, [key]: value }));
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-up">
-      
-      <div className="flex bg-white dark:bg-gray-900 p-2 rounded-[30px] border shadow-sm">
+      <div className="flex bg-white dark:bg-gray-900 p-2 rounded-[30px] border shadow-sm overflow-hidden">
          <button onClick={()=>setActiveTab('tracking')} className={`flex-1 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'tracking' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400'}`}><Activity size={20}/> التتبع</button>
          <button onClick={()=>setActiveTab('domain')} className={`flex-1 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'domain' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400'}`}><Globe size={20}/> النطاق و الربط</button>
          <button onClick={()=>setActiveTab('security')} className={`flex-1 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'security' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400'}`}><Lock size={20}/> الأمان</button>
       </div>
 
       <div className="bg-white dark:bg-gray-900 p-10 rounded-[50px] border shadow-sm space-y-8">
-        
         {activeTab === 'tracking' && (
           <div className="space-y-8">
-            <div className="space-y-6">
-              <h3 className="text-2xl font-black flex items-center gap-3"><Megaphone className="text-emerald-600"/> أكواد البيكسل و التتبع</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <InputGroup label="Facebook Pixel ID" value={local.fbPixelId} onChange={v=>setLocal({...local, fbPixelId:v})} placeholder="1234567890..." />
-                <InputGroup label="Test Event Code" value={local.fbTestEventCode} onChange={v=>setLocal({...local, fbTestEventCode:v})} placeholder="TEST12345..." />
-                <InputGroup label="TikTok Pixel ID" value={local.tiktokPixelId} onChange={v=>setLocal({...local, tiktokPixelId:v})} placeholder="CT8..." />
-                <InputGroup label="Google Analytics ID" value={local.googleAnalyticsId} onChange={v=>setLocal({...local, googleAnalyticsId:v})} placeholder="G-XXXXXXXX..." />
-              </div>
-              <div className="space-y-2 pt-4">
-                <label className="text-sm font-black text-gray-400 pr-2">Google AdSense ID</label>
-                <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" placeholder="ca-pub-XXXXXXXXXXXXXXXX" />
-              </div>
+            <h3 className="text-2xl font-black flex items-center gap-3"><Megaphone className="text-emerald-600"/> أكواد البيكسل و التتبع</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <InputGroup label="Facebook Pixel ID" value={local.fbPixelId || ''} onChange={v => updateField('fbPixelId', v)} placeholder="1234567890..." />
+              <InputGroup label="Test Event Code" value={local.fbTestEventCode || ''} onChange={v => updateField('fbTestEventCode', v)} placeholder="TEST12345..." />
+              <InputGroup label="TikTok Pixel ID" value={local.tiktokPixelId || ''} onChange={v => updateField('tiktokPixelId', v)} placeholder="CT8..." />
+              <InputGroup label="Google Analytics ID" value={local.googleAnalyticsId || ''} onChange={v => updateField('googleAnalyticsId', v)} placeholder="G-XXXXXXXX..." />
             </div>
+            <InputGroup label="Google AdSense ID" value={local.googleAdSenseId || ''} onChange={v => updateField('googleAdSenseId', v)} placeholder="ca-pub-XXXXXXXXXXXXXXXX" />
           </div>
         )}
 
@@ -513,13 +510,17 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
           <div className="space-y-8">
             <h3 className="text-2xl font-black flex items-center gap-3"><Globe className="text-emerald-600"/> إعدادات النطاق و الربط</h3>
             <div className="grid md:grid-cols-2 gap-6">
-              <InputGroup label="اسم النطاق (Domain)" value={local.domainName} onChange={v=>setLocal({...local, domainName:v})} placeholder="example.com" />
-              <InputGroup label="Name Servers" value={local.nameServers} onChange={v=>setLocal({...local, nameServers:v})} placeholder="ns1.host.com, ns2.host.com" />
+              <InputGroup label="اسم النطاق (Domain)" value={local.domainName || ''} onChange={v => updateField('domainName', v)} placeholder="example.com" />
+              <InputGroup label="Name Servers" value={local.nameServers || ''} onChange={v => updateField('nameServers', v)} placeholder="ns1.host.com, ns2.host.com" />
             </div>
             <div className="space-y-4 pt-6">
               <h4 className="text-xl font-black flex items-center gap-3"><TableProperties className="text-emerald-600"/> ربط Google Sheets</h4>
               <p className="text-sm text-gray-400 font-bold">ضع رابط الـ Webhook الخاص بك لإرسال الطلبات تلقائياً إلى ملف Excel.</p>
-              <input type="text" value={local.googleSheetsUrl} onChange={e=>setLocal({...local, googleSheetsUrl:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" placeholder="https://script.google.com/macros/s/..." />
+              <input type="text" value={local.googleSheetsUrl || ''} onChange={e => updateField('googleSheetsUrl', e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" placeholder="https://script.google.com/macros/s/..." />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-black text-gray-400 pr-2">أكواد مخصصة (Custom Scripts)</label>
+              <textarea value={local.customScript || ''} onChange={e => updateField('customScript', e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-mono text-sm h-32 focus:border-emerald-500 outline-none" placeholder="<script>...</script>" />
             </div>
           </div>
         )}
@@ -529,12 +530,13 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
             <h3 className="text-2xl font-black flex items-center gap-3"><KeyRound className="text-emerald-600"/> حماية لوحة التحكم</h3>
             <div className="p-8 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-gray-100 dark:border-gray-700">
                <label className="block text-sm font-black text-gray-400 mb-4 pr-2">تغيير كلمة مرور الإدارة</label>
-               <input type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-900 bg-white dark:bg-gray-800 font-black tracking-widest text-center" placeholder="أدخل كلمة مرور جديدة" />
+               <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-900 bg-white dark:bg-gray-800 font-black tracking-widest text-center" placeholder="أدخل كلمة مرور جديدة" />
+               <p className="text-xs text-gray-400 mt-2 font-bold text-center">اتركه فارغاً للحفاظ على كلمة المرور الحالية</p>
             </div>
           </div>
         )}
         
-        <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-8 rounded-3xl font-black text-2xl shadow-2xl hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+        <button type="button" onClick={handleSave} className="w-full bg-emerald-600 text-white py-8 rounded-3xl font-black text-2xl shadow-2xl hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-3">
            <Check size={28}/> حفظ كافة الإعدادات
         </button>
       </div>
@@ -548,8 +550,8 @@ const InputGroup = ({ label, value, onChange, placeholder }: any) => (
     <input 
       type="text" 
       value={value} 
-      onChange={e=>onChange(e.target.value)} 
-      className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" 
+      onChange={e => onChange(e.target.value)} 
+      className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none transition-all" 
       placeholder={placeholder} 
     />
   </div>
