@@ -1,4 +1,3 @@
-
 import { Product, Order, AppSettings } from './types';
 
 export const INITIAL_PRODUCTS: Product[] = [
@@ -43,7 +42,7 @@ export const getStoredSettings = (): AppSettings => {
   const stored = localStorage.getItem('settings');
   return stored ? JSON.parse(stored) : {
     fbPixelId: '2298107977371972',
-    fbTestEventCode: '', 
+    fbTestEventCode: 'TEST48130', 
     googleAnalyticsId: '',
     googleAdSenseId: '',
     tiktokPixelId: '',
