@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, LayoutDashboard, Menu, X, CreditCard, Watch, Glasses, Smartphone, Home, Car, ShoppingBag, Sun, Moon, Truck } from 'lucide-react';
 import { Product, Order, AppSettings, CartItem } from './types.ts';
-import { getStoredProducts, getStoredOrders, getStoredSettings, saveOrders } from './store.ts';
+import { getStoredProducts, getStoredOrders, getStoredSettings, saveOrders, trackVisit } from './store.ts';
 
 // Pages
 import HomePage from './pages/Home.tsx';
@@ -23,6 +23,9 @@ const SEOManager: React.FC<{ settings: AppSettings }> = ({ settings }) => {
   const location = useLocation();
 
   useEffect(() => {
+    // Track Visitor on Every Route Change (or just App load)
+    trackVisit();
+
     const path = location.pathname;
     let title = "ستور بريمة - تسوق أفضل المنتجات";
     let description = "اكتشف أفضل العروض على الإلكترونيات والساعات في المغرب.";

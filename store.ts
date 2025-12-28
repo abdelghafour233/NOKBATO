@@ -1,4 +1,4 @@
-import { Product, Order, AppSettings } from './types';
+import { Product, Order, AppSettings, DailyVisits } from './types';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
@@ -36,6 +36,18 @@ export const getStoredOrders = (): Order[] => {
 export const getStoredDeletedOrders = (): Order[] => {
   const stored = localStorage.getItem('deleted_orders');
   return stored ? JSON.parse(stored) : [];
+};
+
+export const getStoredVisits = (): DailyVisits => {
+  const stored = localStorage.getItem('analytics_visits');
+  return stored ? JSON.parse(stored) : {};
+};
+
+export const trackVisit = () => {
+  const visits = getStoredVisits();
+  const today = new Date().toISOString().split('T')[0];
+  visits[today] = (visits[today] || 0) + 1;
+  localStorage.setItem('analytics_visits', JSON.stringify(visits));
 };
 
 export const getStoredSettings = (): AppSettings => {

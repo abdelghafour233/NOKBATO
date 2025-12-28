@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Product, Order, AppSettings, Category } from '../types';
+import { Product, Order, AppSettings, Category, DailyVisits } from '../types';
 import { 
   saveProducts, 
   saveOrders, 
@@ -8,7 +8,8 @@ import {
   getStoredOrders, 
   getStoredDeletedOrders,
   getStoredProducts,
-  getStoredSettings
+  getStoredSettings,
+  getStoredVisits
 } from '../store';
 import { 
   Settings, 
@@ -34,7 +35,10 @@ import {
   FileText,
   DollarSign,
   Images,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Users,
+  TrendingUp,
+  ArrowUpRight
 } from 'lucide-react';
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -153,22 +157,144 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   );
 };
 
-const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ orders, products }) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-    <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
-      <div className="text-gray-400 text-[10px] font-black uppercase mb-3 tracking-widest">إجمالي المبيعات</div>
-      <div className="text-4xl font-black text-emerald-600">{orders.reduce((s,o)=>s+o.totalPrice,0).toLocaleString()} <span className="text-sm">د.م.</span></div>
+const VisitorChart: React.FC<{ data: DailyVisits }> = ({ data }) => {
+  // Get last 7 days
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d.toISOString().split('T')[0];
+  });
+
+  const values = last7Days.map(date => data[date] || 0);
+  const maxVal = Math.max(...values, 5); // Minimum height scale of 5
+  
+  // Create SVG path
+  const width = 600;
+  const height = 150;
+  const points = values.map((v, i) => {
+    const x = (i / 6) * width;
+    const y = height - (v / maxVal) * (height - 20);
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <div className="w-full h-40 mt-8 relative">
+      <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        {/* Gradient Fill */}
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 0.3 }} />
+            <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 0 }} />
+          </linearGradient>
+        </defs>
+        <path 
+          d={`M 0,${height} L ${points} L ${width},${height} Z`} 
+          fill="url(#grad)" 
+        />
+        <polyline 
+          fill="none" 
+          stroke="#10b981" 
+          strokeWidth="4" 
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          points={points} 
+        />
+        {/* Points */}
+        {values.map((v, i) => (
+          <circle 
+            key={i} 
+            cx={(i / 6) * width} 
+            cy={height - (v / maxVal) * (height - 20)} 
+            r="5" 
+            fill="#10b981"
+            className="animate-pulse"
+          />
+        ))}
+      </svg>
+      <div className="flex justify-between mt-2 px-1">
+        {last7Days.map(date => (
+          <div key={date} className="text-[8px] font-black text-gray-400 uppercase">
+            {new Date(date).toLocaleDateString('ar-MA', { weekday: 'short' })}
+          </div>
+        ))}
+      </div>
     </div>
-    <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
-      <div className="text-gray-400 text-[10px] font-black uppercase mb-3 tracking-widest">عدد الطلبات</div>
-      <div className="text-4xl font-black dark:text-white">{orders.length} <span className="text-sm">طلب</span></div>
+  );
+};
+
+const StatsOverview: React.FC<{ orders: Order[], products: Product[] }> = ({ orders, products }) => {
+  const [visits, setVisits] = useState<DailyVisits>(getStoredVisits());
+  
+  const todayDate = new Date().toISOString().split('T')[0];
+  const todayVisits = visits[todayDate] || 0;
+  
+  // Explicitly type accumulator and current value in reduce to fix potential unknown type inference issues.
+  const totalWeekVisits = Object.values(visits).reduce((a: number, b: number) => a + b, 0);
+
+  return (
+    <div className="space-y-8">
+      {/* Primary Analytics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
+          <div className="flex items-center justify-between mb-4">
+             <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 rounded-xl flex items-center justify-center"><TrendingUp size={20}/></div>
+             <div className="text-[10px] font-black text-emerald-500 flex items-center gap-1">اليوم <ArrowUpRight size={10}/></div>
+          </div>
+          <div className="text-gray-400 text-[10px] font-black uppercase mb-2 tracking-widest text-right">زوار اليوم</div>
+          <div className="text-4xl font-black text-emerald-600 text-right">{todayVisits.toLocaleString()}</div>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
+          <div className="flex items-center justify-between mb-4">
+             <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/30 text-blue-600 rounded-xl flex items-center justify-center"><Users size={20}/></div>
+             <div className="text-[10px] font-black text-blue-500 flex items-center gap-1">الإجمالي</div>
+          </div>
+          <div className="text-gray-400 text-[10px] font-black uppercase mb-2 tracking-widest text-right">إجمالي الزيارات</div>
+          <div className="text-4xl font-black dark:text-white text-right">{totalWeekVisits.toLocaleString()}</div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
+          <div className="flex items-center justify-between mb-4">
+             <div className="w-10 h-10 bg-orange-100 dark:bg-orange-950/30 text-orange-600 rounded-xl flex items-center justify-center"><DollarSign size={20}/></div>
+             <div className="text-[10px] font-black text-orange-500 flex items-center gap-1">المبيعات</div>
+          </div>
+          <div className="text-gray-400 text-[10px] font-black uppercase mb-2 tracking-widest text-right">إجمالي الدخل</div>
+          <div className="text-3xl font-black dark:text-white text-right">
+            {/* Explicitly type accumulator and current value in reduce to fix potential unknown type inference issues on line 231. */}
+            {orders.reduce((s: number, o: Order) => s + o.totalPrice, 0).toLocaleString()} <span className="text-sm">د.م.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Analytics Visualization Section */}
+      <div className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[50px] border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+             <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-2xl flex items-center justify-center"><BarChart size={24}/></div>
+             <div>
+               <h3 className="text-xl font-black dark:text-white">منحنى زوار المتجر</h3>
+               <p className="text-gray-400 text-[10px] font-bold">مراقبة النشاط خلال آخر 7 أيام</p>
+             </div>
+          </div>
+          <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-xl text-[10px] font-black text-gray-500 uppercase tracking-widest">تحديث مباشر</div>
+        </div>
+        
+        <VisitorChart data={visits} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
+          <div className="text-gray-400 text-[10px] font-black uppercase mb-3 tracking-widest">عدد الطلبات</div>
+          <div className="text-4xl font-black dark:text-white">{orders.length} <span className="text-sm">طلب</span></div>
+        </div>
+        <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
+          <div className="text-gray-400 text-[10px] font-black uppercase mb-3 tracking-widest">منتجات المتجر</div>
+          <div className="text-4xl font-black dark:text-white">{products.length} <span className="text-sm">منتج</span></div>
+        </div>
+      </div>
     </div>
-    <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
-      <div className="text-gray-400 text-[10px] font-black uppercase mb-3 tracking-widest">منتجات المتجر</div>
-      <div className="text-4xl font-black dark:text-white">{products.length} <span className="text-sm">منتج</span></div>
-    </div>
-  </div>
-);
+  );
+};
 
 const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, setOrders }) => {
   const [view, setView] = useState<'active' | 'trash'>('active');

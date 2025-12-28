@@ -37,3 +37,7 @@ export interface AppSettings {
 export interface CartItem extends Product {
   quantity: number;
 }
+
+export interface DailyVisits {
+  [date: string]: number;
+}
