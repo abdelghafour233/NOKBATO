@@ -39,7 +39,9 @@ import {
   Users,
   TrendingUp,
   ArrowUpRight,
-  Activity
+  Activity,
+  Copy,
+  Check
 } from 'lucide-react';
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -158,8 +160,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   );
 };
 
+const CopyButton: React.FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button onClick={handleCopy} className={`p-1.5 rounded-lg transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-emerald-600'}`}>
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+    </button>
+  );
+};
+
 const VisitorChart: React.FC<{ data: DailyVisits }> = ({ data }) => {
-  // Get last 7 days
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -167,9 +184,8 @@ const VisitorChart: React.FC<{ data: DailyVisits }> = ({ data }) => {
   });
 
   const values = last7Days.map(date => data[date] || 0);
-  const maxVal = Math.max(...values, 5); // Minimum height scale of 5
+  const maxVal = Math.max(...values, 5);
   
-  // Create SVG path
   const width = 600;
   const height = 150;
   const points = values.map((v, i) => {
@@ -181,35 +197,16 @@ const VisitorChart: React.FC<{ data: DailyVisits }> = ({ data }) => {
   return (
     <div className="w-full h-40 mt-8 relative">
       <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-        {/* Gradient Fill */}
         <defs>
           <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 0.3 }} />
             <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 0 }} />
           </linearGradient>
         </defs>
-        <path 
-          d={`M 0,${height} L ${points} L ${width},${height} Z`} 
-          fill="url(#grad)" 
-        />
-        <polyline 
-          fill="none" 
-          stroke="#10b981" 
-          strokeWidth="4" 
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          points={points} 
-        />
-        {/* Points */}
+        <path d={`M 0,${height} L ${points} L ${width},${height} Z`} fill="url(#grad)" />
+        <polyline fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" points={points} />
         {values.map((v, i) => (
-          <circle 
-            key={i} 
-            cx={(i / 6) * width} 
-            cy={height - (v / maxVal) * (height - 20)} 
-            r="5" 
-            fill="#10b981"
-            className="animate-pulse"
-          />
+          <circle key={i} cx={(i / 6) * width} cy={height - (v / maxVal) * (height - 20)} r="5" fill="#10b981" className="animate-pulse" />
         ))}
       </svg>
       <div className="flex justify-between mt-2 px-1">
@@ -225,42 +222,46 @@ const VisitorChart: React.FC<{ data: DailyVisits }> = ({ data }) => {
 
 const StatsOverview: React.FC<{ orders: Order[], products: Product[], settings: AppSettings }> = ({ orders, products, settings }) => {
   const [visits, setVisits] = useState<DailyVisits>(getStoredVisits());
-  
   const todayDate = new Date().toISOString().split('T')[0];
   const todayVisits = visits[todayDate] || 0;
-  
   const totalWeekVisits = Object.values(visits).reduce((a: number, b: number) => a + b, 0);
 
   return (
     <div className="space-y-8">
-      {/* Facebook Tracking Status - Highly Visible on Mobile */}
-      <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2">
-        <div className="bg-white dark:bg-gray-900 border border-emerald-100 dark:border-emerald-900/50 p-4 rounded-2xl min-w-[200px] flex-1 shadow-sm flex items-center gap-3">
-           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
-             <Activity size={20} className="animate-pulse" />
-           </div>
-           <div className="text-right">
-             <div className="text-[10px] font-black text-gray-400 uppercase">FB Pixel ID</div>
-             <div className="text-xs font-black dark:text-white truncate max-w-[120px]">{settings.fbPixelId || 'غير مفعل'}</div>
-             <div className="flex items-center gap-1 mt-0.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${settings.fbPixelId ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-[8px] font-bold text-gray-400">{settings.fbPixelId ? 'متصل' : 'مفصول'}</span>
+      {/* Facebook Tracking Status - Highly Visible & Interactive */}
+      <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 -mx-1 px-1">
+        <div className="bg-white dark:bg-gray-900 border-2 border-emerald-50 dark:border-emerald-900/30 p-5 rounded-3xl min-w-[240px] flex-1 shadow-lg flex items-center justify-between gap-4 group hover:border-emerald-500 transition-all">
+           <div className="flex items-center gap-3">
+             <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+               <Activity size={24} className={settings.fbPixelId ? "animate-pulse" : ""} />
+             </div>
+             <div className="text-right">
+               <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">FB Pixel ID</div>
+               <div className="text-sm font-black dark:text-white truncate max-w-[120px]">{settings.fbPixelId || 'غير مفعل'}</div>
+               <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className={`w-2 h-2 rounded-full ${settings.fbPixelId ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`}></div>
+                  <span className="text-[10px] font-black text-gray-400">{settings.fbPixelId ? 'نشط الآن' : 'غير متصل'}</span>
+               </div>
              </div>
            </div>
+           {settings.fbPixelId && <CopyButton text={settings.fbPixelId} />}
         </div>
 
-        <div className="bg-white dark:bg-gray-900 border border-emerald-100 dark:border-emerald-900/50 p-4 rounded-2xl min-w-[200px] flex-1 shadow-sm flex items-center gap-3">
-           <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
-             <Code size={20} />
-           </div>
-           <div className="text-right">
-             <div className="text-[10px] font-black text-gray-400 uppercase">Test Event Code</div>
-             <div className="text-xs font-black dark:text-white truncate max-w-[120px]">{settings.fbTestEventCode || '---'}</div>
-             <div className="flex items-center gap-1 mt-0.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${settings.fbTestEventCode ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <span className="text-[8px] font-bold text-gray-400">نمط الاختبار</span>
+        <div className="bg-white dark:bg-gray-900 border-2 border-indigo-50 dark:border-indigo-900/30 p-5 rounded-3xl min-w-[240px] flex-1 shadow-lg flex items-center justify-between gap-4 group hover:border-indigo-500 transition-all">
+           <div className="flex items-center gap-3">
+             <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+               <Code size={24} />
+             </div>
+             <div className="text-right">
+               <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Event Code</div>
+               <div className="text-sm font-black dark:text-white truncate max-w-[120px]">{settings.fbTestEventCode || 'لا يوجد'}</div>
+               <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className={`w-2 h-2 rounded-full ${settings.fbTestEventCode ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]' : 'bg-gray-300'}`}></div>
+                  <span className="text-[10px] font-black text-gray-400">وضع الاختبار</span>
+               </div>
              </div>
            </div>
+           {settings.fbTestEventCode && <CopyButton text={settings.fbTestEventCode} />}
         </div>
       </div>
 
@@ -296,7 +297,6 @@ const StatsOverview: React.FC<{ orders: Order[], products: Product[], settings: 
         </div>
       </div>
 
-      {/* Analytics Visualization Section */}
       <div className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-[50px] border border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
@@ -308,19 +308,7 @@ const StatsOverview: React.FC<{ orders: Order[], products: Product[], settings: 
           </div>
           <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-xl text-[10px] font-black text-gray-500 uppercase tracking-widest">تحديث مباشر</div>
         </div>
-        
         <VisitorChart data={visits} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
-          <div className="text-gray-400 text-[10px] font-black uppercase mb-3 tracking-widest">عدد الطلبات</div>
-          <div className="text-4xl font-black dark:text-white">{orders.length} <span className="text-sm">طلب</span></div>
-        </div>
-        <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm text-center group hover:border-emerald-500 transition-all">
-          <div className="text-gray-400 text-[10px] font-black uppercase mb-3 tracking-widest">منتجات المتجر</div>
-          <div className="text-4xl font-black dark:text-white">{products.length} <span className="text-sm">منتج</span></div>
-        </div>
       </div>
     </div>
   );
@@ -442,7 +430,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     if (files && files.length > 0) {
       setIsProcessing(true);
       const newImages: string[] = [...(formData.images || [])];
-      
       for (let i = 0; i < files.length; i++) {
         const reader = new FileReader();
         const promise = new Promise<string>((resolve) => {
@@ -455,7 +442,6 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
         const result = await promise;
         newImages.push(result);
       }
-      
       setFormData(prev => ({ ...prev, images: newImages }));
       setIsProcessing(false);
     }
@@ -504,10 +490,9 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
              </div>
 
              <form onSubmit={handleSave} className="space-y-8 text-right">
-                {/* Image Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><ImageIcon size={14}/> صورة الغلاف (الرئيسية)</label>
+                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><ImageIcon size={14}/> صورة الغلاف</label>
                     <div onClick={() => fileInputRef.current?.click()} className="aspect-square border-4 border-dashed rounded-[35px] flex items-center justify-center cursor-pointer bg-gray-50 dark:bg-gray-800 overflow-hidden relative group transition-all">
                       {formData.image ? (
                         <>
@@ -525,25 +510,15 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><Images size={14}/> صور إضافية (المعرض)</label>
+                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><Images size={14}/> صور إضافية</label>
                     <div className="grid grid-cols-2 gap-3 min-h-[150px]">
                       {formData.images?.map((img, idx) => (
                         <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border-2 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                           <img src={img} className="w-full h-full object-cover" />
-                          <button 
-                            type="button" 
-                            onClick={() => removeGalleryImage(idx)}
-                            className="absolute top-1 left-1 bg-red-500 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X size={14} />
-                          </button>
+                          <button type="button" onClick={() => removeGalleryImage(idx)} className="absolute top-1 left-1 bg-red-500 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} /></button>
                         </div>
                       ))}
-                      <button 
-                        type="button"
-                        onClick={() => galleryInputRef.current?.click()}
-                        className="aspect-square border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all"
-                      >
+                      <button type="button" onClick={() => galleryInputRef.current?.click()} className="aspect-square border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all">
                         <PlusCircle size={24} />
                         <span className="text-[10px] font-black mt-1">إضافة صور</span>
                       </button>
@@ -553,54 +528,31 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Name */}
                   <div className="space-y-2">
                     <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><Tag size={14}/> اسم المنتج</label>
-                    <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700" placeholder="أدخل اسم المنتج هنا..." />
+                    <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700" placeholder="أدخل اسم المنتج..." />
                   </div>
-
-                  {/* Price */}
                   <div className="space-y-2">
                     <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><DollarSign size={14}/> السعر (د.م.)</label>
                     <input required type="number" value={formData.price} onChange={e=>setFormData({...formData, price:Number(e.target.value)})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-black outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700" placeholder="0.00" />
                   </div>
                 </div>
 
-                {/* Category Selection */}
                 <div className="space-y-2">
                   <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><Package size={14}/> فئة المنتج</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {CATEGORIES.map(cat => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setFormData({...formData, category: cat.id})}
-                        className={`p-4 rounded-2xl font-black text-xs border-2 transition-all ${formData.category === cat.id ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-400 dark:text-gray-500 hover:border-gray-200'}`}
-                      >
-                        {cat.label}
-                      </button>
+                      <button key={cat.id} type="button" onClick={() => setFormData({...formData, category: cat.id})} className={`p-4 rounded-2xl font-black text-xs border-2 transition-all ${formData.category === cat.id ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-400 dark:text-gray-500 hover:border-gray-200'}`}>{cat.label}</button>
                     ))}
                   </div>
                 </div>
 
-                {/* Description */}
                 <div className="space-y-2">
                   <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><FileText size={14}/> وصف المنتج</label>
-                  <textarea 
-                    value={formData.description} 
-                    onChange={e=>setFormData({...formData, description:e.target.value})} 
-                    className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700 min-h-[150px]" 
-                    placeholder="اكتب وصفاً جذاباً لمنتجك هنا لتشجيع العملاء على الشراء..."
-                  />
+                  <textarea value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500 bg-gray-50 dark:border-gray-700 min-h-[150px]" placeholder="وصف المنتج..." />
                 </div>
 
-                <button 
-                  type="submit" 
-                  disabled={isProcessing} 
-                  className={`w-full py-6 rounded-3xl text-white font-black text-xl shadow-xl transition-all ${isProcessing ? 'bg-gray-400 animate-pulse' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'}`}
-                >
-                  {isProcessing ? 'جاري الحفظ...' : (editingProduct ? 'تحديث بيانات المنتج' : 'حفظ ونشر المنتج')}
-                </button>
+                <button type="submit" disabled={isProcessing} className={`w-full py-6 rounded-3xl text-white font-black text-xl shadow-xl transition-all ${isProcessing ? 'bg-gray-400 animate-pulse' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'}`}>{isProcessing ? 'جاري الحفظ...' : (editingProduct ? 'تحديث المنتج' : 'حفظ المنتج')}</button>
              </form>
           </div>
         </div>
@@ -616,90 +568,49 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
 
   const handleSave = () => {
     let finalSettings = { ...local };
-    if (newPassword.trim()) {
-      finalSettings.adminPasswordHash = btoa(newPassword);
-    }
+    if (newPassword.trim()) finalSettings.adminPasswordHash = btoa(newPassword);
     setSettings(finalSettings);
     saveSettings(finalSettings);
-    alert('✅ تم حفظ الإعدادات بنجاح');
+    alert('✅ تم حفظ الإعدادات');
   };
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto pb-20 text-right">
-      
-      {/* Facebook Marketing Section */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
         <div className="relative z-10 space-y-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-               <Megaphone size={32} />
-            </div>
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center"><Megaphone size={32} /></div>
             <div>
-              <h3 className="text-2xl font-black">إعدادات فيسبوك بيكسل</h3>
-              <p className="text-blue-100 text-xs font-bold">تتبع زوار متجرك وحسن أداء حملاتك الإعلانية</p>
+              <h3 className="text-2xl font-black">إعدادات تتبع فيسبوك</h3>
+              <p className="text-blue-100 text-xs font-bold">اربط متجرك بفيسبوك لمتابعة نشاط الزوار</p>
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-blue-200">Pixel ID</label>
-              <input 
-                type="text" 
-                value={local.fbPixelId} 
-                onChange={e => setLocal({...local, fbPixelId: e.target.value})}
-                className="w-full bg-white/10 border border-white/20 rounded-xl p-4 font-black outline-none focus:bg-white/20 transition-all placeholder:text-blue-300/50"
-                placeholder="مثال: 1234567890"
-              />
+              <input type="text" value={local.fbPixelId} onChange={e => setLocal({...local, fbPixelId: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded-xl p-4 font-black outline-none focus:bg-white/20 transition-all placeholder:text-blue-300/50" placeholder="Pixel ID" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-blue-200">Test Event Code</label>
-              <input 
-                type="text" 
-                value={local.fbTestEventCode} 
-                onChange={e => setLocal({...local, fbTestEventCode: e.target.value})}
-                className="w-full bg-white/10 border border-white/20 rounded-xl p-4 font-black outline-none focus:bg-white/20 transition-all placeholder:text-blue-300/50"
-                placeholder="TEST12345"
-              />
+              <label className="text-[10px] font-black uppercase tracking-widest text-blue-200">Test Code</label>
+              <input type="text" value={local.fbTestEventCode} onChange={e => setLocal({...local, fbTestEventCode: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded-xl p-4 font-black outline-none focus:bg-white/20 transition-all placeholder:text-blue-300/50" placeholder="TEST Code" />
             </div>
           </div>
-          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-             <p className="text-[10px] font-medium leading-relaxed text-blue-50 opacity-80">
-               * النظام يدعم تتبع الأحداث القياسية (PageView, ViewContent, AddToCart, Purchase) تلقائياً بمجرد إدخال الـ ID.
-             </p>
-          </div>
         </div>
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
       </div>
 
       <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] border dark:border-gray-800 shadow-xl space-y-10">
         <div className="space-y-6">
-          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><KeyRound size={24} className="text-emerald-600"/> الأمان وكلمة المرور</h3>
-          <div className="space-y-2">
-            <label className="text-xs font-black text-gray-400">تغيير كلمة المرور</label>
-            <div className="relative">
-              <input type={showPass ? "text" : "password"} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="اتركها فارغة لعدم التغيير" />
-              <button onClick={() => setShowPass(!showPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
+          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><KeyRound size={24} className="text-emerald-600"/> الأمان</h3>
+          <div className="relative">
+            <input type={showPass ? "text" : "password"} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="تغيير كلمة المرور" />
+            <button onClick={() => setShowPass(!showPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">{showPass ? <EyeOff size={20} /> : <Eye size={20} />}</button>
           </div>
         </div>
-
         <div className="space-y-6">
-          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><Globe size={24} className="text-emerald-600"/> الويب والتتبع</h3>
-          <div className="space-y-4">
-             <div className="space-y-2">
-               <label className="text-xs font-black text-gray-400">اسم النطاق (Domain)</label>
-               <input type="text" value={local.domainName} onChange={e=>setLocal({...local, domainName:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="storebrima.com" />
-             </div>
-             <div className="space-y-2">
-               <label className="text-xs font-black text-gray-400">Google AdSense ID</label>
-               <input type="text" value={local.googleAdSenseId} onChange={e=>setLocal({...local, googleAdSenseId:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="ca-pub-xxxxxxxxxxxxxxxx" />
-             </div>
-          </div>
+          <h3 className="text-xl font-black dark:text-white flex items-center gap-3"><Globe size={24} className="text-emerald-600"/> الموقع</h3>
+          <input type="text" value={local.domainName} onChange={e=>setLocal({...local, domainName:e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-emerald-500" placeholder="النطاق (Domain)" />
         </div>
-
-        <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all">حفظ الإعدادات</button>
+        <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all">حفظ</button>
       </div>
     </div>
   );
