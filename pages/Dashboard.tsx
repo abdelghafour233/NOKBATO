@@ -33,7 +33,9 @@ import {
   Code,
   Tag,
   FileText,
-  DollarSign
+  DollarSign,
+  Images,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -232,6 +234,7 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const CATEGORIES: {id: Category, label: string}[] = [
     {id: 'electronics', label: 'إلكترونيات'},
@@ -265,7 +268,7 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
     setEditingProduct(null);
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsProcessing(true);
@@ -277,6 +280,37 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleGalleryFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setIsProcessing(true);
+      const newImages: string[] = [...(formData.images || [])];
+      
+      for (let i = 0; i < files.length; i++) {
+        const reader = new FileReader();
+        const promise = new Promise<string>((resolve) => {
+          reader.onloadend = async () => {
+            const compressed = await compressImage(reader.result as string);
+            resolve(compressed);
+          };
+        });
+        reader.readAsDataURL(files[i]);
+        const result = await promise;
+        newImages.push(result);
+      }
+      
+      setFormData(prev => ({ ...prev, images: newImages }));
+      setIsProcessing(false);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images?.filter((_, i) => i !== index)
+    }));
   };
 
   return (
@@ -316,21 +350,50 @@ const ProductsManager: React.FC<{ products: Product[], setProducts: any }> = ({ 
 
              <form onSubmit={handleSave} className="space-y-8 text-right">
                 {/* Image Section */}
-                <div className="space-y-3">
-                  <label className="text-sm font-black text-gray-400 pr-2">صورة المنتج الرئيسية</label>
-                  <div onClick={() => fileInputRef.current?.click()} className="aspect-video md:aspect-[21/9] border-4 border-dashed rounded-[35px] flex items-center justify-center cursor-pointer bg-gray-50 dark:bg-gray-800 overflow-hidden relative group transition-all">
-                    {formData.image ? (
-                      <>
-                        <img src={formData.image} className="w-full h-full object-contain" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-black transition-opacity">تغيير الصورة</div>
-                      </>
-                    ) : (
-                      <div className="text-center">
-                        <PlusCircle size={40} className="mx-auto text-gray-300 mb-2"/>
-                        <div className="text-gray-400 font-black">اضغط لرفع صورة</div>
-                      </div>
-                    )}
-                    <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><ImageIcon size={14}/> صورة الغلاف (الرئيسية)</label>
+                    <div onClick={() => fileInputRef.current?.click()} className="aspect-square border-4 border-dashed rounded-[35px] flex items-center justify-center cursor-pointer bg-gray-50 dark:bg-gray-800 overflow-hidden relative group transition-all">
+                      {formData.image ? (
+                        <>
+                          <img src={formData.image} className="w-full h-full object-contain" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-black transition-opacity">تغيير الصورة</div>
+                        </>
+                      ) : (
+                        <div className="text-center">
+                          <PlusCircle size={40} className="mx-auto text-gray-300 mb-2"/>
+                          <div className="text-gray-400 font-black text-xs">اضغط لرفع غلاف</div>
+                        </div>
+                      )}
+                      <input type="file" ref={fileInputRef} className="hidden" onChange={handleMainFileChange} accept="image/*" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-black text-gray-400 pr-2 flex items-center gap-2"><Images size={14}/> صور إضافية (المعرض)</label>
+                    <div className="grid grid-cols-2 gap-3 min-h-[150px]">
+                      {formData.images?.map((img, idx) => (
+                        <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border-2 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                          <img src={img} className="w-full h-full object-cover" />
+                          <button 
+                            type="button" 
+                            onClick={() => removeGalleryImage(idx)}
+                            className="absolute top-1 left-1 bg-red-500 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <button 
+                        type="button"
+                        onClick={() => galleryInputRef.current?.click()}
+                        className="aspect-square border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all"
+                      >
+                        <PlusCircle size={24} />
+                        <span className="text-[10px] font-black mt-1">إضافة صور</span>
+                      </button>
+                    </div>
+                    <input type="file" ref={galleryInputRef} className="hidden" onChange={handleGalleryFileChange} accept="image/*" multiple />
                   </div>
                 </div>
 
