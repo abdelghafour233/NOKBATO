@@ -8,8 +8,7 @@ import {
   getStoredOrders, 
   getStoredDeletedOrders,
   getStoredProducts,
-  getStoredSettings,
-  factoryReset
+  getStoredSettings
 } from '../store';
 import { 
   Settings, 
@@ -545,10 +544,6 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
         </div>
 
         <button onClick={handleSave} className="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black text-lg shadow-xl hover:bg-emerald-700 transition-all">حفظ الإعدادات</button>
-      </div>
-      
-      <div className="text-center pt-8">
-        <button onClick={() => factoryReset()} className="text-red-500 text-sm font-black underline">إعادة ضبط المصنع (حذف كل البيانات)</button>
       </div>
     </div>
   );

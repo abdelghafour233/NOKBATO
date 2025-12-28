@@ -58,10 +58,3 @@ export const saveProducts = (products: Product[]) => localStorage.setItem('produ
 export const saveOrders = (orders: Order[]) => localStorage.setItem('orders', JSON.stringify(orders));
 export const saveDeletedOrders = (orders: Order[]) => localStorage.setItem('deleted_orders', JSON.stringify(orders));
 export const saveSettings = (settings: AppSettings) => localStorage.setItem('settings', JSON.stringify(settings));
-
-export const factoryReset = () => {
-  if (confirm('هل أنت متأكد؟ سيتم حذف كل شيء نهائياً.')) {
-    localStorage.clear();
-    window.location.reload();
-  }
-};
