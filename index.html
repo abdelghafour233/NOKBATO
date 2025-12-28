@@ -5,7 +5,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ستور بريمة - فخامة التسوق</title>
-    <meta name="description" content="أفضل العروض والمنتجات المختارة بعناية في المغرب">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +21,7 @@
                 primary: '#10b981',
                 secondary: '#059669',
                 slate: '#0f172a',
-                bg: '#f8fafc'
+                bg: '#ffffff'
               }
             }
           },
@@ -32,28 +31,30 @@
     <style>
       body {
         font-family: 'Cairo', sans-serif;
-        background-color: #f8fafc;
+        background-color: #ffffff;
         color: #0f172a;
         -webkit-font-smoothing: antialiased;
         scroll-behavior: smooth;
       }
       .product-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #f1f5f9;
         transition: all 0.3s ease;
       }
       .product-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.05);
         border-color: #10b981;
       }
       .glass-header {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
       }
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: #f1f5f9; }
+      .mask-fade-right {
+        mask-image: linear-gradient(to right, black 50%, transparent 100%);
+      }
+      ::-webkit-scrollbar { width: 5px; }
       ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
     </style>
     <script type="importmap">

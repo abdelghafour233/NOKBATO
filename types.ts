@@ -1,3 +1,4 @@
+
 export type Category = 'electronics' | 'home' | 'cars' | 'watches' | 'glasses';
 
 export interface Product {
@@ -5,8 +6,8 @@ export interface Product {
   name: string;
   price: number;
   category: Category;
-  image: string; // الصورة الرئيسية (Thumbnail)
-  images?: string[]; // معرض الصور الإضافية
+  image: string;
+  images?: string[];
   description: string;
 }
 
@@ -23,15 +24,16 @@ export interface Order {
 
 export interface AppSettings {
   fbPixelId: string;
-  fbTestEventCode: string; 
+  fbTestEventCode: string;
   googleAnalyticsId: string;
-  googleAdSenseId: string; 
   tiktokPixelId: string;
-  googleSheetsUrl: string;
-  domainName: string;
-  nameServers: string;
   adminPasswordHash: string;
-  customScript: string; 
+  domainName: string;
+  // Added missing settings fields to support dashboard functionality
+  googleAdSenseId: string;
+  nameServers: string;
+  googleSheetsUrl: string;
+  customScript: string;
 }
 
 export interface CartItem extends Product {

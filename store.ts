@@ -3,86 +3,78 @@ import { Product, Order, AppSettings, DailyVisits } from './types';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
-    id: 'product-1',
-    name: 'ساعة رجالية فاخرة - مقاومة للماء',
-    price: 249,
+    id: 'p1',
+    name: 'ساعة ذكية Ultra - إصدار 2024',
+    price: 349,
     category: 'watches',
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
-    description: 'ساعة يد عصرية تجمع بين الكلاسيكية والأناقة الحديثة. تصميم متين مقاوم للصدمات والماء، مثالية للاستخدام اليومي أو المناسبات الرسمية.'
+    image: 'https://images.unsplash.com/photo-1544117518-30dd0f73de6e?auto=format&fit=crop&q=80&w=800',
+    description: 'ساعة ذكية متطورة تدعم الاتصال، تتبع اللياقة البدنية، ومقاومة للماء. شاشة AMOLED واضحة جداً.'
   },
   {
-    id: 'product-2',
-    name: 'سماعات بلوتوث لاسلكية - عزل ضوضاء',
-    price: 380,
+    id: 'p2',
+    name: 'سماعات AirPods Pro - جودة عالية',
+    price: 280,
     category: 'electronics',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800',
-    description: 'استمتع بنقاوة صوت استثنائية مع أحدث سماعات الرأس اللاسلكية. بطارية تدوم طويلاً وتقنية عزل الضوضاء المحيطة.'
+    image: 'https://images.unsplash.com/photo-1588423770809-b6d3939a047e?auto=format&fit=crop&q=80&w=800',
+    description: 'تجربة صوتية فريدة مع عزل الضوضاء النشط. بطارية تدوم طويلاً وتصميم مريح للأذن.'
   },
   {
-    id: 'product-3',
-    name: 'كاميرا مراقبة ذكية للسيارة 4K',
-    price: 450,
+    id: 'p3',
+    name: 'شاحن سيارة سريع 60W - متقن الصنع',
+    price: 150,
     category: 'cars',
-    image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=800',
-    description: 'كاميرا سيارة بدقة 4K لتسجيل كل التفاصيل على الطريق. تدعم الرؤية الليلية والاتصال بالهاتف عبر الواي فاي.'
-  },
-  {
-    id: 'product-4',
-    name: 'نظارات شمسية عصرية - حماية UV',
-    price: 180,
-    category: 'glasses',
-    image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&q=80&w=800',
-    description: 'نظارات شمسية بتصميم عصري وخفيف الوزن. عدسات عالية الجودة توفر حماية كاملة من أشعة الشمس الضارة.'
+    image: 'https://images.unsplash.com/photo-1622445272461-c6580cab8638?auto=format&fit=crop&q=80&w=800',
+    description: 'اشحن هاتفك بسرعة هائلة داخل السيارة. يدعم كافة أنواع الهواتف الذكية مع حماية من الحرارة.'
   }
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
   fbPixelId: '',
-  fbTestEventCode: '', 
+  fbTestEventCode: '',
   googleAnalyticsId: '',
-  googleAdSenseId: '', 
   tiktokPixelId: '',
-  googleSheetsUrl: '',
+  adminPasswordHash: 'aGFsYWwyMDI0', // Password: halal2024
   domainName: 'storebrima.com',
+  // Initialize new fields with empty strings
+  googleAdSenseId: '',
   nameServers: '',
-  adminPasswordHash: 'aGFsYWwyMDI0', 
+  googleSheetsUrl: '',
   customScript: ''
 };
 
 export const getStoredProducts = (): Product[] => {
-  const stored = localStorage.getItem('products');
+  const stored = localStorage.getItem('brima_products');
   return stored ? JSON.parse(stored) : INITIAL_PRODUCTS;
 };
 
 export const getStoredOrders = (): Order[] => {
-  const stored = localStorage.getItem('orders');
+  const stored = localStorage.getItem('brima_orders');
   return stored ? JSON.parse(stored) : [];
 };
 
-// Fix: Add missing export for getStoredDeletedOrders used in Dashboard.tsx
 export const getStoredDeletedOrders = (): Order[] => {
-  const stored = localStorage.getItem('deleted_orders');
+  const stored = localStorage.getItem('brima_deleted_orders');
   return stored ? JSON.parse(stored) : [];
 };
 
 export const getStoredSettings = (): AppSettings => {
-  const stored = localStorage.getItem('settings');
+  const stored = localStorage.getItem('brima_settings');
   return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
 };
 
-export const trackVisit = () => {
-  const visits: DailyVisits = JSON.parse(localStorage.getItem('analytics_visits') || '{}');
-  const today = new Date().toISOString().split('T')[0];
-  visits[today] = (visits[today] || 0) + 1;
-  localStorage.setItem('analytics_visits', JSON.stringify(visits));
-};
-
-// Fix: Add missing export for getStoredVisits used in Dashboard.tsx
 export const getStoredVisits = (): DailyVisits => {
-  const stored = localStorage.getItem('analytics_visits');
+  const stored = localStorage.getItem('brima_visits');
   return stored ? JSON.parse(stored) : {};
 };
 
-export const saveProducts = (p: Product[]) => localStorage.setItem('products', JSON.stringify(p));
-export const saveOrders = (o: Order[]) => localStorage.setItem('orders', JSON.stringify(o));
-export const saveSettings = (s: AppSettings) => localStorage.setItem('settings', JSON.stringify(s));
+export const trackVisit = () => {
+  const visits = getStoredVisits();
+  const today = new Date().toISOString().split('T')[0];
+  visits[today] = (visits[today] || 0) + 1;
+  localStorage.setItem('brima_visits', JSON.stringify(visits));
+};
+
+export const saveProducts = (p: Product[]) => localStorage.setItem('brima_products', JSON.stringify(p));
+export const saveOrders = (o: Order[]) => localStorage.setItem('brima_orders', JSON.stringify(o));
+export const saveDeletedOrders = (o: Order[]) => localStorage.setItem('brima_deleted_orders', JSON.stringify(o));
+export const saveSettings = (s: AppSettings) => localStorage.setItem('brima_settings', JSON.stringify(s));
