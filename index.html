@@ -5,18 +5,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ستور بريمة - فخامة التسوق</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="أفضل العروض والمنتجات المختارة بعناية في المغرب">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: { cairo: ['Cairo', 'sans-serif'] },
@@ -24,8 +21,8 @@
               brand: {
                 primary: '#10b981',
                 secondary: '#059669',
-                dark: '#0f172a',
-                light: '#f8fafc'
+                slate: '#0f172a',
+                bg: '#f8fafc'
               }
             }
           },
@@ -35,52 +32,43 @@
     <style>
       body {
         font-family: 'Cairo', sans-serif;
-        scroll-behavior: smooth;
-        -webkit-font-smoothing: antialiased;
         background-color: #f8fafc;
         color: #0f172a;
+        -webkit-font-smoothing: antialiased;
+        scroll-behavior: smooth;
+      }
+      .product-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+      }
+      .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border-color: #10b981;
+      }
+      .glass-header {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
       }
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: #f1f5f9; }
       ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-      
-      .glass-nav {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-      }
-      
-      .product-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: #ffffff;
-      }
-      .product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-      }
-      
-      .hero-pattern {
-        background-color: #ffffff;
-        background-image: radial-gradient(#10b981 0.5px, transparent 0.5px), radial-gradient(#10b981 0.5px, #ffffff 0.5px);
-        background-size: 20px 20px;
-        background-position: 0 0, 10px 10px;
-        opacity: 0.05;
-      }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0"
-  }
-}
-</script>
-</head>
-  <body class="selection:bg-brand-primary selection:text-white">
+    <script type="importmap">
+    {
+      "imports": {
+        "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0"
+      }
+    }
+    </script>
+  </head>
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

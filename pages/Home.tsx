@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types.ts';
-import { ShoppingCart, Star, ArrowRight, Zap, ShieldCheck, Truck, ShoppingBag, ChevronLeft, Headphones, Sparkles } from 'lucide-react';
+import { Star, ShoppingBag, Zap, ShieldCheck, Truck, Headphones, ChevronLeft } from 'lucide-react';
 
 interface HomePageProps {
   products: Product[];
@@ -10,83 +10,68 @@ interface HomePageProps {
 
 const HomePage: React.FC<HomePageProps> = ({ products }) => {
   return (
-    <div className="pb-20 space-y-16">
-      {/* Bright Professional Hero */}
-      <section className="relative overflow-hidden bg-white pt-10 pb-16">
-        <div className="hero-pattern absolute inset-0"></div>
-        <div className="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8 text-center lg:text-right">
-             <div className="inline-flex items-center gap-2 bg-emerald-50 text-brand-primary px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider">
-                <Sparkles size={14} /> متجر بريمة المغربي الأصلي
-             </div>
-             <h1 className="text-5xl md:text-7xl font-black text-slate-900 leading-[1.2]">
-               تسوق بأمان، <br/> واكشف عن <span className="text-brand-primary">أناقتك</span>.
+    <div className="space-y-16 pb-20">
+      {/* Modern Hero Section */}
+      <section className="max-w-7xl mx-auto px-6">
+        <div className="relative h-[400px] md:h-[550px] bg-brand-slate rounded-[40px] overflow-hidden flex flex-col md:flex-row items-center">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent z-10 md:hidden"></div>
+          <div className="relative z-20 p-8 md:p-16 text-center md:text-right md:w-1/2 space-y-6">
+             <span className="inline-block bg-brand-primary text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">عرض حصري لمتابعينا</span>
+             <h1 className="text-4xl md:text-6xl font-black text-white leading-tight">
+               الجودة التي تستحقها <br/> <span className="text-brand-primary underline decoration-white/20 underline-offset-8">بأفضل الأسعار</span>
              </h1>
-             <p className="text-slate-500 text-lg md:text-xl font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed">
-               نحن نختار لك بعناية أفضل المنتجات العالمية التي تجمع بين الجودة والجمال، مع ضمان التوصيل لباب منزلك مجاناً.
-             </p>
-             <div className="flex flex-wrap justify-center lg:justify-start gap-4">
-               <button className="bg-brand-primary text-white px-10 py-5 rounded-2xl font-black text-xl hover:bg-brand-secondary transition-all shadow-xl shadow-brand-primary/20 flex items-center gap-3">
-                 ابدأ التسوق <ChevronLeft size={24}/>
-               </button>
-               <button className="bg-slate-100 text-slate-700 px-10 py-5 rounded-2xl font-black text-xl hover:bg-slate-200 transition-all">
-                 أحدث العروض
-               </button>
-             </div>
+             <p className="text-gray-400 text-lg font-medium max-w-md mx-auto md:mx-0">نختار لك بعناية أفضل المنتجات العالمية ونوفرها لك مع خدمة التوصيل السريع للمنزل.</p>
+             <button className="bg-white text-brand-slate px-10 py-4 rounded-2xl font-black text-xl hover:bg-brand-primary hover:text-white transition-all shadow-2xl flex items-center gap-3 mx-auto md:mx-0">
+               تصفح المنتجات <ChevronLeft size={24}/>
+             </button>
           </div>
-          <div className="relative hidden lg:block">
-             <div className="absolute inset-0 bg-brand-primary/10 rounded-[60px] blur-3xl -z-10 animate-pulse"></div>
+          <div className="absolute inset-0 md:relative md:w-1/2 h-full">
              <img 
-               src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800" 
-               className="w-full h-auto rounded-[60px] shadow-2xl border-8 border-white" 
-               alt="Featured product" 
+               src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=1200" 
+               className="w-full h-full object-cover opacity-60 md:opacity-100" 
+               alt="Hero Product" 
              />
           </div>
         </div>
       </section>
 
-      {/* Main Product Grid */}
-      <section className="max-w-7xl mx-auto px-6 space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="text-center md:text-right">
-             <h2 className="text-3xl md:text-5xl font-black text-slate-900">منتجاتنا المختارة</h2>
-             <p className="text-slate-400 font-bold mt-2 italic">اكتشف التميز في كل قطعة</p>
-           </div>
-           <div className="flex gap-4">
-              <span className="bg-white border border-slate-100 px-6 py-2 rounded-full text-sm font-black text-slate-400">جميع المنتجات ({products.length})</span>
-           </div>
+      {/* Main Products Grid - الواجهة الأمامية */}
+      <section className="max-w-7xl mx-auto px-6 space-y-10">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-r-4 border-brand-primary pr-6">
+          <div>
+            <h2 className="text-3xl md:text-5xl font-black text-brand-slate">منتجاتنا المختارة</h2>
+            <p className="text-gray-400 font-bold mt-2">تشكيلة واسعة تلبي جميع احتياجاتكم</p>
+          </div>
+          <div className="flex gap-4">
+             <div className="bg-white px-6 py-2 rounded-full border text-xs font-black text-gray-400">إجمالي المنتجات: {products.length}</div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.map(product => (
-            <div key={product.id} className="product-card rounded-[30px] border border-slate-100 overflow-hidden flex flex-col group shadow-sm">
-               <Link to={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-slate-50">
+            <div key={product.id} className="product-card rounded-[35px] overflow-hidden flex flex-col group">
+               <Link to={`/product/${product.id}`} className="relative aspect-square bg-gray-50 overflow-hidden">
                   <img 
                     src={product.image} 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                     alt={product.name} 
                   />
-                  <div className="absolute top-4 right-4 flex flex-col gap-2">
-                    <div className="bg-white/90 backdrop-blur-md text-brand-primary text-[10px] font-black px-3 py-1.5 rounded-full shadow-sm border border-emerald-50">أفضل سعر</div>
-                    {product.price > 200 && <div className="bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-sm">الأكثر طلباً</div>}
-                  </div>
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-brand-primary text-[10px] font-black px-3 py-1.5 rounded-xl shadow-sm border border-brand-primary/10">موصى به</div>
                </Link>
                
-               <div className="p-6 space-y-3 flex-grow flex flex-col">
-                  <h3 className="text-lg font-black text-slate-900 line-clamp-2 leading-snug group-hover:text-brand-primary transition-colors">{product.name}</h3>
-                  
+               <div className="p-6 space-y-4 flex-grow flex flex-col">
+                  <h3 className="text-xl font-black text-brand-slate line-clamp-1 group-hover:text-brand-primary transition-colors">{product.name}</h3>
                   <div className="flex items-center gap-1 text-amber-400">
-                    {[...Array(5)].map((_, i) => <Star key={i} size={10} fill="currentColor"/>)}
-                    <span className="text-[10px] text-slate-400 font-black mr-1">(4.9/5)</span>
+                    {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor"/>)}
+                    <span className="text-[10px] text-gray-400 font-black mr-2">4.9 تقييم</span>
                   </div>
-
                   <div className="mt-auto pt-4 flex items-center justify-between">
                      <div className="flex flex-col">
-                        <span className="text-2xl font-black text-brand-primary">{product.price} <span className="text-[10px]">د.م</span></span>
-                        <span className="text-xs text-slate-300 line-through font-bold">{(product.price * 1.4).toFixed(0)} د.م</span>
+                        <span className="text-3xl font-black text-brand-primary">{product.price} <span className="text-sm">د.م</span></span>
+                        <span className="text-[10px] text-gray-300 line-through font-bold">{(product.price * 1.25).toFixed(0)} د.م</span>
                      </div>
-                     <Link to={`/product/${product.id}`} className="p-3 bg-slate-900 text-white rounded-xl hover:bg-brand-primary hover:scale-105 transition-all shadow-lg">
-                        <ShoppingBag size={18} />
+                     <Link to={`/product/${product.id}`} className="p-3.5 bg-brand-slate text-white rounded-2xl hover:bg-brand-primary hover:scale-110 transition-all shadow-lg">
+                        <ShoppingBag size={20} />
                      </Link>
                   </div>
                </div>
@@ -97,24 +82,23 @@ const HomePage: React.FC<HomePageProps> = ({ products }) => {
 
       {/* Trust Badges */}
       <section className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-           <FeatureItem icon={<Truck/>} title="توصيل مجاني" desc="لكافة مدن المغرب" />
-           <FeatureItem icon={<ShieldCheck/>} title="ضمان الجودة" desc="فحص دقيق للمنتج" />
-           <FeatureItem icon={<Headphones/>} title="دعم فني" desc="طوال أيام الأسبوع" />
-           <FeatureItem icon={<Zap/>} title="دفع آمن" desc="عند الاستلام يداً بيد" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           <FeatureCard icon={<Truck/>} title="شحن مجاني وسريع" desc="نصلك في أقل من 48 ساعة لكافة مدن المغرب." />
+           <FeatureCard icon={<ShieldCheck/>} title="ضمان الجودة 100%" desc="جميع منتجاتنا أصلية وتخضع للفحص قبل الإرسال." />
+           <FeatureCard icon={<Headphones/>} title="دعم طوال اليوم" desc="فريقنا مستعد للإجابة على استفساراتكم عبر الواتساب." />
         </div>
       </section>
 
-      {/* Modern Banner */}
-      <section className="max-w-7xl mx-auto px-6 pb-10">
-         <div className="bg-brand-primary rounded-[40px] p-10 md:p-16 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl shadow-brand-primary/30">
+      {/* Sale Banner */}
+      <section className="max-w-7xl mx-auto px-6">
+         <div className="bg-brand-primary rounded-[40px] p-12 md:p-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-            <div className="relative z-10 text-center md:text-right space-y-4">
-               <h3 className="text-3xl md:text-5xl font-black text-white">تخفيضات تصل إلى 30%</h3>
-               <p className="text-white/80 text-xl font-bold">على تشكيلة مختارة من الساعات والإلكترونيات الذكية.</p>
+            <div className="relative z-10 space-y-4 text-center md:text-right">
+               <h3 className="text-3xl md:text-5xl font-black text-white">خصومات الموسم 🎁</h3>
+               <p className="text-white/80 text-xl font-bold italic">استفد من تخفيضات تصل إلى 40% على تشكيلة الساعات.</p>
             </div>
             <Link to="/category/watches" className="px-12 py-5 bg-white text-brand-primary rounded-2xl font-black text-xl hover:scale-105 transition-all shadow-xl">
-               اكتشف الآن
+               اكتشف العروض الآن
             </Link>
          </div>
       </section>
@@ -122,13 +106,13 @@ const HomePage: React.FC<HomePageProps> = ({ products }) => {
   );
 };
 
-const FeatureItem = ({ icon, title, desc }: any) => (
-  <div className="bg-white p-6 rounded-3xl border border-slate-100 flex flex-col items-center text-center group hover:border-brand-primary/50 transition-all">
-     <div className="w-12 h-12 bg-emerald-50 text-brand-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-        {React.cloneElement(icon, { size: 24 })}
+const FeatureCard = ({ icon, title, desc }: any) => (
+  <div className="bg-white p-8 rounded-[35px] border border-gray-100 flex flex-col items-center text-center group hover:border-brand-primary/40 transition-all">
+     <div className="w-14 h-14 bg-brand-bg text-brand-primary rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        {React.cloneElement(icon, { size: 28 })}
      </div>
-     <h4 className="text-sm font-black text-slate-900">{title}</h4>
-     <p className="text-slate-400 font-bold text-[10px] mt-1">{desc}</p>
+     <h4 className="text-xl font-black text-brand-slate mb-2">{title}</h4>
+     <p className="text-gray-400 font-bold text-sm leading-relaxed">{desc}</p>
   </div>
 );
 
