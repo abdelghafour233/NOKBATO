@@ -1,28 +1,18 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>ستور بريمة - تجربة تسوق استثنائية</title>
+    <title>ستور بريمة - فخامة التسوق</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#064e3b">
+    <meta name="theme-color" content="#020617">
     
-    <script>
-      // جعل الوضع الداكن هو الافتراضي
-      const theme = localStorage.getItem('theme');
-      if (theme === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.add('dark');
-      }
-    </script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -31,24 +21,11 @@
           extend: {
             fontFamily: { cairo: ['Cairo', 'sans-serif'] },
             colors: {
-              premium: {
-                dark: '#064e3b',
-                gold: '#d4af37',
-                light: '#f0fdf4'
-              }
-            },
-            animation: {
-              'float': 'float 6s ease-in-out infinite',
-              'fade-up': 'fadeUp 0.5s ease-out forwards',
-            },
-            keyframes: {
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-20px)' },
-              },
-              fadeUp: {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
+              brand: {
+                primary: '#10b981',
+                secondary: '#059669',
+                dark: '#020617',
+                accent: '#fbbf24'
               }
             }
           },
@@ -60,32 +37,34 @@
         font-family: 'Cairo', sans-serif;
         scroll-behavior: smooth;
         -webkit-font-smoothing: antialiased;
+        background-color: #020617;
       }
-      ::-webkit-scrollbar { width: 8px; }
-      ::-webkit-scrollbar-track { background: #f1f1f1; }
-      ::-webkit-scrollbar-thumb { background: #059669; border-radius: 10px; }
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: #020617; }
+      ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
       
       .glass-nav {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      }
-      .dark .glass-nav {
-        background: rgba(6, 78, 59, 0.7);
+        background: rgba(2, 6, 23, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       }
-      .gradient-text {
-        background: linear-gradient(135deg, #059669 0%, #d4af37 100%);
+      
+      .product-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      .product-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 20px 40px -20px rgba(16, 185, 129, 0.2);
+      }
+      
+      .premium-gradient-text {
+        background: linear-gradient(to right, #ffffff, #10b981);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
-      .premium-card {
-        background: white;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      }
-      .dark .premium-card { background: #064e3b; }
-      .premium-card:hover { transform: translateY(-10px) scale(1.02); }
     </style>
   <script type="importmap">
 {
@@ -99,7 +78,7 @@
 }
 </script>
 </head>
-  <body class="bg-[#fcfcfc] dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-500">
+  <body class="text-slate-100 selection:bg-brand-primary selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
