@@ -1,14 +1,14 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="dark">
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ستور بريمة - فخامة التسوق</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#ffffff">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,8 +24,8 @@
               brand: {
                 primary: '#10b981',
                 secondary: '#059669',
-                dark: '#020617',
-                accent: '#fbbf24'
+                dark: '#0f172a',
+                light: '#f8fafc'
               }
             }
           },
@@ -37,33 +37,35 @@
         font-family: 'Cairo', sans-serif;
         scroll-behavior: smooth;
         -webkit-font-smoothing: antialiased;
-        background-color: #020617;
+        background-color: #f8fafc;
+        color: #0f172a;
       }
-      ::-webkit-scrollbar { width: 4px; }
-      ::-webkit-scrollbar-track { background: #020617; }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #f1f5f9; }
       ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
       
       .glass-nav {
-        background: rgba(2, 6, 23, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
       }
       
       .product-card {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(255, 255, 255, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #ffffff;
       }
       .product-card:hover {
-        transform: translateY(-8px);
-        border-color: rgba(16, 185, 129, 0.3);
-        box-shadow: 0 20px 40px -20px rgba(16, 185, 129, 0.2);
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
       }
       
-      .premium-gradient-text {
-        background: linear-gradient(to right, #ffffff, #10b981);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+      .hero-pattern {
+        background-color: #ffffff;
+        background-image: radial-gradient(#10b981 0.5px, transparent 0.5px), radial-gradient(#10b981 0.5px, #ffffff 0.5px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+        opacity: 0.05;
       }
     </style>
   <script type="importmap">
@@ -78,7 +80,7 @@
 }
 </script>
 </head>
-  <body class="text-slate-100 selection:bg-brand-primary selection:text-white">
+  <body class="selection:bg-brand-primary selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

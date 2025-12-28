@@ -15,9 +15,6 @@ import {
   Star, 
   ShieldCheck, 
   Zap, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
   MessageCircle, 
   Copy, 
   Check, 
@@ -60,7 +57,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
     }
   }, [product, id]);
 
-  if (!product) return <div className="py-24 text-center font-black text-2xl text-slate-500">المنتج غير متوفر</div>;
+  if (!product) return <div className="py-24 text-center font-black text-2xl text-slate-400">المنتج غير متوفر</div>;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(productUrl).then(() => {
@@ -102,16 +99,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
   if (isSuccess) {
     return (
       <div className="max-w-2xl mx-auto px-6 py-20 text-center animate-in zoom-in duration-500">
-        <div className="bg-slate-900 p-12 rounded-[50px] shadow-2xl border-t-8 border-brand-primary">
-          <div className="w-24 h-24 bg-brand-primary/10 text-brand-primary rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-            <CheckCircle size={56} />
+        <div className="bg-white p-12 rounded-[40px] shadow-2xl border-t-8 border-brand-primary">
+          <div className="w-20 h-20 bg-emerald-50 text-brand-primary rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <CheckCircle size={40} />
           </div>
-          <h2 className="text-4xl font-black mb-4 text-white">تم استلام طلبك!</h2>
-          <p className="text-slate-400 text-xl mb-10 font-bold leading-relaxed">
-            شكراً <span className="text-brand-primary">{formData.fullName}</span>. سيتصل بك فريقنا قريباً لتأكيد الشحن إلى <span className="text-brand-primary">{formData.city}</span>.
+          <h2 className="text-3xl font-black mb-4 text-slate-900">شكراً على طلبك!</h2>
+          <p className="text-slate-500 text-lg mb-10 font-bold">
+            سيتصل بك فريقنا قريباً لتأكيد الشحن إلى مدينة <span className="text-brand-primary">{formData.city}</span>.
           </p>
-          <button onClick={() => navigate('/')} className="w-full bg-brand-primary text-white py-6 rounded-2xl font-black text-2xl hover:bg-brand-secondary transition-all flex items-center justify-center gap-3">
-            متابعة التسوق <ArrowRight size={28} />
+          <button onClick={() => navigate('/')} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-xl">
+            العودة للمتجر <ArrowRight size={24} />
           </button>
         </div>
       </div>
@@ -120,19 +117,19 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-24">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
         
-        {/* Gallery */}
-        <section className="lg:col-span-7 space-y-6">
-          <div className="bg-slate-900 rounded-[50px] overflow-hidden shadow-2xl border border-white/5 relative group">
-            <img src={activeImage} alt={product.name} className="w-full object-contain aspect-square transition-transform duration-1000 group-hover:scale-105" />
+        {/* Modern Gallery */}
+        <section className="lg:col-span-7 space-y-4">
+          <div className="bg-white rounded-[40px] overflow-hidden shadow-sm border border-slate-100 relative group">
+            <img src={activeImage} alt={product.name} className="w-full object-contain aspect-square" />
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {allImages.map((img, idx) => (
               <button 
                 key={idx} 
                 onClick={() => setActiveImage(img)}
-                className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-4 transition-all ${activeImage === img ? 'border-brand-primary scale-105 shadow-xl' : 'border-slate-800 opacity-50 hover:opacity-100'}`}
+                className={`flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${activeImage === img ? 'border-brand-primary scale-105' : 'border-slate-100 opacity-60 hover:opacity-100'}`}
               >
                 <img src={img} className="w-full h-full object-cover" alt="gallery" />
               </button>
@@ -140,76 +137,69 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ products, addToCart, setO
           </div>
         </section>
 
-        {/* Product Info & Order Form */}
-        <section className="lg:col-span-5 space-y-10">
+        {/* Product Info & Quick Order Form */}
+        <section className="lg:col-span-5 space-y-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1 bg-brand-primary/10 text-brand-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest"><ShieldCheck size={14}/> منتج أصلي</span>
-              <span className="flex items-center gap-1 bg-amber-400/10 text-amber-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest"><Star size={14} fill="currentColor"/> 4.9 تقييم</span>
+            <div className="flex flex-wrap gap-2">
+              <span className="bg-emerald-50 text-brand-primary px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-emerald-100 flex items-center gap-1"><ShieldCheck size={12}/> أصلي 100%</span>
+              <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-orange-100 flex items-center gap-1"><Zap size={12}/> عرض محدود</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight">{product.name}</h1>
-            <div className="flex items-baseline gap-4">
-              <span className="text-5xl md:text-6xl font-black text-brand-primary">{product.price.toLocaleString()} <span className="text-sm">د.م.</span></span>
-              <span className="text-2xl text-slate-600 font-bold line-through">{(product.price * 1.35).toLocaleString()} د.م.</span>
+            <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">{product.name}</h1>
+            <div className="flex items-center gap-4">
+              <span className="text-4xl md:text-5xl font-black text-brand-primary">{product.price.toLocaleString()} <span className="text-xs">د.م.</span></span>
+              <span className="text-xl text-slate-300 font-bold line-through">{(product.price * 1.4).toLocaleString()} د.م.</span>
             </div>
           </div>
 
-          {/* Social Share */}
-          <div className="bg-slate-900/50 p-6 rounded-[35px] border border-white/5">
-             <span className="block text-[10px] font-black text-slate-500 mb-5 uppercase tracking-widest text-center">شارك هذا المنتج المذهل:</span>
-             <div className="flex flex-wrap gap-4 justify-center">
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' - ' + productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-[#25D366] text-white rounded-2xl flex items-center justify-center hover:scale-110 shadow-lg transition-transform"><MessageCircle size={28}/></a>
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-[#1877F2] text-white rounded-2xl flex items-center justify-center hover:scale-110 shadow-lg transition-transform"><Facebook size={28}/></a>
-                <button onClick={handleCopyLink} className={`w-14 h-14 rounded-2xl flex items-center justify-center hover:scale-110 shadow-lg transition-all ${copied ? 'bg-brand-primary text-white' : 'bg-slate-800 text-slate-300'}`}>
-                  {copied ? <Check size={28} /> : <Copy size={28} />}
-                </button>
-             </div>
-          </div>
-
-          {/* Checkout Form */}
-          <div className="bg-slate-900 p-8 md:p-12 rounded-[50px] shadow-2xl border-t-8 border-brand-primary space-y-8">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl md:text-3xl font-black text-white">اطلب الآن</h2>
-              <p className="text-slate-500 font-bold text-sm">التوصيل مجاني والدفع عند الاستلام</p>
+          {/* Quick Buy Card */}
+          <div className="bg-white p-8 md:p-10 rounded-[40px] shadow-2xl border-2 border-brand-primary/10 space-y-6">
+            <div className="text-center space-y-1">
+              <h2 className="text-2xl font-black text-slate-900">اطلب الآن</h2>
+              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">توصيل مجاني لجميع المدن</p>
             </div>
 
             <form onSubmit={handleDirectOrder} className="space-y-4">
-              <div className="relative group">
-                <User className="absolute right-5 top-1/2 -translate-y-1/2 text-brand-primary" size={20} />
-                <input required type="text" placeholder="الاسم الكامل" className="w-full p-6 pr-14 rounded-2xl border-2 border-slate-800 bg-slate-800/50 text-white focus:bg-slate-800 focus:border-brand-primary outline-none font-bold transition-all" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
+              <div className="relative">
+                <User className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <input required type="text" placeholder="الاسم الكامل" className="w-full p-5 pr-12 rounded-2xl border-2 border-slate-50 bg-slate-50 focus:bg-white focus:border-brand-primary outline-none font-bold transition-all text-slate-900" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
               </div>
 
-              <div className="relative group">
-                <MapPin className="absolute right-5 top-1/2 -translate-y-1/2 text-brand-primary z-10" size={20} />
-                <select required className="w-full p-6 pr-14 rounded-2xl border-2 border-slate-800 bg-slate-800/50 text-white focus:bg-slate-800 focus:border-brand-primary outline-none font-bold transition-all appearance-none cursor-pointer" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})}>
-                  <option value="" disabled>اختر مدينتك</option>
+              <div className="relative">
+                <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 z-10" size={18} />
+                <select required className="w-full p-5 pr-12 rounded-2xl border-2 border-slate-50 bg-slate-50 focus:bg-white focus:border-brand-primary outline-none font-bold transition-all appearance-none cursor-pointer text-slate-900" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})}>
+                  <option value="" disabled>اختر المدينة</option>
                   {MOROCCAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                 </select>
-                <ChevronDown className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={20} />
+                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={18} />
               </div>
 
-              <div className="relative group">
-                <Phone className="absolute right-5 top-1/2 -translate-y-1/2 text-brand-primary" size={20} />
-                <input required type="tel" dir="ltr" placeholder="رقم الهاتف" className="w-full p-6 pr-14 rounded-2xl border-2 border-slate-800 bg-slate-800/50 text-white focus:bg-slate-800 focus:border-brand-primary outline-none font-bold transition-all text-right" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+              <div className="relative">
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <input required type="tel" dir="ltr" placeholder="رقم الهاتف" className="w-full p-5 pr-12 rounded-2xl border-2 border-slate-50 bg-slate-50 focus:bg-white focus:border-brand-primary outline-none font-bold transition-all text-right text-slate-900" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
               </div>
 
-              <button type="submit" disabled={isSubmitting} className={`w-full py-8 rounded-3xl text-white font-black text-2xl shadow-[0_20px_40px_rgba(16,185,129,0.25)] transition-all flex items-center justify-center gap-4 ${isSubmitting ? 'bg-slate-600' : 'bg-brand-primary hover:bg-brand-secondary active:scale-95'}`}>
-                {isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب الآن'} <Zap fill="currentColor" size={24}/>
+              <button type="submit" disabled={isSubmitting} className={`w-full py-6 rounded-2xl text-white font-black text-xl shadow-xl transition-all flex items-center justify-center gap-3 ${isSubmitting ? 'bg-slate-400' : 'bg-brand-primary hover:bg-brand-secondary active:scale-95 shadow-brand-primary/20'}`}>
+                {isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب السريع'} <Zap fill="currentColor" size={20}/>
               </button>
             </form>
+            
+            <div className="flex items-center justify-center gap-4 pt-2 border-t border-slate-50">
+               <div className="flex items-center gap-1 text-[10px] font-black text-slate-400 uppercase tracking-widest"><Truck size={14}/> شحن مجاني</div>
+               <div className="flex items-center gap-1 text-[10px] font-black text-slate-400 uppercase tracking-widest"><ShieldCheck size={14}/> دفع آمن</div>
+            </div>
           </div>
         </section>
       </div>
 
-      {/* Description */}
-      <section className="bg-slate-900/50 p-10 md:p-16 rounded-[60px] border border-white/5">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="p-4 bg-brand-primary/10 text-brand-primary rounded-3xl">
-            <FileText size={32} />
+      {/* Modern Description Area */}
+      <section className="bg-white p-8 md:p-12 rounded-[40px] border border-slate-100">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 bg-slate-50 text-brand-primary rounded-2xl">
+            <FileText size={28} />
           </div>
-          <h2 className="text-3xl md:text-5xl font-black text-white">تفاصيل المنتج</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-slate-900">مميزات المنتج</h2>
         </div>
-        <div className="prose prose-invert max-w-none text-slate-400 font-bold leading-relaxed whitespace-pre-wrap text-xl">
+        <div className="text-slate-500 font-bold leading-relaxed whitespace-pre-wrap text-lg md:text-xl">
           {product.description}
         </div>
       </section>

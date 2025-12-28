@@ -25,7 +25,6 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(getStoredSettings());
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
 
   const location = useLocation();
 
@@ -47,41 +46,38 @@ const App: React.FC = () => {
   const clearCart = () => setCart([]);
 
   return (
-    <div className="min-h-screen flex flex-col font-cairo bg-brand-dark transition-colors duration-500">
+    <div className="min-h-screen flex flex-col font-cairo bg-brand-light transition-colors duration-500">
       
-      {/* Sleek Minimalist Navbar */}
+      {/* Clean Light Navbar */}
       <header className="fixed top-0 left-0 right-0 z-[100] glass-nav">
-        <div className="max-w-7xl mx-auto px-6 h-20 md:h-24 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           
-          <Link to="/" className="flex items-center gap-3">
-             <div className="w-12 h-12 bg-brand-primary rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]">
-               <ShoppingBag size={24} />
+          <Link to="/" className="flex items-center gap-2">
+             <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20">
+               <ShoppingBag size={22} />
              </div>
-             <div className="flex flex-col">
-               <span className="text-xl md:text-2xl font-black tracking-tighter text-white">ستور بريمة</span>
-               <span className="text-[8px] font-black text-brand-primary uppercase tracking-[0.2em]">Luxury Shopping</span>
-             </div>
+             <span className="text-xl md:text-2xl font-black tracking-tighter text-slate-900">ستور بريمة</span>
           </Link>
 
-          <div className="hidden lg:flex items-center gap-10">
+          <div className="hidden lg:flex items-center gap-8">
             <NavLink to="/" current={location.pathname === '/'}>الرئيسية</NavLink>
             <NavLink to="/category/electronics" current={location.pathname.includes('electronics')}>الإلكترونيات</NavLink>
             <NavLink to="/category/watches" current={location.pathname.includes('watches')}>الساعات</NavLink>
-            <Link to="/dashboard" className="flex items-center gap-2 text-sm font-black text-brand-primary hover:text-white transition-colors">
-              <LayoutDashboard size={18} /> لوحة التحكم
+            <Link to="/dashboard" className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-brand-primary transition-colors">
+              <LayoutDashboard size={18} /> الإدارة
             </Link>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-5">
-            <Link to="/cart" className="relative p-3 text-slate-300 hover:text-brand-primary transition-colors">
-              <ShoppingCart size={22} />
+          <div className="flex items-center gap-4">
+            <Link to="/cart" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors bg-slate-100 rounded-xl">
+              <ShoppingCart size={20} />
               {cart.length > 0 && (
-                <span className="absolute top-1 left-1 w-5 h-5 bg-brand-primary text-white text-[10px] flex items-center justify-center rounded-full font-black ring-4 ring-brand-dark">
+                <span className="absolute -top-1 -left-1 w-5 h-5 bg-brand-primary text-white text-[10px] flex items-center justify-center rounded-full font-black ring-2 ring-white">
                   {cart.length}
                 </span>
               )}
             </Link>
-            <button onClick={() => setIsMenuOpen(true)} className="lg:hidden p-2 text-white bg-white/5 rounded-xl">
+            <button onClick={() => setIsMenuOpen(true)} className="lg:hidden p-2 text-slate-900 bg-slate-100 rounded-xl">
               <Menu size={24} />
             </button>
           </div>
@@ -90,21 +86,21 @@ const App: React.FC = () => {
 
       {/* Mobile Sidebar */}
       <div className={`fixed inset-0 z-[200] lg:hidden ${isMenuOpen ? 'visible' : 'invisible'}`}>
-        <div className={`absolute inset-0 bg-brand-dark/95 backdrop-blur-md transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsMenuOpen(false)}></div>
-        <div className={`absolute top-0 right-0 h-full w-4/5 max-w-xs bg-slate-900 shadow-2xl transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-           <div className="p-8 border-b border-white/5 flex justify-between items-center">
-             <span className="text-2xl font-black text-brand-primary">القائمة</span>
+        <div className={`absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsMenuOpen(false)}></div>
+        <div className={`absolute top-0 right-0 h-full w-4/5 max-w-xs bg-white shadow-2xl transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+           <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+             <span className="text-2xl font-black text-slate-900">القائمة</span>
              <button onClick={() => setIsMenuOpen(false)} className="p-2 text-slate-400"><X size={28}/></button>
            </div>
-           <div className="p-6 space-y-2">
+           <div className="p-6 space-y-4">
              <MobileLink to="/" onClick={() => setIsMenuOpen(false)} icon={<Home/>}>الرئيسية</MobileLink>
              <MobileLink to="/category/electronics" onClick={() => setIsMenuOpen(false)} icon={<ShoppingBag/>}>المتجر</MobileLink>
-             <MobileLink to="/dashboard" onClick={() => setIsMenuOpen(false)} icon={<LayoutDashboard/>}>الإدارة</MobileLink>
+             <MobileLink to="/dashboard" onClick={() => setIsMenuOpen(false)} icon={<LayoutDashboard/>}>لوحة التحكم</MobileLink>
            </div>
         </div>
       </div>
 
-      <main className="flex-grow pt-24 md:pt-32">
+      <main className="flex-grow pt-20">
         <Routes>
           <Route path="/" element={<HomePage products={products} />} />
           <Route path="/category/:id" element={<CategoryPage products={products} />} />
@@ -115,38 +111,38 @@ const App: React.FC = () => {
         </Routes>
       </main>
 
-      <footer className="bg-slate-950 text-white pt-24 pb-12 px-6 border-t border-white/5">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
+      <footer className="bg-white text-slate-900 pt-20 pb-12 px-6 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div className="space-y-6">
-            <h4 className="text-3xl font-black tracking-tighter">ستور بريمة</h4>
-            <p className="text-slate-400 font-medium leading-relaxed">بوابتكم المفضلة لتجربة تسوق آمنة وسريعة في المغرب. نختار منتجاتنا بدقة لنضمن لكم الأفضل دائماً.</p>
+            <h4 className="text-2xl font-black text-brand-primary">ستور بريمة</h4>
+            <p className="text-slate-500 font-medium leading-relaxed">أفضل تجربة تسوق أونلاين في المغرب. نضمن لكم الجودة العالية، التوصيل السريع، والدفع عند الاستلام.</p>
           </div>
           <div>
-            <h5 className="font-black text-lg mb-8 text-brand-primary">أقسام المتجر</h5>
-            <ul className="space-y-4 text-slate-400 font-bold">
-              <li><Link to="/category/electronics" className="hover:text-white transition-colors">الإلكترونيات</Link></li>
-              <li><Link to="/category/watches" className="hover:text-white transition-colors">الساعات</Link></li>
-              <li><Link to="/category/cars" className="hover:text-white transition-colors">إكسسوارات السيارات</Link></li>
+            <h5 className="font-black text-lg mb-6">أقسامنا</h5>
+            <ul className="space-y-3 text-slate-500 font-bold">
+              <li><Link to="/category/electronics" className="hover:text-brand-primary transition-colors">الإلكترونيات</Link></li>
+              <li><Link to="/category/watches" className="hover:text-brand-primary transition-colors">الساعات</Link></li>
+              <li><Link to="/category/cars" className="hover:text-brand-primary transition-colors">إكسسوارات السيارات</Link></li>
             </ul>
           </div>
           <div>
-            <h5 className="font-black text-lg mb-8 text-brand-primary">المساعدة</h5>
-            <ul className="space-y-4 text-slate-400 font-bold">
-              <li><Link to="/" className="hover:text-white transition-colors">سياسة التوصيل</Link></li>
-              <li><Link to="/" className="hover:text-white transition-colors">الأسئلة الشائعة</Link></li>
-              <li><Link to="/" className="hover:text-white transition-colors">تواصل معنا</Link></li>
+            <h5 className="font-black text-lg mb-6">الدعم</h5>
+            <ul className="space-y-3 text-slate-500 font-bold">
+              <li>سياسة التوصيل</li>
+              <li>الأسئلة الشائعة</li>
+              <li>اتصل بنا</li>
             </ul>
           </div>
-          <div className="bg-white/5 p-8 rounded-[40px] border border-white/10 flex flex-col items-center text-center">
-             <div className="w-16 h-16 bg-brand-primary/20 text-brand-primary rounded-full flex items-center justify-center mb-4">
-               <Truck size={32} />
+          <div className="bg-brand-light p-8 rounded-3xl border border-slate-100 flex flex-col items-center text-center">
+             <div className="w-14 h-14 bg-white text-brand-primary rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+               <Truck size={28} />
              </div>
-             <h5 className="font-black text-xl mb-2">توصيل مجاني</h5>
-             <p className="text-slate-500 text-xs font-bold leading-relaxed">في كافة أنحاء المغرب، الدفع دائماً بعد الاستلام والمعاينة.</p>
+             <h5 className="font-black text-lg mb-1">توصيل مجاني</h5>
+             <p className="text-slate-500 text-xs font-bold">لكافة مدن المغرب، والدفع عند الاستلام.</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">
-          &copy; {new Date().getFullYear()} Store Brima. Engineered for Luxury.
+        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-100 text-center text-slate-400 text-xs font-bold">
+          &copy; {new Date().getFullYear()} Store Brima. جميع الحقوق محفوظة.
         </div>
       </footer>
     </div>
@@ -154,13 +150,13 @@ const App: React.FC = () => {
 };
 
 const NavLink = ({ to, children, current }: any) => (
-  <Link to={to} className={`text-sm font-black transition-all ${current ? 'text-brand-primary underline underline-offset-8 decoration-2' : 'text-slate-400 hover:text-white'}`}>
+  <Link to={to} className={`text-sm font-black transition-all ${current ? 'text-brand-primary underline underline-offset-8 decoration-2' : 'text-slate-500 hover:text-slate-900'}`}>
     {children}
   </Link>
 );
 
 const MobileLink = ({ to, icon, children, onClick }: any) => (
-  <Link to={to} onClick={onClick} className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 text-lg font-black text-white hover:bg-brand-primary transition-all">
+  <Link to={to} onClick={onClick} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 text-slate-900 font-black hover:bg-brand-primary hover:text-white transition-all">
     {React.cloneElement(icon, { size: 20 })}
     {children}
   </Link>
