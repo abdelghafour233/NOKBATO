@@ -42,8 +42,18 @@ import {
   Check,
   Megaphone,
   TableProperties,
-  Plus
+  Plus,
+  Clock,
+  Truck,
+  CheckCircle2
 } from 'lucide-react';
+
+const MOROCCAN_CITIES = [
+  "الدار البيضاء", "الرباط", "مراكش", "فاس", "طنجة", "أغادير", "مكناس", 
+  "وجدة", "القنيطرة", "تطوان", "تمارة", "سلا", "آسفي", "العيون", 
+  "المحمدية", "بني ملال", "الجديدة", "تازة", "الناظور", "سطات", 
+  "خريبكة", "القصر الكبير", "العرائش", "الخميسات", "تارودانت"
+];
 
 const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
   return new Promise((resolve) => {
@@ -217,6 +227,7 @@ const TrackingStatus = ({ label, id, active }: any) => (
 const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, setOrders }) => {
   const [view, setView] = useState<'active' | 'trash'>('active');
   const [deletedOrders, setDeletedOrders] = useState<Order[]>(getStoredDeletedOrders());
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const moveToTrash = (id: string) => {
     if (!confirm('نقل الطلب للمحذوفات؟')) return;
@@ -226,6 +237,24 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
       const newTrash = [...deletedOrders, order];
       setOrders(newOrders); saveOrders(newOrders);
       setDeletedOrders(newTrash); localStorage.setItem('deleted_orders', JSON.stringify(newTrash));
+    }
+  };
+
+  const handleUpdateOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+    const updated = orders.map(o => o.id === editingOrder.id ? editingOrder : o);
+    setOrders(updated);
+    saveOrders(updated);
+    setEditingOrder(null);
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'pending': return { text: 'قيد الانتظار', color: 'bg-yellow-100 text-yellow-700', icon: <Clock size={12}/> };
+      case 'shipped': return { text: 'تم الشحن', color: 'bg-blue-100 text-blue-700', icon: <Truck size={12}/> };
+      case 'delivered': return { text: 'تم التوصيل', color: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle2 size={12}/> };
+      default: return { text: 'غير معروف', color: 'bg-gray-100 text-gray-700', icon: <X size={12}/> };
     }
   };
 
@@ -239,37 +268,105 @@ const OrdersList: React.FC<{ orders: Order[], setOrders: any }> = ({ orders, set
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {data.length > 0 ? data.map(order => (
-          <div key={order.id} className="bg-white dark:bg-gray-900 p-8 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h4 className="font-black dark:text-white text-xl mb-1">{order.fullName}</h4>
-                <div className="text-xs text-gray-400 font-bold">{new Date(order.date).toLocaleString('ar-MA')}</div>
+        {data.length > 0 ? data.map(order => {
+          const status = getStatusLabel(order.status || 'pending');
+          return (
+            <div key={order.id} className="bg-white dark:bg-gray-900 p-8 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h4 className="font-black dark:text-white text-xl mb-1">{order.fullName}</h4>
+                  <div className="text-xs text-gray-400 font-bold">{new Date(order.date).toLocaleString('ar-MA')}</div>
+                  <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black ${status.color}`}>
+                    {status.icon} {status.text}
+                  </div>
+                </div>
+                <div className="text-emerald-600 font-black text-2xl">{order.totalPrice} <span className="text-xs">د.م</span></div>
               </div>
-              <div className="text-emerald-600 font-black text-2xl">{order.totalPrice} <span className="text-xs">د.م</span></div>
-            </div>
-            
-            <div className="space-y-3 mb-8 text-sm font-bold text-gray-500 dark:text-gray-400">
-              <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-xl"><Phone size={16} className="text-emerald-500"/> {order.phone}</div>
-              <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-xl"><MapPin size={16} className="text-emerald-500"/> {order.city}</div>
-            </div>
+              
+              <div className="space-y-3 mb-8 text-sm font-bold text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-xl"><Phone size={16} className="text-emerald-500"/> {order.phone}</div>
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-xl"><MapPin size={16} className="text-emerald-500"/> {order.city}</div>
+              </div>
 
-            <div className="flex gap-2">
-              <a href={`tel:${order.phone}`} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-center text-sm shadow-lg shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all">اتصال بالعميل</a>
-              {view === 'active' && (
-                <button onClick={() => moveToTrash(order.id)} className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all">
-                  <Trash2 size={20}/>
-                </button>
-              )}
+              <div className="flex gap-2">
+                <a href={`tel:${order.phone}`} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-center text-sm shadow-lg hover:bg-emerald-700 transition-all">اتصال</a>
+                {view === 'active' && (
+                  <>
+                    <button onClick={() => setEditingOrder(order)} className="p-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+                      <Edit2 size={20}/>
+                    </button>
+                    <button onClick={() => moveToTrash(order.id)} className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all">
+                      <Trash2 size={20}/>
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        )) : (
+          )
+        }) : (
           <div className="col-span-full py-24 text-center">
              <ShoppingBag size={80} className="mx-auto text-gray-100 dark:text-gray-800 mb-6" />
              <h3 className="text-2xl font-black text-gray-300">لا توجد طلبات هنا</h3>
           </div>
         )}
       </div>
+
+      {/* Modal تعديل الطلبية */}
+      {editingOrder && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-950 w-full max-w-2xl rounded-[60px] p-10 max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl">
+            <div className="flex justify-between items-center mb-10">
+              <h3 className="text-3xl font-black dark:text-white">تعديل الطلبية</h3>
+              <button onClick={() => setEditingOrder(null)} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full"><X size={32}/></button>
+            </div>
+
+            <form onSubmit={handleUpdateOrder} className="space-y-8">
+              <div className="space-y-2">
+                <label className="text-sm font-black text-gray-400 pr-2">الاسم الكامل للعميل</label>
+                <input required type="text" value={editingOrder.fullName} onChange={e => setEditingOrder({...editingOrder, fullName: e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none" />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-black text-gray-400 pr-2">رقم الهاتف</label>
+                  <input required type="tel" value={editingOrder.phone} onChange={e => setEditingOrder({...editingOrder, phone: e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none text-right" dir="ltr" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-black text-gray-400 pr-2">المدينة</label>
+                  <select value={editingOrder.city} onChange={e => setEditingOrder({...editingOrder, city: e.target.value})} className="w-full p-5 rounded-2xl border-2 dark:bg-gray-800 dark:border-gray-800 font-bold focus:border-emerald-500 outline-none appearance-none">
+                    {MOROCCAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-sm font-black text-gray-400 pr-2">حالة الطلبية</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {(['pending', 'shipped', 'delivered'] as const).map((s) => (
+                    <button 
+                      key={s} 
+                      type="button" 
+                      onClick={() => setEditingOrder({...editingOrder, status: s})}
+                      className={`py-4 rounded-2xl font-black text-xs transition-all border-2 ${editingOrder.status === s ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
+                    >
+                      {getStatusLabel(s).text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800">
+                <div className="flex justify-between items-center text-xl font-black">
+                   <span className="text-gray-400">إجمالي المبلغ:</span>
+                   <span className="text-emerald-600">{editingOrder.totalPrice} د.م</span>
+                </div>
+              </div>
+
+              <button type="submit" className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl shadow-xl hover:bg-emerald-700 active:scale-95 transition-all">تحديث الطلبية</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
