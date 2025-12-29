@@ -3,6 +3,14 @@ import { Product, Order, AppSettings, DailyVisits } from './types';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
+    id: 'p-pump-manual',
+    name: 'مضخة يدوية محمولة للسوائل والزيوت (جودة عالية)',
+    price: 119,
+    category: 'home',
+    image: 'https://img.kwcdn.com/product/open/6dc61c3fd58b412cba8b606fd1a3aa5f-goods.jpeg',
+    description: 'مضخة يدوية احترافية لنقل السوائل (مياه، وقود، زيوت) بكل سهولة. تأتي مع خرطوم PVC مرن وطويل لضمان الوصول لأصعب الأماكن. مثالية للاستخدام المنزلي أو في حالات الطوارئ للسيارة.'
+  },
+  {
     id: 'p1',
     name: 'ساعة ذكية Ultra - إصدار 2024',
     price: 349,
@@ -33,37 +41,41 @@ const DEFAULT_SETTINGS: AppSettings = {
   fbTestEventCode: '',
   googleAnalyticsId: '',
   tiktokPixelId: '',
-  adminPasswordHash: 'aGFsYWwyMDI0', // Password: halal2024
+  adminPasswordHash: 'aGFsYWwyMDI0', 
   domainName: 'storebrima.com',
-  // Initialize new fields with empty strings
   googleAdSenseId: '',
   nameServers: '',
   googleSheetsUrl: '',
   customScript: ''
 };
 
+// استخدام مفتاح v3 لضمان تحديث البيانات عند الزبائن القدامى
+const STORAGE_KEY_PRODUCTS = 'brima_v3_products';
+const STORAGE_KEY_ORDERS = 'brima_v3_orders';
+const STORAGE_KEY_SETTINGS = 'brima_v3_settings';
+
 export const getStoredProducts = (): Product[] => {
-  const stored = localStorage.getItem('brima_products');
+  const stored = localStorage.getItem(STORAGE_KEY_PRODUCTS);
   return stored ? JSON.parse(stored) : INITIAL_PRODUCTS;
 };
 
 export const getStoredOrders = (): Order[] => {
-  const stored = localStorage.getItem('brima_orders');
+  const stored = localStorage.getItem(STORAGE_KEY_ORDERS);
   return stored ? JSON.parse(stored) : [];
 };
 
 export const getStoredDeletedOrders = (): Order[] => {
-  const stored = localStorage.getItem('brima_deleted_orders');
+  const stored = localStorage.getItem('brima_v3_deleted_orders');
   return stored ? JSON.parse(stored) : [];
 };
 
 export const getStoredSettings = (): AppSettings => {
-  const stored = localStorage.getItem('brima_settings');
+  const stored = localStorage.getItem(STORAGE_KEY_SETTINGS);
   return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
 };
 
 export const getStoredVisits = (): DailyVisits => {
-  const stored = localStorage.getItem('brima_visits');
+  const stored = localStorage.getItem('brima_v3_visits');
   return stored ? JSON.parse(stored) : {};
 };
 
@@ -71,10 +83,10 @@ export const trackVisit = () => {
   const visits = getStoredVisits();
   const today = new Date().toISOString().split('T')[0];
   visits[today] = (visits[today] || 0) + 1;
-  localStorage.setItem('brima_visits', JSON.stringify(visits));
+  localStorage.setItem('brima_v3_visits', JSON.stringify(visits));
 };
 
-export const saveProducts = (p: Product[]) => localStorage.setItem('brima_products', JSON.stringify(p));
-export const saveOrders = (o: Order[]) => localStorage.setItem('brima_orders', JSON.stringify(o));
-export const saveDeletedOrders = (o: Order[]) => localStorage.setItem('brima_deleted_orders', JSON.stringify(o));
-export const saveSettings = (s: AppSettings) => localStorage.setItem('brima_settings', JSON.stringify(s));
+export const saveProducts = (p: Product[]) => localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(p));
+export const saveOrders = (o: Order[]) => localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(o));
+export const saveDeletedOrders = (o: Order[]) => localStorage.setItem('brima_v3_deleted_orders', JSON.stringify(o));
+export const saveSettings = (s: AppSettings) => localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
