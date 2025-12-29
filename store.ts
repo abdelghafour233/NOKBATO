@@ -49,10 +49,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   customScript: ''
 };
 
-// استخدام مفتاح v3 لضمان تحديث البيانات عند الزبائن القدامى
-const STORAGE_KEY_PRODUCTS = 'brima_v3_products';
-const STORAGE_KEY_ORDERS = 'brima_v3_orders';
-const STORAGE_KEY_SETTINGS = 'brima_v3_settings';
+// تم التغيير إلى v5 لإجبار المتصفح على تحديث القائمة فوراً
+const STORAGE_KEY_PRODUCTS = 'brima_v5_products';
+const STORAGE_KEY_ORDERS = 'brima_v5_orders';
+const STORAGE_KEY_SETTINGS = 'brima_v5_settings';
+const STORAGE_KEY_VISITS = 'brima_v5_visits';
+const STORAGE_KEY_DELETED = 'brima_v5_deleted_orders';
 
 export const getStoredProducts = (): Product[] => {
   const stored = localStorage.getItem(STORAGE_KEY_PRODUCTS);
@@ -65,7 +67,7 @@ export const getStoredOrders = (): Order[] => {
 };
 
 export const getStoredDeletedOrders = (): Order[] => {
-  const stored = localStorage.getItem('brima_v3_deleted_orders');
+  const stored = localStorage.getItem(STORAGE_KEY_DELETED);
   return stored ? JSON.parse(stored) : [];
 };
 
@@ -75,7 +77,7 @@ export const getStoredSettings = (): AppSettings => {
 };
 
 export const getStoredVisits = (): DailyVisits => {
-  const stored = localStorage.getItem('brima_v3_visits');
+  const stored = localStorage.getItem(STORAGE_KEY_VISITS);
   return stored ? JSON.parse(stored) : {};
 };
 
@@ -83,10 +85,10 @@ export const trackVisit = () => {
   const visits = getStoredVisits();
   const today = new Date().toISOString().split('T')[0];
   visits[today] = (visits[today] || 0) + 1;
-  localStorage.setItem('brima_v3_visits', JSON.stringify(visits));
+  localStorage.setItem(STORAGE_KEY_VISITS, JSON.stringify(visits));
 };
 
 export const saveProducts = (p: Product[]) => localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(p));
 export const saveOrders = (o: Order[]) => localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(o));
-export const saveDeletedOrders = (o: Order[]) => localStorage.setItem('brima_v3_deleted_orders', JSON.stringify(o));
+export const saveDeletedOrders = (o: Order[]) => localStorage.setItem(STORAGE_KEY_DELETED, JSON.stringify(o));
 export const saveSettings = (s: AppSettings) => localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
