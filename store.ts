@@ -41,8 +41,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   fbTestEventCode: '',
   googleAnalyticsId: '',
   tiktokPixelId: '',
-  // الرمز المشفر لكلمة السر "123456" هو MTIzNDU2
-  adminPasswordHash: 'MTIzNDU2', 
+  adminPasswordHash: 'MTIzNDU2', // "123456" in base64
   domainName: 'storebrima.com',
   googleAdSenseId: '',
   nameServers: '',
@@ -50,12 +49,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   customScript: ''
 };
 
-// التغيير إلى v7 يضمن مسح البيانات القديمة تماماً
-const STORAGE_KEY_PRODUCTS = 'brima_v7_products';
-const STORAGE_KEY_ORDERS = 'brima_v7_orders';
-const STORAGE_KEY_SETTINGS = 'brima_v7_settings';
-const STORAGE_KEY_VISITS = 'brima_v7_visits';
-const STORAGE_KEY_DELETED = 'brima_v7_deleted_orders';
+// التحديث إلى v8 لمسح أي مخلفات سابقة
+const STORAGE_KEY_PRODUCTS = 'brima_v8_products';
+const STORAGE_KEY_ORDERS = 'brima_v8_orders';
+const STORAGE_KEY_SETTINGS = 'brima_v8_settings';
+const STORAGE_KEY_VISITS = 'brima_v8_visits';
+const STORAGE_KEY_DELETED = 'brima_v8_deleted_orders';
 
 export const getStoredProducts = (): Product[] => {
   const stored = localStorage.getItem(STORAGE_KEY_PRODUCTS);
@@ -93,3 +92,9 @@ export const saveProducts = (p: Product[]) => localStorage.setItem(STORAGE_KEY_P
 export const saveOrders = (o: Order[]) => localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(o));
 export const saveDeletedOrders = (o: Order[]) => localStorage.setItem(STORAGE_KEY_DELETED, JSON.stringify(o));
 export const saveSettings = (s: AppSettings) => localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
+
+// وظيفة لمسح كل شيء والبدء من جديد
+export const clearAllStorage = () => {
+  localStorage.clear();
+  window.location.reload();
+};

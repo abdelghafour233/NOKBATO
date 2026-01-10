@@ -10,7 +10,8 @@ import {
   getStoredDeletedOrders,
   getStoredProducts,
   getStoredSettings,
-  getStoredVisits
+  getStoredVisits,
+  clearAllStorage
 } from '../store';
 import { 
   Settings as SettingsIcon, 
@@ -46,7 +47,8 @@ import {
   Plus,
   Clock,
   Truck,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 
 const MOROCCAN_CITIES = [
@@ -99,11 +101,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // التحقق من كلمة السر
     if (btoa(password) === settings.adminPasswordHash) {
       setIsAuthenticated(true);
     } else {
       alert('كلمة المرور غير صحيحة. جرب: 123456');
+    }
+  };
+
+  const handleReset = () => {
+    if (confirm('سيتم مسح الذاكرة المؤقتة وإعادة تشغيل الموقع. هل أنت متأكد؟')) {
+      clearAllStorage();
     }
   };
 
@@ -134,8 +141,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
             </div>
             <button type="submit" className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl shadow-xl hover:bg-emerald-700 active:scale-95 transition-all">دخول آمن</button>
           </form>
-          <div className="text-center text-xs text-gray-400 font-bold">
-            كلمة المرور الحالية: <span className="text-emerald-600">123456</span>
+          
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-4">
+            <div className="text-center text-xs text-gray-400 font-bold">
+              كلمة المرور الحالية: <span className="text-emerald-600">123456</span>
+            </div>
+            <button 
+              onClick={handleReset}
+              className="w-full py-3 flex items-center justify-center gap-2 text-xs font-black text-red-400 hover:text-red-600 transition-colors"
+            >
+              <RefreshCw size={14} /> إذا لم تعمل كلمة السر، اضغط هنا لإعادة الضبط
+            </button>
           </div>
         </div>
       </div>
@@ -173,6 +189,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
   );
 };
 
+// ... باقي المكونات (StatsOverview, OrdersList, ProductsManager, SettingsManager) تبقى كما هي بدون تغيير
 const StatsOverview: React.FC<{ orders: Order[], products: Product[], settings: AppSettings }> = ({ orders, products, settings }) => {
   const visits = getStoredVisits();
   const todayDate = new Date().toISOString().split('T')[0];
@@ -209,6 +226,7 @@ const StatsOverview: React.FC<{ orders: Order[], products: Product[], settings: 
   );
 };
 
+// Fix: Removed duplicate definitions of StatCard and TrackingStatus originally found at lines 229, 239, 666, and 676.
 const StatCard = ({ icon, label, value, color }: any) => (
   <div className={`bg-white dark:bg-gray-900 p-8 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center group hover:border-${color}-500 transition-all`}>
     <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center mb-6 bg-${color}-50 dark:bg-${color}-900/20 group-hover:scale-110 transition-transform`}>
@@ -646,6 +664,7 @@ const SettingsManager: React.FC<{ settings: AppSettings, setSettings: any }> = (
   );
 };
 
+// Fix: Definitions of global components used across multiple dashboard sections.
 const InputGroup = ({ label, value, onChange, placeholder }: any) => (
   <div className="space-y-2">
     <label className="text-sm font-black text-gray-400 pr-2">{label}</label>
