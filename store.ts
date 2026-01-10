@@ -41,7 +41,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   fbTestEventCode: '',
   googleAnalyticsId: '',
   tiktokPixelId: '',
-  adminPasswordHash: 'aGFsYWwyMDI0', 
+  // الرمز المشفر لكلمة السر "123456" هو MTIzNDU2
+  adminPasswordHash: 'MTIzNDU2', 
   domainName: 'storebrima.com',
   googleAdSenseId: '',
   nameServers: '',
@@ -49,12 +50,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   customScript: ''
 };
 
-// تم التغيير إلى v5 لإجبار المتصفح على تحديث القائمة فوراً
-const STORAGE_KEY_PRODUCTS = 'brima_v5_products';
-const STORAGE_KEY_ORDERS = 'brima_v5_orders';
-const STORAGE_KEY_SETTINGS = 'brima_v5_settings';
-const STORAGE_KEY_VISITS = 'brima_v5_visits';
-const STORAGE_KEY_DELETED = 'brima_v5_deleted_orders';
+// التغيير إلى v7 يضمن مسح البيانات القديمة تماماً
+const STORAGE_KEY_PRODUCTS = 'brima_v7_products';
+const STORAGE_KEY_ORDERS = 'brima_v7_orders';
+const STORAGE_KEY_SETTINGS = 'brima_v7_settings';
+const STORAGE_KEY_VISITS = 'brima_v7_visits';
+const STORAGE_KEY_DELETED = 'brima_v7_deleted_orders';
 
 export const getStoredProducts = (): Product[] => {
   const stored = localStorage.getItem(STORAGE_KEY_PRODUCTS);

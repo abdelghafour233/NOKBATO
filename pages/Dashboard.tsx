@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Product, Order, AppSettings, Category, DailyVisits } from '../types';
@@ -98,8 +99,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (btoa(password) === settings.adminPasswordHash) setIsAuthenticated(true);
-    else alert('كلمة المرور غير صحيحة');
+    // التحقق من كلمة السر
+    if (btoa(password) === settings.adminPasswordHash) {
+      setIsAuthenticated(true);
+    } else {
+      alert('كلمة المرور غير صحيحة. جرب: 123456');
+    }
   };
 
   if (!isAuthenticated) {
@@ -130,7 +135,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, orders, setting
             <button type="submit" className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl shadow-xl hover:bg-emerald-700 active:scale-95 transition-all">دخول آمن</button>
           </form>
           <div className="text-center text-xs text-gray-400 font-bold">
-            كلمة المرور الافتراضية: <span className="text-emerald-600">halal2024</span>
+            كلمة المرور الحالية: <span className="text-emerald-600">123456</span>
           </div>
         </div>
       </div>
